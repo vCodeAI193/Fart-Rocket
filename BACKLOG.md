@@ -268,7 +268,7 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 ## HUD & In-Game-UI
 
 - [x] **FR-201** Pause-Button im Spiel
-- [ ] **FR-202** Animierte Muenz-/Punkteanzeige
+- [x] **FR-202** Animierte Muenz-/Punkteanzeige
 - [x] **FR-203** Combo-Zaehler-Anzeige
 - [x] **FR-204** Geschwindigkeitsanzeige
 - [x] **FR-205** Hoehen-/Distanzanzeige
@@ -280,7 +280,7 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 - [ ] **FR-211** Fortschrittsbalken zum Muenz-Ziel
 - [x] **FR-212** Checkpoint-Benachrichtigung
 - [ ] **FR-213** Sammel-Pop-ups (+10)
-- [ ] **FR-214** Aktuelle Sterne-Vorschau im HUD
+- [x] **FR-214** Aktuelle Sterne-Vorschau im HUD
 - [ ] **FR-215** Minimalistischer HUD-Modus
 - [ ] **FR-216** Einstellbare HUD-Skalierung
 - [ ] **FR-217** Linkshaender-HUD-Layout
@@ -338,7 +338,7 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 
 - [x] **FR-261** Partikel beim Muenz-Sammeln
 - [x] **FR-262** Aufprall-Staub und Truemmer-Partikel
-- [ ] **FR-263** Explosions-Effekte
+- [x] **FR-263** Explosions-Effekte
 - [x] **FR-264** Geschwindigkeits-Linien bei hohem Tempo
 - [x] **FR-265** Bildschirm-Blitz bei Tod
 - [x] **FR-266** Hit-Stop fuer mehr Wucht
@@ -355,7 +355,7 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 - [ ] **FR-277** Power-up-Aura um das Maennchen
 - [ ] **FR-278** Umgebungspartikel (Staub, Funken)
 - [ ] **FR-279** Verzerrung bei schwarzen Loechern
-- [ ] **FR-280** Combo-Feuerwerk bei hohen Ketten
+- [x] **FR-280** Combo-Feuerwerk bei hohen Ketten
 
 ## Shader & Rendering
 
@@ -383,7 +383,7 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 ## Fortschritt & Meta-Progression
 
 - [x] **FR-301** Globaler XP-/Spieler-Levelaufstieg
-- [ ] **FR-302** Sterne-Gesamtzahl als Freischalt-Waehrung
+- [x] **FR-302** Sterne-Gesamtzahl als Freischalt-Waehrung
 - [ ] **FR-303** Welt-Freischaltung ueber Sterne-Schwellen
 - [ ] **FR-304** Skill-Baum fuer Maennchen-Faehigkeiten
 - [ ] **FR-305** Permanente Upgrades (z.B. Furz-Staerke kaufen)
