@@ -14,6 +14,7 @@ var _player: Player
 var _level_end: LevelEnd
 var _max_charges: int = 0
 var _level_finished: bool = false
+var _checkpoint_pos: Vector2 = Vector2(INF, INF)  # FR-135
 
 # Fällt das Männchen unter diese Grenze (oder fliegt weit darüber hinaus),
 # gilt das Level als verloren und wird neu gestartet.
@@ -51,6 +52,7 @@ func _process(delta: float) -> void:
 ## Lädt die aktuelle Level-Szene und richtet das Spiel ein.
 func _load_current_level() -> void:
 	_level_finished = false
+	_checkpoint_pos = Vector2(INF, INF)  # FR-135: Checkpoint zurücksetzen
 	var path := GameManager.get_level_scene_path(GameManager.current_level)
 	var level_scene: PackedScene = load(path)
 	var level := level_scene.instantiate()
@@ -82,6 +84,9 @@ func _load_current_level() -> void:
 	_player.fart_fired.connect(_on_fart_fired)  # FR-265
 	if _level_end != null:
 		_level_end.reached.connect(_on_level_reached)
+	# FR-135: Checkpoints verbinden (nach add_child haben alle _ready() durchlaufen)
+	for cp in get_tree().get_nodes_in_group("checkpoints"):
+		(cp as Checkpoint).triggered.connect(_on_checkpoint_triggered)
 
 	# Kamera sofort auf den Player setzen
 	_camera.global_position = _player.global_position
@@ -108,7 +113,16 @@ func _on_fart_fired(impulse: float) -> void:
 # --- Spielereignisse --------------------------------------------
 func _on_player_died() -> void:
 	_camera_shake(0.3, 0.35)
-	get_tree().reload_current_scene()
+	# FR-135: Am Checkpoint wiederbeleben, falls einer aktiviert wurde
+	if _checkpoint_pos.x < INF:
+		_player.revive(_checkpoint_pos)
+		_level_finished = false
+	else:
+		get_tree().reload_current_scene()
+
+
+func _on_checkpoint_triggered(pos: Vector2) -> void:
+	_checkpoint_pos = pos
 
 
 func _on_level_reached() -> void:

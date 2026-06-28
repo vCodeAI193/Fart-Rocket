@@ -65,14 +65,14 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 - [ ] **FR-023** Auftrieb-/Wasserzonen mit eigener Physik
 - [ ] **FR-024** Bewegliche Plattformen als sichere Landeflaechen
 - [ ] **FR-025** Foerderbaender, die das Maennchen verschieben
-- [ ] **FR-026** Sprungfedern/Trampoline zum Abprallen
+- [x] **FR-026** Sprungfedern/Trampoline zum Abprallen
 - [ ] **FR-027** Magnetfelder, die das Maennchen ziehen oder abstossen
 - [ ] **FR-028** Schleim-/Klebezonen verlangsamen die Bewegung
 - [ ] **FR-029** Eis-/Glaettezonen mit reduzierter Reibung
 - [ ] **FR-030** Luftstroemungen und Wind-Tunnel
 - [ ] **FR-031** Schwarze Loecher mit Anziehungskraft
-- [ ] **FR-032** Konfigurierbare Terminalgeschwindigkeit/Speed-Limit
-- [ ] **FR-033** Einstellbare Drall-Daempfung (abklingende Rotation)
+- [x] **FR-032** Konfigurierbare Terminalgeschwindigkeit/Speed-Limit
+- [x] **FR-033** Einstellbare Drall-Daempfung (abklingende Rotation)
 - [ ] **FR-034** Bouncy-Walls mit Energieerhalt beim Abprall
 - [ ] **FR-035** Zerstoerbare Waende abhaengig von der Aufprallgeschwindigkeit
 - [ ] **FR-036** Bullet-Time-/Zeitlupen-Zonen
@@ -130,10 +130,10 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 ## Sammelobjekte & Power-ups
 
 - [x] **FR-081** Verschiedene Muenz-Werte (Bronze/Silber/Gold)
-- [ ] **FR-082** Edelsteine als Premium-Sammelobjekt
+- [x] **FR-082** Edelsteine als Premium-Sammelobjekt
 - [ ] **FR-083** Magnet-Power-up zieht Muenzen an
 - [x] **FR-084** Schild-Power-up ueberlebt einen Treffer
-- [ ] **FR-085** Verlangsamungs-Power-up (Zeitlupe)
+- [x] **FR-085** Verlangsamungs-Power-up (Zeitlupe)
 - [ ] **FR-086** Zeitlich begrenztes Doppel-Muenzen-Power-up
 - [x] **FR-087** Extra-Furz-Ladung als Pickup
 - [ ] **FR-088** Versteckte Sterne als Sammelobjekt pro Level
@@ -189,7 +189,7 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 - [ ] **FR-132** Level mit beweglichem Wasserstand
 - [ ] **FR-133** Pflichtlevel: alle Muenzen sammeln
 - [ ] **FR-134** Mehrere verzweigte Pfade pro Level
-- [ ] **FR-135** Checkpoint-System in langen Leveln
+- [x] **FR-135** Checkpoint-System in langen Leveln
 - [ ] **FR-136** Versteckte Raeume mit Belohnungen
 - [ ] **FR-137** Themen-spezifische Hindernis-Sets
 - [ ] **FR-138** Level-Intro-Kamerafahrt
@@ -228,7 +228,7 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 - [ ] **FR-165** Furz-Sound-Pakete
 - [ ] **FR-166** Huete und Accessoires
 - [ ] **FR-167** Gesichtsausdruecke und Emotes
-- [ ] **FR-168** Trail-/Spur-Effekte beim Fliegen
+- [x] **FR-168** Trail-/Spur-Effekte beim Fliegen
 - [ ] **FR-169** Ueber Muenzen freischaltbare Skins
 - [ ] **FR-170** Seltenheitsstufen fuer Skins
 - [ ] **FR-171** Skin-Vorschau im Menue

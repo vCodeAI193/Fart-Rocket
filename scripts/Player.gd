@@ -18,6 +18,12 @@ class_name Player
 # --- FR-021: Schwerkraft-Skalierung pro Level -------------------
 @export var level_gravity_scale: float = 1.0 # 0.5 = Mond, 2.0 = Jupiter
 
+# --- FR-032: Maximale Fluggeschwindigkeit -----------------------
+@export var max_speed: float = 2400.0
+
+# --- FR-033: Drall-Dämpfung (abklingende Rotation) -------------
+@export var rotation_damping: float = 1.5
+
 # --- FR-162: Maennchen-Farbe (Skin) ----------------------------
 @export var skin_color: Color = Color(0.95, 0.95, 0.95)
 
@@ -72,13 +78,19 @@ var _cooldown_remaining: float = 0.0         # verbleibende Abklingzeit (FR-008)
 var _aim_arrow: Line2D
 
 
+var _trail: Line2D = null  # FR-168: Flug-Spur
+
+
 func _ready() -> void:
 	contact_monitor = true
 	max_contacts_reported = 4
-	gravity_scale = level_gravity_scale  # FR-021: Level-spezifische Schwerkraft
+	gravity_scale = level_gravity_scale  # FR-021
+	angular_damp = rotation_damping      # FR-033
 	body_entered.connect(_on_body_entered)
 	_build_stick_figure()
 	_build_aim_arrow()
+	# Trail nach dem nächsten Frame aufbauen, damit get_parent() bereit ist
+	call_deferred("_build_trail")
 
 
 # ----------------------------------------------------------------
@@ -106,6 +118,9 @@ func _process(delta: float) -> void:
 
 	# FR-001: Ladungen über Zeit regenerieren
 	_process_regen(delta)
+
+	# FR-168: Flug-Spur aktualisieren
+	_update_trail()
 
 
 ## FR-001: Regenerations-Logik (aus _process ausgelagert).
@@ -266,6 +281,10 @@ func _integrate_forces(state: PhysicsDirectBodyState2D) -> void:
 	if _is_dead:
 		return
 	var vel := state.linear_velocity
+	# FR-032: Maximale Fluggeschwindigkeit begrenzen
+	if vel.length() > max_speed:
+		state.linear_velocity = vel.normalized() * max_speed
+		vel = state.linear_velocity
 	if vel.length() > 60.0:
 		# Kopf zeigt in Flugrichtung (Figur ist standardmäßig "Kopf oben")
 		var target_rot := vel.angle() + PI * 0.5
@@ -371,6 +390,58 @@ func _build_aim_arrow() -> void:
 	_aim_arrow.default_color = Color(1.0, 0.85, 0.2, 0.9)  # gelber Pfeil
 	_aim_arrow.visible = false
 	add_child(_aim_arrow)
+
+
+## FR-135: Wiederbelebt den Spieler an einer Checkpoint-Position.
+func revive(at_pos: Vector2) -> void:
+	_is_dead = false
+	_is_aiming = false
+	_touch_index = -1
+	_aim_hold = 0.0
+	_cooldown_remaining = 0.0
+	_shield_remaining = 0.0
+	global_position = at_pos
+	linear_velocity = Vector2.ZERO
+	angular_velocity = 0.0
+	rotation = 0.0
+	gravity_scale = level_gravity_scale
+	_aim_arrow.visible = false
+	shield_changed.emit(false)
+	if _trail != null:
+		_trail.clear_points()
+
+
+# ----------------------------------------------------------------
+# FR-168: Flug-Spur (Trail)
+# ----------------------------------------------------------------
+func _build_trail() -> void:
+	_trail = Line2D.new()
+	_trail.name = "PlayerTrail"
+	_trail.z_index = -1
+	_trail.width = 5.0
+	_trail.default_color = Color(0.6, 1.0, 0.5, 0.35)
+	get_parent().add_child(_trail)
+
+
+const _TRAIL_MAX := 22
+const _TRAIL_MIN_DIST := 6.0
+
+func _update_trail() -> void:
+	if _trail == null or not is_instance_valid(_trail):
+		return
+	var speed := linear_velocity.length()
+	_trail.visible = speed > 120.0 and not _is_dead
+	if not _trail.visible:
+		_trail.clear_points()
+		return
+	var local_pos := _trail.to_local(global_position)
+	if _trail.get_point_count() == 0 or local_pos.distance_to(
+			_trail.get_point_position(_trail.get_point_count() - 1)) > _TRAIL_MIN_DIST:
+		_trail.add_point(local_pos)
+		if _trail.get_point_count() > _TRAIL_MAX:
+			_trail.remove_point(0)
+	var alpha := clampf(speed / 1000.0, 0.0, 0.55)
+	_trail.default_color = Color(0.55, 1.0, 0.45, alpha)
 
 
 ## Zeichnet den Zielpfeil in lokaler Ausrichtung (entgegen der Rotation,
