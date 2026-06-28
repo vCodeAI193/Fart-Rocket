@@ -319,7 +319,7 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 - [ ] **FR-244** Umfangreiche Furz-Sound-Bibliothek
 - [ ] **FR-245** Treffer- und Tod-Sounds
 - [ ] **FR-246** Sieg-Fanfare beim Levelende
-- [ ] **FR-247** UI-Klick-Sounds
+- [x] **FR-247** UI-Klick-Sounds
 - [ ] **FR-248** Ambient-Soundscapes pro Thema
 - [ ] **FR-249** Getrennte Lautstaerkeregler (Musik/SFX)
 - [x] **FR-250** Stumm-Schalter
@@ -364,7 +364,7 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 - [ ] **FR-283** Wasser-Brechungs-Shader
 - [ ] **FR-284** Hitzeflimmer-Shader fuer Lava
 - [ ] **FR-285** Outline-Shader fuer wichtige Objekte
-- [ ] **FR-286** Vignette-Post-Processing
+- [x] **FR-286** Vignette-Post-Processing
 - [ ] **FR-287** Bloom fuer Glueh-Effekte
 - [ ] **FR-288** Chromatische Aberration bei hohem Tempo
 - [ ] **FR-289** Dunkelheits-/Sichtkegel-Shader

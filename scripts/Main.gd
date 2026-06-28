@@ -10,6 +10,8 @@ extends Node2D
 @onready var _hud: HUD = $HUD
 @onready var _level_complete: LevelComplete = $LevelComplete
 
+var _vignette: CanvasLayer  # FR-286: Vignette-Effekt
+
 var _player: Player
 var _level_end: LevelEnd
 var _max_charges: int = 0
@@ -35,7 +37,22 @@ func _ready() -> void:
 	_starfield = ParallaxStarfield.new()
 	add_child(_starfield)
 
+	# FR-286: Vignette-Post-Processing
+	_build_vignette()
+
 	_load_current_level()
+
+
+## FR-286: Dunkle Vignette an Bildschirmrändern.
+func _build_vignette() -> void:
+	_vignette = CanvasLayer.new()
+	_vignette.layer = 100
+	add_child(_vignette)
+	var vig := ColorRect.new()
+	vig.set_anchors_preset(Control.PRESET_FULL_RECT)
+	vig.color = Color(0.0, 0.0, 0.0, 0.35)
+	vig.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_vignette.add_child(vig)
 
 
 func _process(delta: float) -> void:

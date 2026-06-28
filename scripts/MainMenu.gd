@@ -105,6 +105,7 @@ func _build_settings_button() -> void:
 
 
 func _on_settings_pressed() -> void:
+	GameManager.vibrate(15)  # FR-247: UI-Feedback
 	_settings_screen.show_settings()
 
 
