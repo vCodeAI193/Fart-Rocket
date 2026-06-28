@@ -43,3 +43,31 @@ func show_result(stars: int, coins: int, time_sec: float, has_next: bool) -> voi
 	_next_button.visible = has_next
 
 	visible = true
+	_spawn_confetti()  # FR-268
+
+
+## FR-268: Konfetti-Regen beim Levelende.
+func _spawn_confetti() -> void:
+	var colors := [
+		Color(1.0, 0.25, 0.25), Color(1.0, 0.85, 0.15),
+		Color(0.25, 0.85, 0.25), Color(0.3, 0.65, 1.0), Color(0.9, 0.3, 0.9)
+	]
+	for i in range(5):
+		var p := CPUParticles2D.new()
+		p.position = Vector2(200.0 + i * 310.0, -10.0)
+		p.direction = Vector2(0.0, 1.0)
+		p.spread = 55.0
+		p.emitting = true
+		p.one_shot = true
+		p.explosiveness = 0.85
+		p.amount = 28
+		p.lifetime = 3.0
+		p.initial_velocity_min = 180.0
+		p.initial_velocity_max = 460.0
+		p.gravity = Vector2(0.0, 180.0)
+		p.scale_amount_min = 5.0
+		p.scale_amount_max = 13.0
+		p.color = colors[i % colors.size()]
+		add_child(p)
+
+	visible = true

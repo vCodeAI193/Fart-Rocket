@@ -46,8 +46,8 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 - [ ] **FR-007** Dauerstrahl-Furz bei gehaltenem Finger (kontinuierlicher Schub)
 - [x] **FR-008** Cooldown/Kuehlzeit zwischen einzelnen Furz-Stoessen
 - [ ] **FR-009** Winkel-Praezisions-Bonus — perfekter Zielwinkel gibt mehr Schub
-- [ ] **FR-010** Furz-Schild — kurzer Schutz unmittelbar nach einem Stoss
-- [ ] **FR-011** Treibstoff-Pickups fuellen Ladungen mitten im Level auf
+- [x] **FR-010** Furz-Schild — kurzer Schutz unmittelbar nach einem Stoss
+- [x] **FR-011** Treibstoff-Pickups fuellen Ladungen mitten im Level auf
 - [ ] **FR-012** Ueberhitzung bei zu vielen Fuerzen (Risiko/Belohnung)
 - [ ] **FR-013** Wind-Interaktion — Gegenwind reduziert den Furz-Schub
 - [ ] **FR-014** Unterwasser-Furz mit Blasen und Auftriebsverhalten
@@ -60,7 +60,7 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 
 ## Physik & Bewegung
 
-- [ ] **FR-021** Variable Schwerkraft pro Level (Mond, Jupiter, ...)
+- [x] **FR-021** Variable Schwerkraft pro Level (Mond, Jupiter, ...)
 - [ ] **FR-022** Umkehrbare Schwerkraftrichtung fuer Decken-Sektionen
 - [ ] **FR-023** Auftrieb-/Wasserzonen mit eigener Physik
 - [ ] **FR-024** Bewegliche Plattformen als sichere Landeflaechen
@@ -129,13 +129,13 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 
 ## Sammelobjekte & Power-ups
 
-- [ ] **FR-081** Verschiedene Muenz-Werte (Bronze/Silber/Gold)
+- [x] **FR-081** Verschiedene Muenz-Werte (Bronze/Silber/Gold)
 - [ ] **FR-082** Edelsteine als Premium-Sammelobjekt
 - [ ] **FR-083** Magnet-Power-up zieht Muenzen an
-- [ ] **FR-084** Schild-Power-up ueberlebt einen Treffer
+- [x] **FR-084** Schild-Power-up ueberlebt einen Treffer
 - [ ] **FR-085** Verlangsamungs-Power-up (Zeitlupe)
 - [ ] **FR-086** Zeitlich begrenztes Doppel-Muenzen-Power-up
-- [ ] **FR-087** Extra-Furz-Ladung als Pickup
+- [x] **FR-087** Extra-Furz-Ladung als Pickup
 - [ ] **FR-088** Versteckte Sterne als Sammelobjekt pro Level
 - [ ] **FR-089** Sammelkarten-/Sticker-System
 - [ ] **FR-090** Truhen mit Zufallsbelohnung
@@ -222,7 +222,7 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 ## Maennchen-Anpassung & Skins
 
 - [ ] **FR-161** Verschiedene Helm-Designs
-- [ ] **FR-162** Farbauswahl fuer das Maennchen
+- [x] **FR-162** Farbauswahl fuer das Maennchen
 - [ ] **FR-163** Kostueme/Outfits (Astronaut, Superheld, Tier)
 - [ ] **FR-164** Furz-Wolken-Farben und -Effekte
 - [ ] **FR-165** Furz-Sound-Pakete
@@ -245,9 +245,9 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 ## Kamera & Sicht
 
 - [ ] **FR-181** Dynamischer Zoom je nach Geschwindigkeit
-- [ ] **FR-182** Kamera-Vorausschau in Bewegungsrichtung
-- [ ] **FR-183** Screen-Shake bei Treffern und Explosionen
-- [ ] **FR-184** Sanftes Kamera-Folgen mit Totzone
+- [x] **FR-182** Kamera-Vorausschau in Bewegungsrichtung
+- [x] **FR-183** Screen-Shake bei Treffern und Explosionen
+- [x] **FR-184** Sanftes Kamera-Folgen mit Totzone
 - [ ] **FR-185** Kamera-Grenzen (Bounds) pro Level
 - [ ] **FR-186** Zielfokus-Kamera beim Zielen
 - [ ] **FR-187** Kino-Modus fuer das Levelende
@@ -270,7 +270,7 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 - [x] **FR-201** Pause-Button im Spiel
 - [ ] **FR-202** Animierte Muenz-/Punkteanzeige
 - [x] **FR-203** Combo-Zaehler-Anzeige
-- [ ] **FR-204** Geschwindigkeitsanzeige
+- [x] **FR-204** Geschwindigkeitsanzeige
 - [ ] **FR-205** Hoehen-/Distanzanzeige
 - [ ] **FR-206** Power-up-Status-Icons mit Timer
 - [ ] **FR-207** Geist-Anzeige der Bestzeit
@@ -343,7 +343,7 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 - [x] **FR-265** Bildschirm-Blitz bei Tod
 - [ ] **FR-266** Hit-Stop fuer mehr Wucht
 - [ ] **FR-267** Verbesserte Furz-Wolke mit mehreren Layern
-- [ ] **FR-268** Sieges-Konfetti am Levelende
+- [x] **FR-268** Sieges-Konfetti am Levelende
 - [ ] **FR-269** Muenz-Magnet-Spur-Effekt
 - [ ] **FR-270** Slow-Mo-Visualfilter
 - [ ] **FR-271** Schweif hinter dem Maennchen

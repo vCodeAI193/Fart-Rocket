@@ -15,6 +15,12 @@ class_name Player
 @export var max_drag_distance: float = 300.0 # max. Ziehweite für volle Stärke
 @export var fart_burst_scene: PackedScene    # FartBurst.tscn (Partikel + Sound)
 
+# --- FR-021: Schwerkraft-Skalierung pro Level -------------------
+@export var level_gravity_scale: float = 1.0 # 0.5 = Mond, 2.0 = Jupiter
+
+# --- FR-162: Maennchen-Farbe (Skin) ----------------------------
+@export var skin_color: Color = Color(0.95, 0.95, 0.95)
+
 # --- FR-001: Optionale Furz-Regeneration (pro Level einstellbar) -
 @export var charge_regen_enabled: bool = false  # Ladungen mit der Zeit nachfüllen?
 @export var charge_regen_time: float = 5.0      # Sekunden bis eine Ladung nachlädt
@@ -32,6 +38,7 @@ signal aim_changed(direction, strength)      # Zielrichtung/-stärke geändert
 signal aim_released                          # Zielen beendet (Pfeil ausblenden)
 signal fart_type_changed(index)              # aktiver Furz-Typ gewechselt (FR-002)
 signal fart_fired(impulse)                   # FR-265: Furz ausgelöst (für Kamera-Wackeln)
+signal shield_changed(active)               # FR-010: Schild aktiviert/deaktiviert
 
 # --- FR-002: Verfügbare Furz-Typen ------------------------------
 # power : Multiplikator auf fart_power
@@ -50,6 +57,7 @@ const FART_TYPES := [
 ]
 
 # --- interner Zustand -------------------------------------------
+var _shield_remaining: float = 0.0          # FR-010: verbleibende Schild-Zeit
 var _is_aiming: bool = false
 var _aim_start: Vector2 = Vector2.ZERO       # Startpunkt der Berührung (Screen)
 var _aim_current: Vector2 = Vector2.ZERO     # aktueller Berührungspunkt (Screen)
@@ -65,12 +73,10 @@ var _aim_arrow: Line2D
 
 
 func _ready() -> void:
-	# Schwerkraft skalieren (Standard kommt aus den Projekteinstellungen)
 	contact_monitor = true
 	max_contacts_reported = 4
-	# Kollision mit Hindernissen erkennen
+	gravity_scale = level_gravity_scale  # FR-021: Level-spezifische Schwerkraft
 	body_entered.connect(_on_body_entered)
-	# Strichmännchen + Helm zeichnen und Zielpfeil vorbereiten
 	_build_stick_figure()
 	_build_aim_arrow()
 
@@ -86,6 +92,12 @@ func _process(delta: float) -> void:
 	# FR-008: Abklingzeit herunterzählen
 	if _cooldown_remaining > 0.0:
 		_cooldown_remaining = maxf(0.0, _cooldown_remaining - delta)
+
+	# FR-010: Schild-Timer
+	if _shield_remaining > 0.0:
+		_shield_remaining = maxf(0.0, _shield_remaining - delta)
+		if _shield_remaining == 0.0:
+			shield_changed.emit(false)
 
 	# FR-005: Solange gezielt wird, lädt der Furz auf
 	if _is_aiming:
@@ -269,7 +281,20 @@ func _on_body_entered(body: Node) -> void:
 	if _is_dead:
 		return
 	if body.is_in_group("obstacles"):
+		# FR-010: Schild absorbiert den ersten Treffer
+		if _shield_remaining > 0.0:
+			_shield_remaining = 0.0
+			shield_changed.emit(false)
+			GameManager.vibrate(60)
+			return
 		_die()
+
+
+## FR-010: Aktiviert den Furz-Schild für `duration` Sekunden.
+func activate_shield(duration: float) -> void:
+	_shield_remaining = duration
+	shield_changed.emit(true)
+	GameManager.vibrate(30)
 
 
 ## Lustige Tod-Animation: das Männchen wirbelt herum, dann Signal "died".
@@ -292,7 +317,7 @@ func _die() -> void:
 # Aufbau der Grafik: Strichmännchen mit Helm (per Line2D)
 # ----------------------------------------------------------------
 func _build_stick_figure() -> void:
-	var col := Color(0.95, 0.95, 0.95)  # weiße Linien
+	var col := skin_color  # FR-162: konfigurierbare Maennchen-Farbe
 
 	# Helm (Kreis aus Line2D-Punkten)
 	var helmet := Line2D.new()

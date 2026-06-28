@@ -16,6 +16,7 @@ signal fart_type_selected(index)             # Spieler hat einen Furz-Typ gewäh
 @onready var _fart_types_box: HBoxContainer = $Root/FartTypesBox
 @onready var _pause_btn: Button = $Root/PauseButton       # FR-201
 @onready var _combo_label: Label = $Root/ComboLabel       # FR-003
+@onready var _speed_label: Label = $Root/SpeedLabel       # FR-204
 
 var _max_charges: int = 0
 var _charge_icons: Array[ColorRect] = []
@@ -102,6 +103,12 @@ func highlight_fart_type(index: int) -> void:
 
 func _on_fart_type_button(index: int) -> void:
 	fart_type_selected.emit(index)
+
+
+## FR-204: Aktualisiert die Geschwindigkeitsanzeige.
+func set_speed(speed_px: float) -> void:
+	# Pixel/s in lesbare "m/s" umrechnen (100 px = 1 m)
+	_speed_label.text = "%d m/s" % int(speed_px / 100.0)
 
 
 ## FR-201: Pausiert oder setzt das Spiel fort.

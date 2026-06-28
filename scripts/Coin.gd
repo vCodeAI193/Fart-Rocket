@@ -86,12 +86,23 @@ func _spawn_collect_particles() -> void:
 	)
 
 
-# --- Münzgrafik (gelber Kreis mit Rand) -------------------------
+# --- FR-081: Münzgrafik (Bronze/Silber/Gold je nach Wert) -------
 func _build_coin_visual() -> void:
+	var outer_col: Color
+	var inner_col: Color
+	if coin_value >= 50:         # Gold
+		outer_col = Color(1.0, 0.82, 0.15)
+		inner_col = Color(1.0, 0.93, 0.5)
+	elif coin_value >= 25:       # Silber
+		outer_col = Color(0.72, 0.72, 0.80)
+		inner_col = Color(0.90, 0.90, 0.98)
+	else:                        # Bronze
+		outer_col = Color(0.78, 0.50, 0.22)
+		inner_col = Color(0.95, 0.68, 0.42)
 	var outer := Polygon2D.new()
-	outer.color = Color(1.0, 0.82, 0.15)  # goldgelb
+	outer.color = outer_col
 	var inner := Polygon2D.new()
-	inner.color = Color(1.0, 0.92, 0.45)  # heller Kern
+	inner.color = inner_col
 	var pts_outer := PackedVector2Array()
 	var pts_inner := PackedVector2Array()
 	var segments := 20

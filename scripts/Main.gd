@@ -30,11 +30,16 @@ func _ready() -> void:
 	_load_current_level()
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	if not is_instance_valid(_player):
 		return
-	# Kamera folgt dem Männchen (nur Position, keine Rotation)
-	_camera.global_position = _player.global_position
+	# FR-182/184: Kamera folgt sanft mit leichter Vorausschau
+	var vel := _player.linear_velocity
+	var look_ahead := vel.normalized() * minf(vel.length() * 0.10, 80.0)
+	var target := _player.global_position + look_ahead
+	_camera.global_position = _camera.global_position.lerp(target, minf(delta * 8.0, 1.0))
+	# FR-204: Geschwindigkeit ans HUD melden
+	_hud.set_speed(vel.length())
 	# Aus dem Spielfeld gefallen? -> Level neu starten
 	if not _level_finished:
 		var y := _player.global_position.y
