@@ -23,6 +23,23 @@ class_name Player
 signal died                                  # Männchen hat ein Hindernis getroffen
 signal aim_changed(direction, strength)      # Zielrichtung/-stärke geändert
 signal aim_released                          # Zielen beendet (Pfeil ausblenden)
+signal fart_type_changed(index)              # aktiver Furz-Typ gewechselt (FR-002)
+
+# --- FR-002: Verfügbare Furz-Typen ------------------------------
+# power : Multiplikator auf fart_power
+# cost  : verbrauchte Furz-Ladungen
+# bursts: Anzahl der Stöße (Doppel-Stoß = 2)
+# color : Einfärbung der Furz-Wolke
+const FART_TYPES := [
+	{"id": "mini", "name": "Mini", "power": 0.55, "cost": 1, "bursts": 1,
+		"color": Color(0.7, 0.95, 0.5)},
+	{"id": "normal", "name": "Normal", "power": 1.0, "cost": 1, "bursts": 1,
+		"color": Color(0.55, 0.85, 0.3)},
+	{"id": "mega", "name": "Mega", "power": 1.8, "cost": 2, "bursts": 1,
+		"color": Color(0.4, 0.7, 1.0)},
+	{"id": "double", "name": "Doppel", "power": 0.85, "cost": 2, "bursts": 2,
+		"color": Color(1.0, 0.7, 0.3)},
+]
 
 # --- interner Zustand -------------------------------------------
 var _is_aiming: bool = false
@@ -31,6 +48,7 @@ var _aim_current: Vector2 = Vector2.ZERO     # aktueller Berührungspunkt (Scree
 var _touch_index: int = -1                   # verfolgter Finger (Multitouch-sicher)
 var _is_dead: bool = false                   # Tod/Restart läuft bereits
 var _regen_accum: float = 0.0                # aufgelaufene Zeit für die Regeneration
+var _fart_type_index: int = 1                # aktiver Furz-Typ (Standard: Normal)
 
 # Referenzen auf untergeordnete Knoten
 var _aim_arrow: Line2D
@@ -103,7 +121,7 @@ func _update_aim_visual() -> void:
 	aim_changed.emit(dir, strength)
 
 
-## Löst den Furz-Stoß aus: Impuls anwenden, Partikel + Sound spawnen.
+## Löst den Furz-Stoß aus: je nach Furz-Typ Impuls(e) + Partikel + Sound.
 func _release_fart() -> void:
 	_is_aiming = false
 	_aim_arrow.visible = false
@@ -114,23 +132,43 @@ func _release_fart() -> void:
 	if drag.length() < 20.0:
 		return
 
-	# Keine Ladungen mehr übrig -> kein Stoß
-	if not GameManager.use_charge():
+	var fart: Dictionary = FART_TYPES[_fart_type_index]
+
+	# Genug Ladungen für diesen Furz-Typ vorhanden?
+	if not GameManager.use_charges(fart["cost"]):
 		return
 
 	var strength := clampf(drag.length() / max_drag_distance, 0.0, 1.0)
 	var dir := drag.normalized()
+	var impulse: float = fart_power * strength * fart["power"]
+	var bursts: int = fart["bursts"]
+	var tint: Color = fart["color"]
 
+	# Ersten Stoß sofort auslösen
+	_do_thrust(dir, impulse, tint)
+
+	# Doppel-Stoß: weitere Stöße kurz versetzt nachfeuern
+	for i in range(bursts - 1):
+		if _is_dead:
+			return
+		await get_tree().create_timer(0.12).timeout
+		# Nach der Wartezeit erneut prüfen (Szene könnte neu geladen sein)
+		if not is_instance_valid(self) or _is_dead:
+			return
+		_do_thrust(dir, impulse * 0.85, tint)
+
+
+## Wendet einen einzelnen Schub an und erzeugt die passende Furz-Wolke.
+func _do_thrust(dir: Vector2, impulse: float, tint: Color) -> void:
 	# Das Männchen fliegt in Zugrichtung (wie eine Rakete)
-	apply_central_impulse(dir * fart_power * strength)
-
+	apply_central_impulse(dir * impulse)
 	# Furz-Wolke hinter dem Männchen erzeugen (entgegengesetzte Richtung).
 	# Die FartBurst-Szene spielt dabei selbst den Furz-Sound ab.
-	_spawn_fart_burst(-dir)
+	_spawn_fart_burst(-dir, tint)
 
 
-## Erzeugt die FartBurst-Szene (grüne Partikelwolke) hinter dem Männchen.
-func _spawn_fart_burst(back_dir: Vector2) -> void:
+## Erzeugt die FartBurst-Szene (eingefärbte Partikelwolke) hinter dem Männchen.
+func _spawn_fart_burst(back_dir: Vector2, tint: Color = Color.WHITE) -> void:
 	if fart_burst_scene == null:
 		return
 	var burst := fart_burst_scene.instantiate() as FartBurst
@@ -138,7 +176,26 @@ func _spawn_fart_burst(back_dir: Vector2) -> void:
 	burst.global_position = global_position + back_dir * 30.0
 	# Partikel in die Furz-Richtung ausrichten
 	burst.rotation = back_dir.angle()
-	burst.erupt()
+	burst.erupt(tint)
+
+
+# --- FR-002: Öffentliche Schnittstelle für die Furz-Typ-Auswahl -
+## Liefert die Liste der verfügbaren Furz-Typen (für das HUD).
+func get_fart_types() -> Array:
+	return FART_TYPES
+
+
+## Liefert den Index des aktuell aktiven Furz-Typs.
+func get_fart_type_index() -> int:
+	return _fart_type_index
+
+
+## Setzt den aktiven Furz-Typ (vom HUD aufgerufen).
+func set_fart_type(index: int) -> void:
+	if index < 0 or index >= FART_TYPES.size():
+		return
+	_fart_type_index = index
+	fart_type_changed.emit(_fart_type_index)
 
 
 # ----------------------------------------------------------------

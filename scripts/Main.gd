@@ -67,6 +67,11 @@ func _load_current_level() -> void:
 	_hud.set_max_charges(_max_charges)
 	_hud.start_timer()
 
+	# FR-002: Furz-Typ-Auswahl aufbauen und mit dem Player verbinden
+	_hud.setup_fart_types(_player.get_fart_types(), _player.get_fart_type_index())
+	_hud.fart_type_selected.connect(_player.set_fart_type)
+	_player.fart_type_changed.connect(_hud.highlight_fart_type)
+
 	# Signale verbinden
 	_player.died.connect(_on_player_died)
 	if _level_end != null:

@@ -65,9 +65,17 @@ func add_coin(value: int) -> void:
 ## Eine Furz-Ladung wurde verbraucht. Gibt true zurück,
 ## wenn noch eine Ladung verfügbar war.
 func use_charge() -> bool:
-	if charges_remaining <= 0:
+	return use_charges(1)
+
+
+## Verbraucht mehrere Furz-Ladungen auf einmal (FR-002: Mega/Doppel kosten 2).
+## Gibt true zurück, wenn genügend Ladungen vorhanden waren.
+func use_charges(count: int) -> bool:
+	if count <= 0:
+		return true
+	if charges_remaining < count:
 		return false
-	charges_remaining -= 1
+	charges_remaining -= count
 	charges_changed.emit(charges_remaining)
 	return true
 

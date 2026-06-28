@@ -8,12 +8,16 @@ class_name HUD
 ##  - Verstrichene Zeit (Timer)
 ## Reagiert über Signale auf Änderungen im GameManager.
 
+signal fart_type_selected(index)             # Spieler hat einen Furz-Typ gewählt (FR-002)
+
 @onready var _charges_box: HBoxContainer = $Root/ChargesBox
 @onready var _coin_label: Label = $Root/CoinBox/CoinLabel
 @onready var _timer_label: Label = $Root/TimerLabel
+@onready var _fart_types_box: HBoxContainer = $Root/FartTypesBox
 
 var _max_charges: int = 0
 var _charge_icons: Array[ColorRect] = []
+var _fart_type_buttons: Array[Button] = []
 
 var _elapsed: float = 0.0
 var _timer_running: bool = false
@@ -59,6 +63,38 @@ func start_timer() -> void:
 func stop_timer() -> float:
 	_timer_running = false
 	return _elapsed
+
+
+## FR-002: Baut die Auswahl-Buttons für die Furz-Typen auf.
+func setup_fart_types(types: Array, current_index: int) -> void:
+	for btn in _fart_type_buttons:
+		btn.queue_free()
+	_fart_type_buttons.clear()
+
+	for i in range(types.size()):
+		var data: Dictionary = types[i]
+		var btn := Button.new()
+		btn.text = str(data["name"])
+		btn.custom_minimum_size = Vector2(200, 76)
+		btn.add_theme_font_size_override("font_size", 34)
+		# Einfärbung passend zum Furz-Typ
+		btn.add_theme_color_override("font_color", data["color"])
+		btn.pressed.connect(_on_fart_type_button.bind(i))
+		_fart_types_box.add_child(btn)
+		_fart_type_buttons.append(btn)
+
+	highlight_fart_type(current_index)
+
+
+## FR-002: Hebt den aktiven Furz-Typ-Button hervor.
+func highlight_fart_type(index: int) -> void:
+	for i in range(_fart_type_buttons.size()):
+		# Aktiver Button voll sichtbar, inaktive abgedunkelt
+		_fart_type_buttons[i].modulate = Color.WHITE if i == index else Color(0.6, 0.6, 0.6)
+
+
+func _on_fart_type_button(index: int) -> void:
+	fart_type_selected.emit(index)
 
 
 # --- Signal-Handler ---------------------------------------------

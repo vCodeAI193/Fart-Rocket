@@ -21,7 +21,9 @@ func _ready() -> void:
 
 
 ## Startet die Partikel und den Sound. Räumt sich danach selbst auf.
-func erupt() -> void:
+## tint färbt die Wolke je nach Furz-Typ ein (FR-002).
+func erupt(tint: Color = Color.WHITE) -> void:
+	modulate = tint
 	_particles.emitting = true
 	if _audio.stream != null:
 		_audio.play()
