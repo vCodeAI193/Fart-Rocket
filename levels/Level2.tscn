@@ -1,4 +1,4 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/Player.tscn" id="1_player"]
 [ext_resource type="PackedScene" path="res://scenes/Obstacle.tscn" id="2_obs"]
@@ -6,6 +6,7 @@
 [ext_resource type="PackedScene" path="res://scenes/LevelEnd.tscn" id="4_end"]
 [ext_resource type="PackedScene" path="res://scenes/ChargePickup.tscn" id="5_cp"]
 [ext_resource type="PackedScene" path="res://scenes/FartShield.tscn" id="6_fs"]
+[ext_resource type="PackedScene" path="res://scenes/DoubleCoinsPower.tscn" id="7_dc"]
 
 [node name="Level2" type="Node2D"]
 
@@ -68,6 +69,9 @@ position = Vector2(1700, 550)
 
 [node name="Shield1" parent="." instance=ExtResource("6_fs")]
 position = Vector2(2650, 400)
+
+[node name="DoubleCoinsPower1" parent="." instance=ExtResource("7_dc")]
+position = Vector2(2150, 500)
 
 [node name="LevelEnd" parent="." instance=ExtResource("4_end")]
 position = Vector2(3250, 600)

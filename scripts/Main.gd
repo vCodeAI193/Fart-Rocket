@@ -15,6 +15,7 @@ var _level_end: LevelEnd
 var _max_charges: int = 0
 var _level_finished: bool = false
 var _checkpoint_pos: Vector2 = Vector2(INF, INF)  # FR-135
+var _starfield: ParallaxStarfield  # FR-188
 
 # Fällt das Männchen unter diese Grenze (oder fliegt weit darüber hinaus),
 # gilt das Level als verloren und wird neu gestartet.
@@ -28,6 +29,10 @@ func _ready() -> void:
 	_level_complete.retry_pressed.connect(_on_retry)
 	_level_complete.menu_pressed.connect(_on_menu)
 
+	# FR-188: Parallax-Sternenhintergrund erzeugen
+	_starfield = ParallaxStarfield.new()
+	add_child(_starfield)
+
 	_load_current_level()
 
 
@@ -39,8 +44,12 @@ func _process(delta: float) -> void:
 	var look_ahead := vel.normalized() * minf(vel.length() * 0.10, 80.0)
 	var target := _player.global_position + look_ahead
 	_camera.global_position = _camera.global_position.lerp(target, minf(delta * 8.0, 1.0))
-	# FR-204: Geschwindigkeit ans HUD melden
+	# FR-188: Sternenhintergrund mit Parallax-Versatz aktualisieren
+	if _starfield != null:
+		_starfield.global_position = _camera.global_position * (1.0 - _starfield.parallax_ratio)
+	# FR-204/205: Geschwindigkeit und Höhe ans HUD melden
 	_hud.set_speed(vel.length())
+	_hud.set_player_height(_player.global_position.y)
 	# Aus dem Spielfeld gefallen? -> Level neu starten
 	if not _level_finished:
 		var y := _player.global_position.y
@@ -113,6 +122,7 @@ func _on_fart_fired(impulse: float) -> void:
 # --- Spielereignisse --------------------------------------------
 func _on_player_died() -> void:
 	_camera_shake(0.3, 0.35)
+	_hud.flash_damage()  # FR-209: rote Vignette
 	# FR-135: Am Checkpoint wiederbeleben, falls einer aktiviert wurde
 	if _checkpoint_pos.x < INF:
 		_player.revive(_checkpoint_pos)
@@ -123,6 +133,7 @@ func _on_player_died() -> void:
 
 func _on_checkpoint_triggered(pos: Vector2) -> void:
 	_checkpoint_pos = pos
+	_hud.show_checkpoint_msg()  # FR-212: Checkpoint-Benachrichtigung
 
 
 func _on_level_reached() -> void:

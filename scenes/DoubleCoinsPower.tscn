@@ -1,0 +1,15 @@
+[gd_scene load_steps=3 format=3 uid="uid://doublecoinspwr"]
+
+[ext_resource type="Script" path="res://scripts/DoubleCoinsPower.gd" id="1_dcpwr"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_1"]
+radius = 30.0
+
+[node name="DoubleCoinsPower" type="Area2D"]
+script = ExtResource("1_dcpwr")
+collision_layer = 4
+collision_mask = 1
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, 0)
+shape = SubResource("CircleShape2D_1")

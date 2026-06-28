@@ -55,15 +55,15 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 - [ ] **FR-016** Furz-Sound variiert dynamisch mit der Stoss-Staerke
 - [ ] **FR-017** Verweilende Geruchswolke als optionale Schadenszone
 - [ ] **FR-018** Sticky-Furz — kurzes Haften an Waenden nach Aufprall
-- [ ] **FR-019** Furz-Boost-Ringe laden beim Durchfliegen sofort eine Ladung
+- [x] **FR-019** Furz-Boost-Ringe laden beim Durchfliegen sofort eine Ladung
 - [ ] **FR-020** Anpassbare Furz-Schubkurven fuer Tuning im Editor
 
 ## Physik & Bewegung
 
 - [x] **FR-021** Variable Schwerkraft pro Level (Mond, Jupiter, ...)
-- [ ] **FR-022** Umkehrbare Schwerkraftrichtung fuer Decken-Sektionen
+- [x] **FR-022** Umkehrbare Schwerkraftrichtung fuer Decken-Sektionen
 - [ ] **FR-023** Auftrieb-/Wasserzonen mit eigener Physik
-- [ ] **FR-024** Bewegliche Plattformen als sichere Landeflaechen
+- [x] **FR-024** Bewegliche Plattformen als sichere Landeflaechen
 - [ ] **FR-025** Foerderbaender, die das Maennchen verschieben
 - [x] **FR-026** Sprungfedern/Trampoline zum Abprallen
 - [ ] **FR-027** Magnetfelder, die das Maennchen ziehen oder abstossen
@@ -90,9 +90,9 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 - [x] **FR-045** Haptisches Feedback (Vibration) bei Furz und Treffer
 - [ ] **FR-046** Optionale Gamepad-Unterstuetzung
 - [ ] **FR-047** Tastatur-/Maus-Unterstuetzung fuer Desktop-Tests
-- [ ] **FR-048** Flugbahn-Vorschau (Trajektorie) beim Zielen
+- [x] **FR-048** Flugbahn-Vorschau (Trajektorie) beim Zielen
 - [ ] **FR-049** Anpassbare Visualisierung von Pfeil-Laenge und -Staerke
-- [ ] **FR-050** Doppel-Tipp fuer Schnell-Neustart
+- [x] **FR-050** Doppel-Tipp fuer Schnell-Neustart
 - [ ] **FR-051** Wisch-Geste zum Pausieren
 - [ ] **FR-052** Zielen mit Zeitlupe zur Feinjustierung
 - [ ] **FR-053** Auto-Aim-Unterstuetzung als Assist-Modus
@@ -134,7 +134,7 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 - [ ] **FR-083** Magnet-Power-up zieht Muenzen an
 - [x] **FR-084** Schild-Power-up ueberlebt einen Treffer
 - [x] **FR-085** Verlangsamungs-Power-up (Zeitlupe)
-- [ ] **FR-086** Zeitlich begrenztes Doppel-Muenzen-Power-up
+- [x] **FR-086** Zeitlich begrenztes Doppel-Muenzen-Power-up
 - [x] **FR-087** Extra-Furz-Ladung als Pickup
 - [ ] **FR-088** Versteckte Sterne als Sammelobjekt pro Level
 - [ ] **FR-089** Sammelkarten-/Sticker-System
@@ -251,7 +251,7 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 - [ ] **FR-185** Kamera-Grenzen (Bounds) pro Level
 - [ ] **FR-186** Zielfokus-Kamera beim Zielen
 - [ ] **FR-187** Kino-Modus fuer das Levelende
-- [ ] **FR-188** Parallax-Hintergrundebenen
+- [x] **FR-188** Parallax-Hintergrundebenen
 - [ ] **FR-189** Einstellbare Ruettel-Intensitaet
 - [ ] **FR-190** Mini-Karte/Uebersichtskarte
 - [ ] **FR-191** Heranzoomen bei Zeitlupe
@@ -271,14 +271,14 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 - [ ] **FR-202** Animierte Muenz-/Punkteanzeige
 - [x] **FR-203** Combo-Zaehler-Anzeige
 - [x] **FR-204** Geschwindigkeitsanzeige
-- [ ] **FR-205** Hoehen-/Distanzanzeige
+- [x] **FR-205** Hoehen-/Distanzanzeige
 - [ ] **FR-206** Power-up-Status-Icons mit Timer
 - [ ] **FR-207** Geist-Anzeige der Bestzeit
 - [ ] **FR-208** Nachfuell-Animation der Furz-Ladungen
-- [ ] **FR-209** Schaden-/Treffer-Vignette
+- [x] **FR-209** Schaden-/Treffer-Vignette
 - [ ] **FR-210** Tutorial-Hinweis-Overlays
 - [ ] **FR-211** Fortschrittsbalken zum Muenz-Ziel
-- [ ] **FR-212** Checkpoint-Benachrichtigung
+- [x] **FR-212** Checkpoint-Benachrichtigung
 - [ ] **FR-213** Sammel-Pop-ups (+10)
 - [ ] **FR-214** Aktuelle Sterne-Vorschau im HUD
 - [ ] **FR-215** Minimalistischer HUD-Modus
@@ -291,8 +291,8 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 ## Menues & Navigation
 
 - [ ] **FR-221** Welt-/Kapitelauswahl als Karte
-- [ ] **FR-222** Animierte Menue-Uebergaenge
-- [ ] **FR-223** Einstellungs-Untermenues
+- [x] **FR-222** Animierte Menue-Uebergaenge
+- [x] **FR-223** Einstellungs-Untermenues
 - [ ] **FR-224** Shop-Bildschirm
 - [ ] **FR-225** Sammlungs-/Galerie-Bildschirm
 - [ ] **FR-226** Statistik-Bildschirm
@@ -302,14 +302,14 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 - [ ] **FR-230** Splash-Screen/Logo-Intro
 - [ ] **FR-231** Animierter Hauptmenue-Hintergrund
 - [ ] **FR-232** Level-Detail-Popup (Sterne/Bestzeit)
-- [ ] **FR-233** Korrekte Android-Zurueck-Button-Behandlung
+- [x] **FR-233** Korrekte Android-Zurueck-Button-Behandlung
 - [ ] **FR-234** Tab-Navigation in Menues
 - [ ] **FR-235** Such-/Filterfunktion fuer Level
 - [ ] **FR-236** Favoriten-Level markieren
 - [ ] **FR-237** Fortschritts-Uebersicht (Gesamt-Prozent)
 - [ ] **FR-238** Schnellstart: letztes Level fortsetzen
 - [ ] **FR-239** Sound-Feedback in Menues
-- [ ] **FR-240** Onboarding-Begruessungsbildschirm
+- [x] **FR-240** Onboarding-Begruessungsbildschirm
 
 ## Audio & Musik
 
@@ -337,20 +337,20 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 ## Visuelle Effekte & Juice
 
 - [x] **FR-261** Partikel beim Muenz-Sammeln
-- [ ] **FR-262** Aufprall-Staub und Truemmer-Partikel
+- [x] **FR-262** Aufprall-Staub und Truemmer-Partikel
 - [ ] **FR-263** Explosions-Effekte
-- [ ] **FR-264** Geschwindigkeits-Linien bei hohem Tempo
+- [x] **FR-264** Geschwindigkeits-Linien bei hohem Tempo
 - [x] **FR-265** Bildschirm-Blitz bei Tod
-- [ ] **FR-266** Hit-Stop fuer mehr Wucht
+- [x] **FR-266** Hit-Stop fuer mehr Wucht
 - [ ] **FR-267** Verbesserte Furz-Wolke mit mehreren Layern
 - [x] **FR-268** Sieges-Konfetti am Levelende
 - [ ] **FR-269** Muenz-Magnet-Spur-Effekt
 - [ ] **FR-270** Slow-Mo-Visualfilter
-- [ ] **FR-271** Schweif hinter dem Maennchen
+- [x] **FR-271** Schweif hinter dem Maennchen
 - [ ] **FR-272** Wasser-Spritzer-Effekte
 - [ ] **FR-273** Lava-Gluehen/Hitzeflimmern
 - [ ] **FR-274** Sternen-Funkeln im Hintergrund
-- [ ] **FR-275** Floating-Text/Schadenszahlen
+- [x] **FR-275** Floating-Text/Schadenszahlen
 - [ ] **FR-276** Wischeffekte beim Szenenwechsel
 - [ ] **FR-277** Power-up-Aura um das Maennchen
 - [ ] **FR-278** Umgebungspartikel (Staub, Funken)
@@ -382,7 +382,7 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 
 ## Fortschritt & Meta-Progression
 
-- [ ] **FR-301** Globaler XP-/Spieler-Levelaufstieg
+- [x] **FR-301** Globaler XP-/Spieler-Levelaufstieg
 - [ ] **FR-302** Sterne-Gesamtzahl als Freischalt-Waehrung
 - [ ] **FR-303** Welt-Freischaltung ueber Sterne-Schwellen
 - [ ] **FR-304** Skill-Baum fuer Maennchen-Faehigkeiten

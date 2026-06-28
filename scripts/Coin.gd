@@ -48,6 +48,9 @@ func _collect() -> void:
 	if _audio.stream != null:
 		_audio.play()
 
+	# FR-275: Schwebenden Punktetext anzeigen
+	var effective := coin_value * (2 if GameManager.double_coins_active else 1)
+	FloatingText.spawn(get_parent(), global_position, "+%d" % effective)
 	# FR-261: Goldener Partikel-Burst beim Einsammeln
 	_spawn_collect_particles()
 

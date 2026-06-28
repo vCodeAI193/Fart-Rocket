@@ -78,7 +78,10 @@ var _cooldown_remaining: float = 0.0         # verbleibende Abklingzeit (FR-008)
 var _aim_arrow: Line2D
 
 
-var _trail: Line2D = null  # FR-168: Flug-Spur
+var _trail: Line2D = null              # FR-168: Flug-Spur
+var _speed_lines: Array[Line2D] = []   # FR-264: Geschwindigkeitslinien
+var _traj_dots: Array[Node2D] = []     # FR-048: Flugbahn-Vorschau
+var _last_tap_time: float = -1.0       # FR-050: Doppel-Tipp-Erkennung
 
 
 func _ready() -> void:
@@ -89,7 +92,7 @@ func _ready() -> void:
 	body_entered.connect(_on_body_entered)
 	_build_stick_figure()
 	_build_aim_arrow()
-	# Trail nach dem nächsten Frame aufbauen, damit get_parent() bereit ist
+	# Trail und Speed-Lines nach dem nächsten Frame aufbauen
 	call_deferred("_build_trail")
 
 
@@ -121,6 +124,8 @@ func _process(delta: float) -> void:
 
 	# FR-168: Flug-Spur aktualisieren
 	_update_trail()
+	# FR-264: Geschwindigkeitslinien aktualisieren
+	_update_speed_lines()
 
 
 ## FR-001: Regenerations-Logik (aus _process ausgelagert).
@@ -159,6 +164,12 @@ func _unhandled_input(event: InputEvent) -> void:
 	# Finger berührt den Bildschirm -> Zielen beginnen
 	if event is InputEventScreenTouch:
 		if event.pressed and _touch_index == -1:
+			# FR-050: Doppel-Tipp erkennen (innerhalb 0.3 Sekunden)
+			var now := Time.get_ticks_msec() / 1000.0
+			if now - _last_tap_time < 0.3:
+				died.emit()  # Schnell-Neustart: Tod-Signal senden, Main lädt Level neu
+				return
+			_last_tap_time = now
 			_touch_index = event.index
 			_is_aiming = true
 			_aim_start = event.position
@@ -169,6 +180,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			# Finger losgelassen -> Furz-Stoß auslösen
 			_release_fart()
 			_touch_index = -1
+			_clear_traj_dots()
 
 	# Finger zieht über den Bildschirm -> Zielrichtung aktualisieren
 	elif event is InputEventScreenDrag and event.index == _touch_index:
@@ -187,12 +199,15 @@ func _update_aim_visual() -> void:
 	_aim_arrow.default_color = Color(1.0, 0.85, 0.2, 0.9).lerp(Color(1.0, 0.3, 0.2, 1.0), charge)
 	_aim_arrow.width = 8.0 + charge * 8.0
 	aim_changed.emit(dir, strength)
+	# FR-048: Flugbahn-Vorschau zeichnen
+	_update_traj_preview(dir, strength, charge)
 
 
 ## Löst den Furz-Stoß aus: je nach Furz-Typ Impuls(e) + Partikel + Sound.
 func _release_fart() -> void:
 	_is_aiming = false
 	_aim_arrow.visible = false
+	_clear_traj_dots()
 	aim_released.emit()
 
 	var drag := _aim_current - _aim_start
@@ -321,6 +336,12 @@ func _die() -> void:
 	_is_dead = true
 	_aim_arrow.visible = false
 	GameManager.vibrate(120)  # FR-045: kräftige Vibration beim Tod
+	# FR-266: Hit-Stop – kurzes Einfrieren beim Aufprall
+	Engine.time_scale = 0.0
+	await get_tree().create_timer(0.08, false, false, true).timeout
+	Engine.time_scale = 1.0
+	# FR-262: Crash-Partikel-Explosion
+	_spawn_crash_particles()
 	# Wild durch die Luft wirbeln (lustiger Effekt)
 	gravity_scale = 0.3
 	angular_velocity = 12.0
@@ -330,6 +351,29 @@ func _die() -> void:
 	# Kurze Verzögerung, damit man die Animation sieht
 	await get_tree().create_timer(0.9).timeout
 	died.emit()
+
+
+## FR-262: Partikel-Explosion beim Aufprall.
+func _spawn_crash_particles() -> void:
+	var p := CPUParticles2D.new()
+	get_parent().add_child(p)
+	p.global_position = global_position
+	p.emitting = true
+	p.one_shot = true
+	p.explosiveness = 1.0
+	p.amount = 30
+	p.lifetime = 0.9
+	p.initial_velocity_min = 120.0
+	p.initial_velocity_max = 340.0
+	p.gravity = Vector2(0, 500)
+	p.scale_amount_min = 4.0
+	p.scale_amount_max = 9.0
+	p.color = Color(1.0, 0.5, 0.15)
+	get_tree().create_timer(1.1).timeout.connect(
+		func() -> void:
+			if is_instance_valid(p):
+				p.queue_free()
+	)
 
 
 # ----------------------------------------------------------------
@@ -390,6 +434,72 @@ func _build_aim_arrow() -> void:
 	_aim_arrow.default_color = Color(1.0, 0.85, 0.2, 0.9)  # gelber Pfeil
 	_aim_arrow.visible = false
 	add_child(_aim_arrow)
+
+
+## FR-048: Simuliert die Flugbahn und zeichnet Vorschau-Punkte.
+func _update_traj_preview(dir: Vector2, strength: float, charge: float) -> void:
+	var fart: Dictionary = FART_TYPES[_fart_type_index]
+	var impulse := fart_power * strength * fart["power"] * (1.0 + charge * charge_hold_bonus)
+	var grav := Vector2(0, ProjectSettings.get_setting("physics/2d/default_gravity", 980.0))
+	grav *= gravity_scale
+	var sim_vel := linear_velocity + dir * impulse / mass
+	var sim_pos := global_position
+	var dt := 0.06
+	const DOTS := 10
+	# Genug Dots vorbereiten
+	while _traj_dots.size() < DOTS:
+		var dot := ColorRect.new()
+		dot.custom_minimum_size = Vector2(10, 10)
+		dot.color = Color(1.0, 0.9, 0.3, 0.6)
+		dot.position = Vector2(-5, -5)
+		get_parent().add_child(dot)
+		_traj_dots.append(dot)
+	for i in range(DOTS):
+		sim_vel += grav * dt
+		sim_pos += sim_vel * dt
+		_traj_dots[i].global_position = sim_pos - Vector2(5, 5)
+		var alpha := lerpf(0.6, 0.1, float(i) / float(DOTS))
+		_traj_dots[i].modulate.a = alpha
+		_traj_dots[i].visible = true
+
+
+func _clear_traj_dots() -> void:
+	for dot in _traj_dots:
+		if is_instance_valid(dot):
+			dot.visible = false
+
+
+## FR-264: Aufbau der radialen Geschwindigkeitslinien (8 Linien um den Spieler).
+func _build_speed_lines() -> void:
+	for i in range(8):
+		var line := Line2D.new()
+		line.width = 2.5
+		line.default_color = Color(0.8, 1.0, 0.6, 0.0)
+		line.z_index = -2
+		add_child(line)
+		_speed_lines.append(line)
+
+
+## FR-264: Geschwindigkeitslinien in Flugrichtung zeichnen.
+func _update_speed_lines() -> void:
+	if _speed_lines.is_empty():
+		_build_speed_lines()
+	var speed := linear_velocity.length()
+	var show := speed > 600.0 and not _is_dead
+	var dir := linear_velocity.normalized() if speed > 0.0 else Vector2.RIGHT
+	for i in range(_speed_lines.size()):
+		var line := _speed_lines[i]
+		if not show:
+			line.default_color.a = 0.0
+			continue
+		var angle := TAU * float(i) / float(_speed_lines.size())
+		var spread := dir.rotated(angle) * 30.0
+		var tail := -dir.rotated(angle * 0.1) * lerpf(20.0, 60.0, (speed - 600.0) / 800.0)
+		line.clear_points()
+		line.add_point(spread)
+		line.add_point(spread + tail)
+		var alpha := clampf((speed - 600.0) / 600.0, 0.0, 0.55)
+		line.default_color = Color(0.75, 1.0, 0.55, alpha)
 
 
 ## FR-135: Wiederbelebt den Spieler an einer Checkpoint-Position.

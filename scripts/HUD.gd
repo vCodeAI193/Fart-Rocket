@@ -26,6 +26,13 @@ var _elapsed: float = 0.0
 var _timer_running: bool = false
 var _is_paused: bool = false                               # FR-201
 
+# FR-205: Höhenanzeige
+var _height_label: Label
+# FR-209: Treffer-Vignette
+var _vignette: ColorRect
+# FR-212: Checkpoint-Benachrichtigung
+var _checkpoint_label: Label
+
 
 func _ready() -> void:
 	# HUD bleibt auch im Pause-Modus aktiv
@@ -37,6 +44,47 @@ func _ready() -> void:
 	GameManager.combo_changed.connect(_on_combo_changed)   # FR-003
 	_pause_btn.pressed.connect(_on_pause_pressed)          # FR-201
 	_on_coins_changed(GameManager.total_coins)
+	_build_height_label()
+	_build_vignette()
+	_build_checkpoint_label()
+
+
+## FR-205: Höhenanzeige aufbauen (links oben, unterhalb der Ladungen).
+func _build_height_label() -> void:
+	_height_label = Label.new()
+	_height_label.add_theme_font_size_override("font_size", 30)
+	_height_label.add_theme_color_override("font_color", Color(0.8, 0.9, 1.0))
+	_height_label.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
+	_height_label.offset_left = 20.0
+	_height_label.offset_bottom = -20.0
+	_height_label.offset_top = -60.0
+	_height_label.offset_right = 300.0
+	add_child(_height_label)
+
+
+## FR-209: Rote Vignette beim Treffer.
+func _build_vignette() -> void:
+	_vignette = ColorRect.new()
+	_vignette.color = Color(1.0, 0.1, 0.1, 0.0)
+	_vignette.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_vignette.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_vignette)
+
+
+## FR-212: Checkpoint-Meldung (kurz sichtbar, dann ausblenden).
+func _build_checkpoint_label() -> void:
+	_checkpoint_label = Label.new()
+	_checkpoint_label.text = "CHECKPOINT!"
+	_checkpoint_label.add_theme_font_size_override("font_size", 54)
+	_checkpoint_label.add_theme_color_override("font_color", Color(0.3, 1.0, 0.4))
+	_checkpoint_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_checkpoint_label.set_anchors_preset(Control.PRESET_CENTER_TOP)
+	_checkpoint_label.offset_top = 120.0
+	_checkpoint_label.offset_bottom = 190.0
+	_checkpoint_label.offset_left = -300.0
+	_checkpoint_label.offset_right = 300.0
+	_checkpoint_label.modulate.a = 0.0
+	add_child(_checkpoint_label)
 
 
 func _process(delta: float) -> void:
@@ -109,6 +157,35 @@ func _on_fart_type_button(index: int) -> void:
 func set_speed(speed_px: float) -> void:
 	# Pixel/s in lesbare "m/s" umrechnen (100 px = 1 m)
 	_speed_label.text = "%d m/s" % int(speed_px / 100.0)
+
+
+## FR-205: Aktualisiert die Höhenanzeige (Y-Position des Spielers in Weltkoordinaten).
+func set_player_height(world_y: float) -> void:
+	# Höhe wächst nach oben (negatives Y in Godot)
+	var meters := int(-world_y / 100.0)
+	_height_label.text = "%d m" % meters
+
+
+## FR-209: Kurze rote Vignette beim Treffer anzeigen.
+func flash_damage() -> void:
+	var tween := create_tween()
+	tween.tween_property(_vignette, "color:a", 0.55, 0.05)
+	tween.tween_property(_vignette, "color:a", 0.0, 0.35)
+
+
+## FR-212: Checkpoint-Meldung kurz einblenden.
+func show_checkpoint_msg() -> void:
+	var tween := create_tween()
+	tween.tween_property(_checkpoint_label, "modulate:a", 1.0, 0.15)
+	tween.tween_interval(0.9)
+	tween.tween_property(_checkpoint_label, "modulate:a", 0.0, 0.4)
+
+
+## FR-233: Android Zurück-Taste pausiert das Spiel im Level.
+func _input(event: InputEvent) -> void:
+	if event.is_action_pressed("ui_cancel"):
+		_on_pause_pressed()
+		get_viewport().set_input_as_handled()
 
 
 ## FR-201: Pausiert oder setzt das Spiel fort.

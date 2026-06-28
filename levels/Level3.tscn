@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3]
+[gd_scene load_steps=13 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/Player.tscn" id="1_player"]
 [ext_resource type="PackedScene" path="res://scenes/Obstacle.tscn" id="2_obs"]
@@ -10,6 +10,9 @@
 [ext_resource type="PackedScene" path="res://scenes/BouncePad.tscn" id="8_bp"]
 [ext_resource type="PackedScene" path="res://scenes/Checkpoint.tscn" id="9_chk"]
 [ext_resource type="PackedScene" path="res://scenes/SlowMoPower.tscn" id="10_smp"]
+[ext_resource type="PackedScene" path="res://scenes/BoostRing.tscn" id="11_br"]
+[ext_resource type="PackedScene" path="res://scenes/MovingPlatform.tscn" id="12_mpl"]
+[ext_resource type="PackedScene" path="res://scenes/ReverseGravityZone.tscn" id="13_rgz"]
 
 [node name="Level3" type="Node2D"]
 
@@ -92,6 +95,17 @@ position = Vector2(1800, 700)
 
 [node name="SlowMo1" parent="." instance=ExtResource("10_smp")]
 position = Vector2(2300, 560)
+
+[node name="BoostRing1" parent="." instance=ExtResource("11_br")]
+position = Vector2(1100, 500)
+
+[node name="MovingPlatform1" parent="." instance=ExtResource("12_mpl")]
+position = Vector2(600, 820)
+move_offset = Vector2(0, -200)
+move_duration = 1.8
+
+[node name="ReverseGravityZone1" parent="." instance=ExtResource("13_rgz")]
+position = Vector2(2250, 600)
 
 [node name="LevelEnd" parent="." instance=ExtResource("4_end")]
 position = Vector2(3450, 600)

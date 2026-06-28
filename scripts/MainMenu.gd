@@ -6,9 +6,29 @@ extends Control
 
 @onready var _level_buttons: HBoxContainer = $LevelButtons
 
+var _settings_screen: SettingsScreen
+var _onboarding: OnboardingScreen
+
 
 func _ready() -> void:
+	# FR-222: Einstellungs-Overlay erstellen
+	_settings_screen = preload("res://scenes/SettingsScreen.tscn").instantiate()
+	add_child(_settings_screen)
+	# FR-240: Onboarding beim ersten Start
+	_onboarding = preload("res://scenes/OnboardingScreen.tscn").instantiate()
+	add_child(_onboarding)
+	_onboarding.show_if_needed()
 	_build_level_buttons()
+	_build_settings_button()
+
+
+## FR-233: Android-Zurück-Taste schließt Einstellungen oder beendet das Spiel.
+func _input(event: InputEvent) -> void:
+	if event.is_action_pressed("ui_cancel"):
+		if _settings_screen.visible:
+			_settings_screen.visible = false
+		else:
+			get_tree().quit()
 
 
 ## Erzeugt für jedes Level einen Button samt Stern-Anzeige.
@@ -36,6 +56,25 @@ func _build_level_buttons() -> void:
 		box.add_child(stars_label)
 
 		_level_buttons.add_child(box)
+
+
+## FR-222: Einstellungs-Button oben rechts hinzufügen.
+func _build_settings_button() -> void:
+	var btn := Button.new()
+	btn.text = "Einstellungen"
+	btn.custom_minimum_size = Vector2(260, 72)
+	btn.add_theme_font_size_override("font_size", 34)
+	btn.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	btn.offset_left = -280.0
+	btn.offset_top = 20.0
+	btn.offset_right = -20.0
+	btn.offset_bottom = 92.0
+	btn.pressed.connect(_on_settings_pressed)
+	add_child(btn)
+
+
+func _on_settings_pressed() -> void:
+	_settings_screen.show_settings()
 
 
 ## Startet das gewählte Level: Auswahl merken und zur Main-Szene wechseln.

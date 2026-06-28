@@ -14,6 +14,8 @@ signal score_changed(total_score)        # Punktestand hat sich geändert
 signal charges_changed(remaining)        # Furz-Ladungen haben sich geändert
 signal charge_regen_progress(fraction)   # Fortschritt der nachladenden Ladung (0..1)
 signal combo_changed(count, multiplier)  # Combo-Zähler/Multiplikator geändert (FR-003)
+signal xp_changed(total_xp, player_level)  # FR-301: XP/Level geändert
+signal double_coins_changed(active)        # FR-086: Doppel-Münzen-Status
 
 # --- Konstanten -------------------------------------------------
 const TOTAL_LEVELS := 3
@@ -44,6 +46,17 @@ var level_stars := {1: 0, 2: 0, 3: 0}
 var combo_count: int = 0
 var _combo_elapsed: float = 0.0
 
+# --- FR-086: Doppel-Münzen-Status -------------------------------
+var double_coins_active: bool = false
+var _double_coins_remaining: float = 0.0
+
+# --- FR-301: XP / Spieler-Level ---------------------------------
+var total_xp: int = 0
+var player_level: int = 1
+const XP_PER_COIN := 5
+const XP_PER_STAR := 20
+const XP_PER_LEVEL := 100
+
 # --- Einstellungen (FR-045 Haptik, FR-249 Stummschaltung) -------
 var haptics_enabled: bool = true
 var sound_muted: bool = false
@@ -63,6 +76,12 @@ func _process(delta: float) -> void:
 		if _combo_elapsed >= COMBO_WINDOW:
 			combo_count = 0
 			combo_changed.emit(0, 1)
+	# FR-086: Doppel-Münzen-Timer herunterzählen
+	if _double_coins_remaining > 0.0:
+		_double_coins_remaining = maxf(0.0, _double_coins_remaining - delta)
+		if _double_coins_remaining == 0.0:
+			double_coins_active = false
+			double_coins_changed.emit(false)
 
 
 ## Setzt die Zähler für ein neu gestartetes Level zurück.
@@ -93,10 +112,14 @@ func add_coin(value: int) -> void:
 	var multiplier := clampi(combo_count, 1, COMBO_MAX_MULTIPLIER)
 
 	total_coins += 1
-	total_score += value * multiplier
+	# FR-086: Doppel-Münzen verdoppeln den Punktewert
+	var effective_value := value * (2 if double_coins_active else 1)
+	total_score += effective_value * multiplier
 	coins_changed.emit(total_coins)
 	score_changed.emit(total_score)
 	combo_changed.emit(combo_count, multiplier)
+	# FR-301: XP für gesammelte Münze
+	add_xp(XP_PER_COIN)
 
 
 ## Eine Furz-Ladung wurde verbraucht. Gibt true zurück,
@@ -171,12 +194,30 @@ func calculate_stars(max_charges: int) -> int:
 		return 1
 
 
+## FR-086: Doppel-Münzen-Modus für `duration` Sekunden aktivieren.
+func activate_double_coins(duration: float) -> void:
+	double_coins_active = true
+	_double_coins_remaining = duration
+	double_coins_changed.emit(true)
+
+
+## FR-301: XP hinzufügen und ggf. Level hochzählen.
+func add_xp(amount: int) -> void:
+	total_xp += amount
+	var new_level := 1 + total_xp / XP_PER_LEVEL
+	if new_level != player_level:
+		player_level = new_level
+	xp_changed.emit(total_xp, player_level)
+
+
 ## Speichert die beste Stern-Bewertung für ein Level.
 func record_stars(level_index: int, stars: int) -> void:
 	if not level_stars.has(level_index):
 		level_stars[level_index] = 0
 	if stars > level_stars[level_index]:
 		level_stars[level_index] = stars
+		# FR-301: XP für Sterne vergeben
+		add_xp(stars * XP_PER_STAR)
 		_save_progress()
 
 
