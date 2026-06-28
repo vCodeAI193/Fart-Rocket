@@ -19,11 +19,19 @@ class_name Player
 @export var charge_regen_enabled: bool = false  # Ladungen mit der Zeit nachfüllen?
 @export var charge_regen_time: float = 5.0      # Sekunden bis eine Ladung nachlädt
 
+# --- FR-008: Mindestabstand zwischen zwei Furz-Stößen -----------
+@export var fart_cooldown: float = 0.2          # Sekunden Abklingzeit
+
+# --- FR-005: Aufgeladener Furz (länger halten = stärker) --------
+@export var charge_hold_time: float = 0.8       # Zeit bis zur vollen Aufladung
+@export var charge_hold_bonus: float = 0.6      # max. zusätzlicher Schub-Anteil
+
 # --- Signale ----------------------------------------------------
 signal died                                  # Männchen hat ein Hindernis getroffen
 signal aim_changed(direction, strength)      # Zielrichtung/-stärke geändert
 signal aim_released                          # Zielen beendet (Pfeil ausblenden)
 signal fart_type_changed(index)              # aktiver Furz-Typ gewechselt (FR-002)
+signal fart_fired(impulse)                   # FR-265: Furz ausgelöst (für Kamera-Wackeln)
 
 # --- FR-002: Verfügbare Furz-Typen ------------------------------
 # power : Multiplikator auf fart_power
@@ -49,6 +57,8 @@ var _touch_index: int = -1                   # verfolgter Finger (Multitouch-sic
 var _is_dead: bool = false                   # Tod/Restart läuft bereits
 var _regen_accum: float = 0.0                # aufgelaufene Zeit für die Regeneration
 var _fart_type_index: int = 1                # aktiver Furz-Typ (Standard: Normal)
+var _aim_hold: float = 0.0                   # wie lange schon gezielt wird (FR-005)
+var _cooldown_remaining: float = 0.0         # verbleibende Abklingzeit (FR-008)
 
 # Referenzen auf untergeordnete Knoten
 var _aim_arrow: Line2D
@@ -66,10 +76,29 @@ func _ready() -> void:
 
 
 # ----------------------------------------------------------------
-# FR-001: Furz-Ladungen über Zeit regenerieren (optional)
+# Pro-Frame-Logik: Cooldown (FR-008), Aufladung (FR-005),
+# Regeneration (FR-001)
 # ----------------------------------------------------------------
 func _process(delta: float) -> void:
-	if _is_dead or not charge_regen_enabled or charge_regen_time <= 0.0:
+	if _is_dead:
+		return
+
+	# FR-008: Abklingzeit herunterzählen
+	if _cooldown_remaining > 0.0:
+		_cooldown_remaining = maxf(0.0, _cooldown_remaining - delta)
+
+	# FR-005: Solange gezielt wird, lädt der Furz auf
+	if _is_aiming:
+		_aim_hold += delta
+		_update_aim_visual()
+
+	# FR-001: Ladungen über Zeit regenerieren
+	_process_regen(delta)
+
+
+## FR-001: Regenerations-Logik (aus _process ausgelagert).
+func _process_regen(delta: float) -> void:
+	if not charge_regen_enabled or charge_regen_time <= 0.0:
 		return
 	# Nur nachladen, wenn noch Platz ist
 	if GameManager.charges_remaining >= GameManager.max_charges:
@@ -86,6 +115,13 @@ func _process(delta: float) -> void:
 		GameManager.set_regen_progress(0.0)
 
 
+## FR-005: Aktueller Aufladegrad (0..1) anhand der Haltedauer.
+func _hold_factor() -> float:
+	if charge_hold_time <= 0.0:
+		return 0.0
+	return clampf(_aim_hold / charge_hold_time, 0.0, 1.0)
+
+
 # ----------------------------------------------------------------
 # Touch-Eingabe: Zielen & Furzen
 # ----------------------------------------------------------------
@@ -100,6 +136,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			_is_aiming = true
 			_aim_start = event.position
 			_aim_current = event.position
+			_aim_hold = 0.0  # FR-005: Aufladung neu beginnen
 			_update_aim_visual()
 		elif not event.pressed and event.index == _touch_index:
 			# Finger losgelassen -> Furz-Stoß auslösen
@@ -118,6 +155,10 @@ func _update_aim_visual() -> void:
 	var strength := clampf(drag.length() / max_drag_distance, 0.0, 1.0)
 	var dir := drag.normalized()
 	_draw_aim_arrow(dir, strength)
+	# FR-005: Pfeil färbt sich mit zunehmender Aufladung von Gelb nach Rot
+	var charge := _hold_factor()
+	_aim_arrow.default_color = Color(1.0, 0.85, 0.2, 0.9).lerp(Color(1.0, 0.3, 0.2, 1.0), charge)
+	_aim_arrow.width = 8.0 + charge * 8.0
 	aim_changed.emit(dir, strength)
 
 
@@ -132,17 +173,27 @@ func _release_fart() -> void:
 	if drag.length() < 20.0:
 		return
 
+	# FR-008: Noch in der Abklingzeit? Dann kein Stoß.
+	if _cooldown_remaining > 0.0:
+		return
+
 	var fart: Dictionary = FART_TYPES[_fart_type_index]
 
 	# Genug Ladungen für diesen Furz-Typ vorhanden?
 	if not GameManager.use_charges(fart["cost"]):
 		return
 
+	# FR-005: Haltedauer erhöht den Schub zusätzlich
+	var charge_mult := 1.0 + _hold_factor() * charge_hold_bonus
 	var strength := clampf(drag.length() / max_drag_distance, 0.0, 1.0)
 	var dir := drag.normalized()
-	var impulse: float = fart_power * strength * fart["power"]
+	var impulse: float = fart_power * strength * fart["power"] * charge_mult
 	var bursts: int = fart["bursts"]
 	var tint: Color = fart["color"]
+
+	# FR-008: Abklingzeit starten, FR-045: kurze Vibration
+	_cooldown_remaining = fart_cooldown
+	GameManager.vibrate(40)
 
 	# Ersten Stoß sofort auslösen
 	_do_thrust(dir, impulse, tint)
@@ -160,10 +211,8 @@ func _release_fart() -> void:
 
 ## Wendet einen einzelnen Schub an und erzeugt die passende Furz-Wolke.
 func _do_thrust(dir: Vector2, impulse: float, tint: Color) -> void:
-	# Das Männchen fliegt in Zugrichtung (wie eine Rakete)
 	apply_central_impulse(dir * impulse)
-	# Furz-Wolke hinter dem Männchen erzeugen (entgegengesetzte Richtung).
-	# Die FartBurst-Szene spielt dabei selbst den Furz-Sound ab.
+	fart_fired.emit(impulse)  # FR-265: Kamera-Wackeln signalisieren
 	_spawn_fart_burst(-dir, tint)
 
 
@@ -227,6 +276,7 @@ func _on_body_entered(body: Node) -> void:
 func _die() -> void:
 	_is_dead = true
 	_aim_arrow.visible = false
+	GameManager.vibrate(120)  # FR-045: kräftige Vibration beim Tod
 	# Wild durch die Luft wirbeln (lustiger Effekt)
 	gravity_scale = 0.3
 	angular_velocity = 12.0

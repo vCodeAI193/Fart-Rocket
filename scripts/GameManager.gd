@@ -13,9 +13,15 @@ signal coins_changed(total_coins)        # Münzanzahl hat sich geändert
 signal score_changed(total_score)        # Punktestand hat sich geändert
 signal charges_changed(remaining)        # Furz-Ladungen haben sich geändert
 signal charge_regen_progress(fraction)   # Fortschritt der nachladenden Ladung (0..1)
+signal combo_changed(count, multiplier)  # Combo-Zähler/Multiplikator geändert (FR-003)
 
 # --- Konstanten -------------------------------------------------
 const TOTAL_LEVELS := 3
+
+# FR-003: Zeitfenster (Sekunden), in dem Folge-Münzen die Combo erhöhen
+const COMBO_WINDOW := 2.0
+# FR-003: höchster Combo-Multiplikator
+const COMBO_MAX_MULTIPLIER := 5
 
 # Pfade zu den Level-Szenen (Index 0 = Level 1)
 const LEVEL_SCENES := [
@@ -34,10 +40,29 @@ var max_charges: int = 0                 # maximale Furz-Ladungen im aktuellen L
 # Bestwertung (Sterne 0..3) je Level, persistent während der Sitzung
 var level_stars := {1: 0, 2: 0, 3: 0}
 
+# --- FR-003: Combo-Zustand --------------------------------------
+var combo_count: int = 0
+var _combo_elapsed: float = 0.0
+
+# --- Einstellungen (FR-045 Haptik, FR-249 Stummschaltung) -------
+var haptics_enabled: bool = true
+var sound_muted: bool = false
+
 
 func _ready() -> void:
 	# Beim Start einmal den gespeicherten Fortschritt laden (falls vorhanden)
 	_load_progress()
+	# Gespeicherte Audio-Einstellung anwenden
+	_apply_mute()
+
+
+func _process(delta: float) -> void:
+	# FR-003: Combo läuft nach dem Zeitfenster ab
+	if combo_count > 0:
+		_combo_elapsed += delta
+		if _combo_elapsed >= COMBO_WINDOW:
+			combo_count = 0
+			combo_changed.emit(0, 1)
 
 
 ## Setzt die Zähler für ein neu gestartetes Level zurück.
@@ -47,19 +72,31 @@ func start_level(level_index: int, max_charges: int) -> void:
 	total_score = 0
 	self.max_charges = max_charges
 	charges_remaining = max_charges
+	combo_count = 0
+	_combo_elapsed = 0.0
 	# UI informieren
 	coins_changed.emit(total_coins)
 	score_changed.emit(total_score)
 	charges_changed.emit(charges_remaining)
 	charge_regen_progress.emit(0.0)
+	combo_changed.emit(0, 1)
 
 
-## Eine Münze wurde eingesammelt.
+## Eine Münze wurde eingesammelt (mit Combo-Multiplikator, FR-003).
 func add_coin(value: int) -> void:
+	# Combo erhöhen, wenn die letzte Münze im Zeitfenster lag
+	if _combo_elapsed <= COMBO_WINDOW:
+		combo_count += 1
+	else:
+		combo_count = 1
+	_combo_elapsed = 0.0
+	var multiplier := clampi(combo_count, 1, COMBO_MAX_MULTIPLIER)
+
 	total_coins += 1
-	total_score += value
+	total_score += value * multiplier
 	coins_changed.emit(total_coins)
 	score_changed.emit(total_score)
+	combo_changed.emit(combo_count, multiplier)
 
 
 ## Eine Furz-Ladung wurde verbraucht. Gibt true zurück,
@@ -93,6 +130,32 @@ func add_charge() -> bool:
 ## Meldet den Fortschritt der gerade nachladenden Ladung (0..1) an die UI.
 func set_regen_progress(fraction: float) -> void:
 	charge_regen_progress.emit(clampf(fraction, 0.0, 1.0))
+
+
+# --- FR-045: Haptisches Feedback --------------------------------
+## Löst eine kurze Vibration aus (sofern aktiviert und unterstützt).
+func vibrate(duration_ms: int = 30) -> void:
+	if haptics_enabled:
+		Input.vibrate_handheld(duration_ms)
+
+
+func set_haptics(enabled: bool) -> void:
+	haptics_enabled = enabled
+
+
+# --- FR-249: Stummschaltung -------------------------------------
+func set_muted(muted: bool) -> void:
+	sound_muted = muted
+	_apply_mute()
+
+
+func toggle_muted() -> void:
+	set_muted(not sound_muted)
+
+
+func _apply_mute() -> void:
+	# Master-Bus stummschalten (Index 0)
+	AudioServer.set_bus_mute(0, sound_muted)
 
 
 ## Berechnet die Stern-Bewertung (1..3) anhand der übrigen Ladungen.

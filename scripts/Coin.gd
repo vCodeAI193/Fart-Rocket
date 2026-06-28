@@ -44,8 +44,12 @@ func _collect() -> void:
 	_collected = true
 	GameManager.add_coin(coin_value)
 	collected.emit(coin_value)
+	GameManager.vibrate(20)
 	if _audio.stream != null:
 		_audio.play()
+
+	# FR-261: Goldener Partikel-Burst beim Einsammeln
+	_spawn_collect_particles()
 
 	# Kleine Einsammel-Animation: nach oben schweben und ausblenden
 	var tween := create_tween()
@@ -55,6 +59,31 @@ func _collect() -> void:
 	tween.tween_property(_visual, "modulate:a", 0.0, 0.4)
 	await tween.finished
 	queue_free()
+
+
+## FR-261: Goldener Partikel-Burst, der beim Einsammeln entsteht.
+func _spawn_collect_particles() -> void:
+	var p := CPUParticles2D.new()
+	get_parent().add_child(p)
+	p.global_position = global_position
+	p.emitting = true
+	p.one_shot = true
+	p.explosiveness = 0.95
+	p.amount = 20
+	p.lifetime = 0.7
+	p.initial_velocity_min = 90.0
+	p.initial_velocity_max = 200.0
+	p.gravity = Vector2(0, 300)
+	p.scale_amount_min = 3.0
+	p.scale_amount_max = 7.0
+	p.color = Color(1.0, 0.85, 0.15)
+	# Partikel nach Lebensdauer entfernen (fire-and-forget)
+	var lifetime := p.lifetime
+	get_tree().create_timer(lifetime + 0.1).timeout.connect(
+		func() -> void:
+			if is_instance_valid(p):
+				p.queue_free()
+	)
 
 
 # --- Münzgrafik (gelber Kreis mit Rand) -------------------------

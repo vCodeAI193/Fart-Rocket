@@ -74,6 +74,7 @@ func _load_current_level() -> void:
 
 	# Signale verbinden
 	_player.died.connect(_on_player_died)
+	_player.fart_fired.connect(_on_fart_fired)  # FR-265
 	if _level_end != null:
 		_level_end.reached.connect(_on_level_reached)
 
@@ -82,9 +83,26 @@ func _load_current_level() -> void:
 	_camera.make_current()
 
 
+# --- FR-265: Kamera-Wackeln ------------------------------------
+func _camera_shake(strength: float, duration: float) -> void:
+	var tween := create_tween()
+	var steps := maxi(2, int(duration / 0.04))
+	for i in range(steps):
+		var offset := Vector2(
+			randf_range(-1.0, 1.0) * strength * 80.0,
+			randf_range(-1.0, 1.0) * strength * 80.0
+		)
+		tween.tween_property(_camera, "offset", offset, 0.04)
+	tween.tween_property(_camera, "offset", Vector2.ZERO, 0.06)
+
+
+func _on_fart_fired(impulse: float) -> void:
+	_camera_shake(clampf(impulse / 2000.0, 0.04, 0.18), 0.14)
+
+
 # --- Spielereignisse --------------------------------------------
 func _on_player_died() -> void:
-	# Männchen hat ein Hindernis getroffen -> Level neu starten
+	_camera_shake(0.3, 0.35)
 	get_tree().reload_current_scene()
 
 

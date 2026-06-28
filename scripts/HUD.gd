@@ -14,6 +14,8 @@ signal fart_type_selected(index)             # Spieler hat einen Furz-Typ gewäh
 @onready var _coin_label: Label = $Root/CoinBox/CoinLabel
 @onready var _timer_label: Label = $Root/TimerLabel
 @onready var _fart_types_box: HBoxContainer = $Root/FartTypesBox
+@onready var _pause_btn: Button = $Root/PauseButton       # FR-201
+@onready var _combo_label: Label = $Root/ComboLabel       # FR-003
 
 var _max_charges: int = 0
 var _charge_icons: Array[ColorRect] = []
@@ -21,13 +23,18 @@ var _fart_type_buttons: Array[Button] = []
 
 var _elapsed: float = 0.0
 var _timer_running: bool = false
+var _is_paused: bool = false                               # FR-201
 
 
 func _ready() -> void:
+	# HUD bleibt auch im Pause-Modus aktiv
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	# Auf globale Zustandsänderungen lauschen
 	GameManager.coins_changed.connect(_on_coins_changed)
 	GameManager.charges_changed.connect(_on_charges_changed)
 	GameManager.charge_regen_progress.connect(_on_regen_progress)
+	GameManager.combo_changed.connect(_on_combo_changed)   # FR-003
+	_pause_btn.pressed.connect(_on_pause_pressed)          # FR-201
 	_on_coins_changed(GameManager.total_coins)
 
 
@@ -95,6 +102,25 @@ func highlight_fart_type(index: int) -> void:
 
 func _on_fart_type_button(index: int) -> void:
 	fart_type_selected.emit(index)
+
+
+## FR-201: Pausiert oder setzt das Spiel fort.
+func _on_pause_pressed() -> void:
+	_is_paused = not _is_paused
+	get_tree().paused = _is_paused
+	_pause_btn.text = "▶" if _is_paused else "⏸"
+
+
+## FR-003: Zeigt Combo-Multiplikator kurz in der Bildschirmmitte an.
+func _on_combo_changed(count: int, multiplier: int) -> void:
+	if count < 2:
+		_combo_label.modulate.a = 0.0
+		return
+	_combo_label.text = "COMBO x%d!\n%dx PUNKTE" % [count, multiplier]
+	var tween := create_tween()
+	tween.tween_property(_combo_label, "modulate:a", 1.0, 0.1)
+	tween.tween_interval(0.55)
+	tween.tween_property(_combo_label, "modulate:a", 0.0, 0.35)
 
 
 # --- Signal-Handler ---------------------------------------------

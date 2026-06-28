@@ -39,12 +39,12 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 
 - [x] **FR-001** Furz-Aufladung ueber Zeit — optional regenerierende Ladungen pro Level
 - [x] **FR-002** Mehrere Furz-Typen (Mega-Furz, Mini-Furz, Doppel-Stoss)
-- [ ] **FR-003** Furz-Combo-System — schnelle Folgefuerze geben Bonus-Schub
+- [x] **FR-003** Furz-Combo-System — schnelle Folgefuerze geben Bonus-Schub
 - [ ] **FR-004** Treibstoff-Modus mit Ladungsbalken statt fester Ladungen
-- [ ] **FR-005** Aufgeladener Furz — laenger halten ergibt staerkeren Stoss
+- [x] **FR-005** Aufgeladener Furz — laenger halten ergibt staerkeren Stoss
 - [ ] **FR-006** Seitlicher Furz-Rueckstoss dreht das Maennchen kontrolliert
 - [ ] **FR-007** Dauerstrahl-Furz bei gehaltenem Finger (kontinuierlicher Schub)
-- [ ] **FR-008** Cooldown/Kuehlzeit zwischen einzelnen Furz-Stoessen
+- [x] **FR-008** Cooldown/Kuehlzeit zwischen einzelnen Furz-Stoessen
 - [ ] **FR-009** Winkel-Praezisions-Bonus — perfekter Zielwinkel gibt mehr Schub
 - [ ] **FR-010** Furz-Schild — kurzer Schutz unmittelbar nach einem Stoss
 - [ ] **FR-011** Treibstoff-Pickups fuellen Ladungen mitten im Level auf
@@ -87,7 +87,7 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 - [ ] **FR-042** Umschaltbare Steuerschemata (Slingshot vs. Direktstoss)
 - [ ] **FR-043** Links-/Rechtshaender-Modus mit gespiegeltem HUD
 - [ ] **FR-044** Einstellbare Touch-Empfindlichkeit und Dead-Zone
-- [ ] **FR-045** Haptisches Feedback (Vibration) bei Furz und Treffer
+- [x] **FR-045** Haptisches Feedback (Vibration) bei Furz und Treffer
 - [ ] **FR-046** Optionale Gamepad-Unterstuetzung
 - [ ] **FR-047** Tastatur-/Maus-Unterstuetzung fuer Desktop-Tests
 - [ ] **FR-048** Flugbahn-Vorschau (Trajektorie) beim Zielen
@@ -267,9 +267,9 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 
 ## HUD & In-Game-UI
 
-- [ ] **FR-201** Pause-Button im Spiel
+- [x] **FR-201** Pause-Button im Spiel
 - [ ] **FR-202** Animierte Muenz-/Punkteanzeige
-- [ ] **FR-203** Combo-Zaehler-Anzeige
+- [x] **FR-203** Combo-Zaehler-Anzeige
 - [ ] **FR-204** Geschwindigkeitsanzeige
 - [ ] **FR-205** Hoehen-/Distanzanzeige
 - [ ] **FR-206** Power-up-Status-Icons mit Timer
@@ -322,7 +322,7 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 - [ ] **FR-247** UI-Klick-Sounds
 - [ ] **FR-248** Ambient-Soundscapes pro Thema
 - [ ] **FR-249** Getrennte Lautstaerkeregler (Musik/SFX)
-- [ ] **FR-250** Stumm-Schalter
+- [x] **FR-250** Stumm-Schalter
 - [ ] **FR-251** Audio-Ducking (Musik leiser bei SFX)
 - [ ] **FR-252** Positions-/3D-Audio fuer Hindernisse
 - [ ] **FR-253** Countdown-Sound beim Start
@@ -336,11 +336,11 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 
 ## Visuelle Effekte & Juice
 
-- [ ] **FR-261** Partikel beim Muenz-Sammeln
+- [x] **FR-261** Partikel beim Muenz-Sammeln
 - [ ] **FR-262** Aufprall-Staub und Truemmer-Partikel
 - [ ] **FR-263** Explosions-Effekte
 - [ ] **FR-264** Geschwindigkeits-Linien bei hohem Tempo
-- [ ] **FR-265** Bildschirm-Blitz bei Tod
+- [x] **FR-265** Bildschirm-Blitz bei Tod
 - [ ] **FR-266** Hit-Stop fuer mehr Wucht
 - [ ] **FR-267** Verbesserte Furz-Wolke mit mehreren Layern
 - [ ] **FR-268** Sieges-Konfetti am Levelende
