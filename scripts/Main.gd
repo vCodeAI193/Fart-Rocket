@@ -16,6 +16,8 @@ var _max_charges: int = 0
 var _level_finished: bool = false
 var _checkpoint_pos: Vector2 = Vector2(INF, INF)  # FR-135
 var _starfield: ParallaxStarfield  # FR-188
+var _camera_min := Vector2(-100, -100)   # FR-185: Kamera-Grenzen pro Level
+var _camera_max := Vector2(3800, 1400)
 
 # Fällt das Männchen unter diese Grenze (oder fliegt weit darüber hinaus),
 # gilt das Level als verloren und wird neu gestartet.
@@ -44,6 +46,8 @@ func _process(delta: float) -> void:
 	var look_ahead := vel.normalized() * minf(vel.length() * 0.10, 80.0)
 	var target := _player.global_position + look_ahead
 	_camera.global_position = _camera.global_position.lerp(target, minf(delta * 8.0, 1.0))
+	# FR-185: Kamera in Grenzen halten
+	_camera.global_position = _camera.global_position.clamp(_camera_min, _camera_max)
 	# FR-188: Sternenhintergrund mit Parallax-Versatz aktualisieren
 	if _starfield != null:
 		_starfield.global_position = _camera.global_position * (1.0 - _starfield.parallax_ratio)

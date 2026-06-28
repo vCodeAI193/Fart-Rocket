@@ -248,7 +248,7 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 - [x] **FR-182** Kamera-Vorausschau in Bewegungsrichtung
 - [x] **FR-183** Screen-Shake bei Treffern und Explosionen
 - [x] **FR-184** Sanftes Kamera-Folgen mit Totzone
-- [ ] **FR-185** Kamera-Grenzen (Bounds) pro Level
+- [x] **FR-185** Kamera-Grenzen (Bounds) pro Level
 - [ ] **FR-186** Zielfokus-Kamera beim Zielen
 - [ ] **FR-187** Kino-Modus fuer das Levelende
 - [x] **FR-188** Parallax-Hintergrundebenen
@@ -344,7 +344,7 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 - [x] **FR-266** Hit-Stop fuer mehr Wucht
 - [ ] **FR-267** Verbesserte Furz-Wolke mit mehreren Layern
 - [x] **FR-268** Sieges-Konfetti am Levelende
-- [ ] **FR-269** Muenz-Magnet-Spur-Effekt
+- [x] **FR-269** Muenz-Magnet-Spur-Effekt
 - [ ] **FR-270** Slow-Mo-Visualfilter
 - [x] **FR-271** Schweif hinter dem Maennchen
 - [ ] **FR-272** Wasser-Spritzer-Effekte
