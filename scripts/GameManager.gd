@@ -12,6 +12,7 @@ extends Node
 signal coins_changed(total_coins)        # Münzanzahl hat sich geändert
 signal score_changed(total_score)        # Punktestand hat sich geändert
 signal charges_changed(remaining)        # Furz-Ladungen haben sich geändert
+signal charge_regen_progress(fraction)   # Fortschritt der nachladenden Ladung (0..1)
 
 # --- Konstanten -------------------------------------------------
 const TOTAL_LEVELS := 3
@@ -28,6 +29,7 @@ var current_level: int = 1              # 1-basiert (Level 1, 2, 3)
 var total_coins: int = 0                # gesammelte Münzen im aktuellen Level
 var total_score: int = 0                # Punkte im aktuellen Level
 var charges_remaining: int = 0          # übrige Furz-Ladungen im Level
+var max_charges: int = 0                 # maximale Furz-Ladungen im aktuellen Level
 
 # Bestwertung (Sterne 0..3) je Level, persistent während der Sitzung
 var level_stars := {1: 0, 2: 0, 3: 0}
@@ -43,11 +45,13 @@ func start_level(level_index: int, max_charges: int) -> void:
 	current_level = level_index
 	total_coins = 0
 	total_score = 0
+	self.max_charges = max_charges
 	charges_remaining = max_charges
 	# UI informieren
 	coins_changed.emit(total_coins)
 	score_changed.emit(total_score)
 	charges_changed.emit(charges_remaining)
+	charge_regen_progress.emit(0.0)
 
 
 ## Eine Münze wurde eingesammelt.
@@ -66,6 +70,21 @@ func use_charge() -> bool:
 	charges_remaining -= 1
 	charges_changed.emit(charges_remaining)
 	return true
+
+
+## Lädt eine Furz-Ladung nach (für die Regeneration, FR-001).
+## Gibt true zurück, wenn tatsächlich nachgeladen wurde.
+func add_charge() -> bool:
+	if charges_remaining >= max_charges:
+		return false
+	charges_remaining += 1
+	charges_changed.emit(charges_remaining)
+	return true
+
+
+## Meldet den Fortschritt der gerade nachladenden Ladung (0..1) an die UI.
+func set_regen_progress(fraction: float) -> void:
+	charge_regen_progress.emit(clampf(fraction, 0.0, 1.0))
 
 
 ## Berechnet die Stern-Bewertung (1..3) anhand der übrigen Ladungen.

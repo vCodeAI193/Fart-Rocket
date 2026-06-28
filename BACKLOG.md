@@ -37,7 +37,7 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 
 ## Antrieb & Furz-Mechanik
 
-- [ ] **FR-001** Furz-Aufladung ueber Zeit — optional regenerierende Ladungen pro Level
+- [x] **FR-001** Furz-Aufladung ueber Zeit — optional regenerierende Ladungen pro Level
 - [ ] **FR-002** Mehrere Furz-Typen (Mega-Furz, Mini-Furz, Doppel-Stoss)
 - [ ] **FR-003** Furz-Combo-System — schnelle Folgefuerze geben Bonus-Schub
 - [ ] **FR-004** Treibstoff-Modus mit Ladungsbalken statt fester Ladungen

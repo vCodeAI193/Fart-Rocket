@@ -10,6 +10,8 @@
 [node name="Player" parent="." instance=ExtResource("1_player")]
 position = Vector2(250, 600)
 max_fart_charges = 5
+charge_regen_enabled = true
+charge_regen_time = 6.0
 
 [node name="Bar1" parent="." instance=ExtResource("2_obs")]
 position = Vector2(1100, 300)

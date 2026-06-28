@@ -15,6 +15,10 @@ class_name Player
 @export var max_drag_distance: float = 300.0 # max. Ziehweite für volle Stärke
 @export var fart_burst_scene: PackedScene    # FartBurst.tscn (Partikel + Sound)
 
+# --- FR-001: Optionale Furz-Regeneration (pro Level einstellbar) -
+@export var charge_regen_enabled: bool = false  # Ladungen mit der Zeit nachfüllen?
+@export var charge_regen_time: float = 5.0      # Sekunden bis eine Ladung nachlädt
+
 # --- Signale ----------------------------------------------------
 signal died                                  # Männchen hat ein Hindernis getroffen
 signal aim_changed(direction, strength)      # Zielrichtung/-stärke geändert
@@ -26,6 +30,7 @@ var _aim_start: Vector2 = Vector2.ZERO       # Startpunkt der Berührung (Screen
 var _aim_current: Vector2 = Vector2.ZERO     # aktueller Berührungspunkt (Screen)
 var _touch_index: int = -1                   # verfolgter Finger (Multitouch-sicher)
 var _is_dead: bool = false                   # Tod/Restart läuft bereits
+var _regen_accum: float = 0.0                # aufgelaufene Zeit für die Regeneration
 
 # Referenzen auf untergeordnete Knoten
 var _aim_arrow: Line2D
@@ -40,6 +45,27 @@ func _ready() -> void:
 	# Strichmännchen + Helm zeichnen und Zielpfeil vorbereiten
 	_build_stick_figure()
 	_build_aim_arrow()
+
+
+# ----------------------------------------------------------------
+# FR-001: Furz-Ladungen über Zeit regenerieren (optional)
+# ----------------------------------------------------------------
+func _process(delta: float) -> void:
+	if _is_dead or not charge_regen_enabled or charge_regen_time <= 0.0:
+		return
+	# Nur nachladen, wenn noch Platz ist
+	if GameManager.charges_remaining >= GameManager.max_charges:
+		_regen_accum = 0.0
+		return
+
+	_regen_accum += delta
+	# Fortschritt der gerade nachladenden Ladung an das HUD melden
+	GameManager.set_regen_progress(_regen_accum / charge_regen_time)
+
+	if _regen_accum >= charge_regen_time:
+		_regen_accum = 0.0
+		GameManager.add_charge()
+		GameManager.set_regen_progress(0.0)
 
 
 # ----------------------------------------------------------------

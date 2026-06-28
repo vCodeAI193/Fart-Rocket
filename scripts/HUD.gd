@@ -23,6 +23,7 @@ func _ready() -> void:
 	# Auf globale Zustandsänderungen lauschen
 	GameManager.coins_changed.connect(_on_coins_changed)
 	GameManager.charges_changed.connect(_on_charges_changed)
+	GameManager.charge_regen_progress.connect(_on_regen_progress)
 	_on_coins_changed(GameManager.total_coins)
 
 
@@ -72,6 +73,15 @@ func _on_charges_changed(remaining: int) -> void:
 			_charge_icons[i].color = Color(0.45, 0.85, 0.35)      # aktiv (grün)
 		else:
 			_charge_icons[i].color = Color(0.3, 0.3, 0.3, 0.5)    # verbraucht
+
+
+## FR-001: Füllt das nächste (nachladende) Icon entsprechend dem Fortschritt.
+func _on_regen_progress(fraction: float) -> void:
+	var idx := GameManager.charges_remaining
+	if idx < 0 or idx >= _charge_icons.size():
+		return
+	# Von "verbraucht" (blass) zu "aktiv" (grün) überblenden
+	_charge_icons[idx].color = Color(0.45, 0.85, 0.35, lerpf(0.25, 1.0, fraction))
 
 
 # --- Hilfsfunktionen --------------------------------------------
