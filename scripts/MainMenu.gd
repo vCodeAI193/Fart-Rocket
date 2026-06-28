@@ -10,7 +10,15 @@ var _settings_screen: SettingsScreen
 var _onboarding: OnboardingScreen
 
 
+var _bg_node: Node2D  # FR-231: animierter Hintergrund
+
+
 func _ready() -> void:
+	# FR-231: Animierter Sternenhintergrund im Hauptmenü
+	_bg_node = Node2D.new()
+	_bg_node.z_index = -10
+	add_child(_bg_node)
+	_build_menu_bg()
 	# FR-222: Einstellungs-Overlay erstellen
 	_settings_screen = preload("res://scenes/SettingsScreen.tscn").instantiate()
 	add_child(_settings_screen)
@@ -20,6 +28,29 @@ func _ready() -> void:
 	_onboarding.show_if_needed()
 	_build_level_buttons()
 	_build_settings_button()
+
+
+## FR-231: Prozeduraler Sternenhintergrund mit Drift-Animation.
+func _build_menu_bg() -> void:
+	var bg := ColorRect.new()
+	bg.color = Color(0.04, 0.04, 0.14)
+	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_bg_node.add_child(bg)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 12345
+	for i in range(60):
+		var star := ColorRect.new()
+		var sz := rng.randf_range(2.0, 5.0)
+		star.custom_minimum_size = Vector2(sz, sz)
+		star.color = Color(0.8, 0.85, 1.0, rng.randf_range(0.3, 0.9))
+		star.position = Vector2(rng.randf_range(0, 1920), rng.randf_range(0, 1200))
+		_bg_node.add_child(star)
+		# Langsam nach rechts driften lassen
+		var drift_x := rng.randf_range(8.0, 28.0)
+		var tween := star.create_tween()
+		tween.set_loops()
+		tween.tween_property(star, "position:x", star.position.x + 1920.0, 1920.0 / drift_x)
+		tween.tween_callback(func() -> void: star.position.x = -8.0)
 
 
 ## FR-233: Android-Zurück-Taste schließt Einstellungen oder beendet das Spiel.

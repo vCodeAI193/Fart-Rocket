@@ -90,7 +90,8 @@ func _load_current_level() -> void:
 
 	# Signale verbinden
 	_player.died.connect(_on_player_died)
-	_player.fart_fired.connect(_on_fart_fired)  # FR-265
+	_player.fart_fired.connect(_on_fart_fired)    # FR-265
+	_player.shield_changed.connect(_hud.set_shield_active)  # FR-206/010
 	if _level_end != null:
 		_level_end.reached.connect(_on_level_reached)
 	# FR-135: Checkpoints verbinden (nach add_child haben alle _ready() durchlaufen)

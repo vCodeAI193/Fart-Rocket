@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene load_steps=11 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/Player.tscn" id="1_player"]
 [ext_resource type="PackedScene" path="res://scenes/Obstacle.tscn" id="2_obs"]
@@ -7,6 +7,9 @@
 [ext_resource type="PackedScene" path="res://scenes/ChargePickup.tscn" id="5_cp"]
 [ext_resource type="PackedScene" path="res://scenes/FartShield.tscn" id="6_fs"]
 [ext_resource type="PackedScene" path="res://scenes/DoubleCoinsPower.tscn" id="7_dc"]
+[ext_resource type="PackedScene" path="res://scenes/MagneticField.tscn" id="8_mf"]
+[ext_resource type="PackedScene" path="res://scenes/StickyZone.tscn" id="9_sz"]
+[ext_resource type="PackedScene" path="res://scenes/ConveyorBelt.tscn" id="10_cv"]
 
 [node name="Level2" type="Node2D"]
 
@@ -72,6 +75,19 @@ position = Vector2(2650, 400)
 
 [node name="DoubleCoinsPower1" parent="." instance=ExtResource("7_dc")]
 position = Vector2(2150, 500)
+
+[node name="Magnet1" parent="." instance=ExtResource("8_mf")]
+position = Vector2(1200, 400)
+attract = true
+strength = 380.0
+
+[node name="StickyZone1" parent="." instance=ExtResource("9_sz")]
+position = Vector2(2300, 800)
+
+[node name="ConveyorBelt1" parent="." instance=ExtResource("10_cv")]
+position = Vector2(750, 1020)
+belt_direction = Vector2(1, 0)
+belt_speed = 250.0
 
 [node name="LevelEnd" parent="." instance=ExtResource("4_end")]
 position = Vector2(3250, 600)

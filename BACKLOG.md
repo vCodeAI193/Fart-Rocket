@@ -42,14 +42,14 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 - [x] **FR-003** Furz-Combo-System — schnelle Folgefuerze geben Bonus-Schub
 - [ ] **FR-004** Treibstoff-Modus mit Ladungsbalken statt fester Ladungen
 - [x] **FR-005** Aufgeladener Furz — laenger halten ergibt staerkeren Stoss
-- [ ] **FR-006** Seitlicher Furz-Rueckstoss dreht das Maennchen kontrolliert
+- [x] **FR-006** Seitlicher Furz-Rueckstoss dreht das Maennchen kontrolliert
 - [ ] **FR-007** Dauerstrahl-Furz bei gehaltenem Finger (kontinuierlicher Schub)
 - [x] **FR-008** Cooldown/Kuehlzeit zwischen einzelnen Furz-Stoessen
 - [ ] **FR-009** Winkel-Praezisions-Bonus — perfekter Zielwinkel gibt mehr Schub
 - [x] **FR-010** Furz-Schild — kurzer Schutz unmittelbar nach einem Stoss
 - [x] **FR-011** Treibstoff-Pickups fuellen Ladungen mitten im Level auf
 - [ ] **FR-012** Ueberhitzung bei zu vielen Fuerzen (Risiko/Belohnung)
-- [ ] **FR-013** Wind-Interaktion — Gegenwind reduziert den Furz-Schub
+- [x] **FR-013** Wind-Interaktion — Gegenwind reduziert den Furz-Schub
 - [ ] **FR-014** Unterwasser-Furz mit Blasen und Auftriebsverhalten
 - [ ] **FR-015** Schwerelosigkeits-Zonen veraendern die Furz-Wirkung
 - [ ] **FR-016** Furz-Sound variiert dynamisch mit der Stoss-Staerke
@@ -64,12 +64,12 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 - [x] **FR-022** Umkehrbare Schwerkraftrichtung fuer Decken-Sektionen
 - [ ] **FR-023** Auftrieb-/Wasserzonen mit eigener Physik
 - [x] **FR-024** Bewegliche Plattformen als sichere Landeflaechen
-- [ ] **FR-025** Foerderbaender, die das Maennchen verschieben
+- [x] **FR-025** Foerderbaender, die das Maennchen verschieben
 - [x] **FR-026** Sprungfedern/Trampoline zum Abprallen
-- [ ] **FR-027** Magnetfelder, die das Maennchen ziehen oder abstossen
-- [ ] **FR-028** Schleim-/Klebezonen verlangsamen die Bewegung
+- [x] **FR-027** Magnetfelder, die das Maennchen ziehen oder abstossen
+- [x] **FR-028** Schleim-/Klebezonen verlangsamen die Bewegung
 - [ ] **FR-029** Eis-/Glaettezonen mit reduzierter Reibung
-- [ ] **FR-030** Luftstroemungen und Wind-Tunnel
+- [x] **FR-030** Luftstroemungen und Wind-Tunnel
 - [ ] **FR-031** Schwarze Loecher mit Anziehungskraft
 - [x] **FR-032** Konfigurierbare Terminalgeschwindigkeit/Speed-Limit
 - [x] **FR-033** Einstellbare Drall-Daempfung (abklingende Rotation)
@@ -272,7 +272,7 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 - [x] **FR-203** Combo-Zaehler-Anzeige
 - [x] **FR-204** Geschwindigkeitsanzeige
 - [x] **FR-205** Hoehen-/Distanzanzeige
-- [ ] **FR-206** Power-up-Status-Icons mit Timer
+- [x] **FR-206** Power-up-Status-Icons mit Timer
 - [ ] **FR-207** Geist-Anzeige der Bestzeit
 - [ ] **FR-208** Nachfuell-Animation der Furz-Ladungen
 - [x] **FR-209** Schaden-/Treffer-Vignette
@@ -300,7 +300,7 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 - [ ] **FR-228** Bestaetigungsdialoge (Beenden/Zuruecksetzen)
 - [ ] **FR-229** Lade-Bildschirm mit Tipps
 - [ ] **FR-230** Splash-Screen/Logo-Intro
-- [ ] **FR-231** Animierter Hauptmenue-Hintergrund
+- [x] **FR-231** Animierter Hauptmenue-Hintergrund
 - [ ] **FR-232** Level-Detail-Popup (Sterne/Bestzeit)
 - [x] **FR-233** Korrekte Android-Zurueck-Button-Behandlung
 - [ ] **FR-234** Tab-Navigation in Menues

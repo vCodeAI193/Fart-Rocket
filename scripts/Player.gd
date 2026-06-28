@@ -254,6 +254,12 @@ func _release_fart() -> void:
 ## Wendet einen einzelnen Schub an und erzeugt die passende Furz-Wolke.
 func _do_thrust(dir: Vector2, impulse: float, tint: Color) -> void:
 	apply_central_impulse(dir * impulse)
+	# FR-006: Seitlicher Drall — Schub senkrecht zur Bewegungsrichtung dreht das Männchen
+	var current_vel := linear_velocity
+	if current_vel.length() > 80.0:
+		var side_component := dir - dir.project(current_vel.normalized())
+		if side_component.length() > 0.1:
+			apply_torque_impulse(side_component.x * impulse * 0.008)
 	fart_fired.emit(impulse)  # FR-265: Kamera-Wackeln signalisieren
 	_spawn_fart_burst(-dir, tint)
 

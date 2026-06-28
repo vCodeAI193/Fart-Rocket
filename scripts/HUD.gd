@@ -28,6 +28,11 @@ var _is_paused: bool = false                               # FR-201
 
 # FR-205: Höhenanzeige
 var _height_label: Label
+# FR-206: Power-up-Status-Icons
+var _powerup_box: HBoxContainer
+var _shield_icon: ColorRect
+var _double_coins_icon: ColorRect
+var _slowmo_icon: ColorRect
 # FR-209: Treffer-Vignette
 var _vignette: ColorRect
 # FR-212: Checkpoint-Benachrichtigung
@@ -45,8 +50,11 @@ func _ready() -> void:
 	_pause_btn.pressed.connect(_on_pause_pressed)          # FR-201
 	_on_coins_changed(GameManager.total_coins)
 	_build_height_label()
+	_build_powerup_icons()
 	_build_vignette()
 	_build_checkpoint_label()
+	# FR-206: Auf Schild- und Doppelmünzen-Signale lauschen
+	GameManager.double_coins_changed.connect(_on_double_coins_changed)
 
 
 ## FR-205: Höhenanzeige aufbauen (links oben, unterhalb der Ladungen).
@@ -60,6 +68,46 @@ func _build_height_label() -> void:
 	_height_label.offset_top = -60.0
 	_height_label.offset_right = 300.0
 	add_child(_height_label)
+
+
+## FR-206: Power-up-Icons (Schild, Doppelmünzen, Zeitlupe) rechts unten.
+func _build_powerup_icons() -> void:
+	_powerup_box = HBoxContainer.new()
+	_powerup_box.add_theme_constant_override("separation", 10)
+	_powerup_box.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+	_powerup_box.offset_right = -20.0
+	_powerup_box.offset_bottom = -20.0
+	_powerup_box.offset_left = -300.0
+	_powerup_box.offset_top = -72.0
+	add_child(_powerup_box)
+
+	_shield_icon = _make_icon(Color(0.3, 0.7, 1.0), "S")
+	_double_coins_icon = _make_icon(Color(1.0, 0.85, 0.1), "x2")
+	_slowmo_icon = _make_icon(Color(0.7, 0.3, 1.0), "Z")
+	_powerup_box.add_child(_shield_icon)
+	_powerup_box.add_child(_double_coins_icon)
+	_powerup_box.add_child(_slowmo_icon)
+	# Alle Icons zunächst ausblenden
+	_shield_icon.modulate.a = 0.0
+	_double_coins_icon.modulate.a = 0.0
+	_slowmo_icon.modulate.a = 0.0
+
+
+func _make_icon(col: Color, text: String) -> ColorRect:
+	var cr := ColorRect.new()
+	cr.custom_minimum_size = Vector2(56, 56)
+	cr.color = col
+	var lbl := Label.new()
+	lbl.text = text
+	lbl.add_theme_font_size_override("font_size", 26)
+	lbl.set_anchors_preset(Control.PRESET_CENTER)
+	lbl.offset_left = -22.0
+	lbl.offset_right = 22.0
+	lbl.offset_top = -16.0
+	lbl.offset_bottom = 16.0
+	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	cr.add_child(lbl)
+	return cr
 
 
 ## FR-209: Rote Vignette beim Treffer.
@@ -171,6 +219,20 @@ func flash_damage() -> void:
 	var tween := create_tween()
 	tween.tween_property(_vignette, "color:a", 0.55, 0.05)
 	tween.tween_property(_vignette, "color:a", 0.0, 0.35)
+
+
+## FR-206: Schild-Icon ein-/ausblenden.
+func set_shield_active(active: bool) -> void:
+	if _shield_icon == null:
+		return
+	_shield_icon.modulate.a = 1.0 if active else 0.0
+
+
+## FR-206: Doppelmünzen-Signal-Handler.
+func _on_double_coins_changed(active: bool) -> void:
+	if _double_coins_icon == null:
+		return
+	_double_coins_icon.modulate.a = 1.0 if active else 0.0
 
 
 ## FR-212: Checkpoint-Meldung kurz einblenden.

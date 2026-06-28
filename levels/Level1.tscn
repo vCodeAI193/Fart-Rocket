@@ -1,4 +1,4 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=9 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/Player.tscn" id="1_player"]
 [ext_resource type="PackedScene" path="res://scenes/Obstacle.tscn" id="2_obs"]
@@ -6,6 +6,8 @@
 [ext_resource type="PackedScene" path="res://scenes/LevelEnd.tscn" id="4_end"]
 [ext_resource type="PackedScene" path="res://scenes/ChargePickup.tscn" id="5_cp"]
 [ext_resource type="PackedScene" path="res://scenes/FartShield.tscn" id="6_fs"]
+[ext_resource type="PackedScene" path="res://scenes/WindZone.tscn" id="7_wz"]
+[ext_resource type="PackedScene" path="res://scenes/BoostRing.tscn" id="8_br"]
 
 [node name="Level1" type="Node2D"]
 
@@ -50,6 +52,13 @@ position = Vector2(1600, 750)
 
 [node name="Shield1" parent="." instance=ExtResource("6_fs")]
 position = Vector2(2200, 500)
+
+[node name="WindZone1" parent="." instance=ExtResource("7_wz")]
+position = Vector2(1750, 600)
+wind_force = Vector2(-150, 0)
+
+[node name="BoostRing1" parent="." instance=ExtResource("8_br")]
+position = Vector2(2650, 580)
 
 [node name="LevelEnd" parent="." instance=ExtResource("4_end")]
 position = Vector2(3300, 600)
