@@ -1,0 +1,75 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/MainMenu.gd" id="1_menu"]
+
+[sub_resource type="Gradient" id="Gradient_menu"]
+offsets = PackedFloat32Array(0, 1)
+colors = PackedColorArray(0.05, 0.07, 0.18, 1, 0, 0, 0, 1)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_menu"]
+gradient = SubResource("Gradient_menu")
+width = 1920
+height = 1200
+fill_from = Vector2(0, 0)
+fill_to = Vector2(0, 1)
+
+[node name="MainMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_menu")
+
+[node name="BG" type="TextureRect" parent="."]
+texture = SubResource("GradientTexture2D_menu")
+expand_mode = 1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Title" type="Label" parent="."]
+layout_mode = 1
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -500.0
+offset_top = 140.0
+offset_right = 500.0
+offset_bottom = 260.0
+grow_horizontal = 2
+theme_override_font_sizes/font_size = 120
+text = "Fart Rocket"
+horizontal_alignment = 1
+
+[node name="Subtitle" type="Label" parent="."]
+layout_mode = 1
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -500.0
+offset_top = 280.0
+offset_right = 500.0
+offset_bottom = 340.0
+grow_horizontal = 2
+theme_override_colors/font_color = Color(0.7, 0.9, 0.7, 1)
+theme_override_font_sizes/font_size = 42
+text = "Furz dich durch den Weltraum!"
+horizontal_alignment = 1
+
+[node name="LevelButtons" type="HBoxContainer" parent="."]
+layout_mode = 1
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -550.0
+offset_top = -50.0
+offset_right = 550.0
+offset_bottom = 250.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 60
+alignment = 1

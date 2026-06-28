@@ -1,0 +1,77 @@
+extends Area2D
+## Coin – einsammelbare Münze
+## ==========================
+## Eine gelbe, rotierende Münze. Berührt der Player sie, wird sie
+## eingesammelt (Sound + kleine Einsammel-Animation) und die Punkte
+## werden über den GameManager verbucht.
+
+@export var coin_value: int = 10           # Punktwert dieser Münze
+@export var spin_speed: float = 3.0        # Rotationsgeschwindigkeit (rad/s)
+@export var collect_sound: AudioStream     # Platzhalter-Sound (im Editor setzbar)
+
+signal collected(value)                    # Signal beim Einsammeln
+
+var _collected: bool = false
+
+@onready var _visual: Node2D = $Visual
+@onready var _audio: AudioStreamPlayer = $CollectSound
+
+
+func _ready() -> void:
+	add_to_group("coins")
+	body_entered.connect(_on_body_entered)
+	if collect_sound != null:
+		_audio.stream = collect_sound
+	_build_coin_visual()
+
+
+func _process(delta: float) -> void:
+	# Münze "rotiert" durch horizontales Stauchen (2D-Münzeffekt)
+	if not _collected:
+		var s := absf(sin(Time.get_ticks_msec() / 1000.0 * spin_speed))
+		_visual.scale.x = lerpf(0.2, 1.0, s)
+
+
+func _on_body_entered(body: Node) -> void:
+	if _collected:
+		return
+	if body.is_in_group("player"):
+		_collect()
+
+
+## Sammelt die Münze ein: Punkte verbuchen, Sound + Animation, dann löschen.
+func _collect() -> void:
+	_collected = true
+	GameManager.add_coin(coin_value)
+	collected.emit(coin_value)
+	if _audio.stream != null:
+		_audio.play()
+
+	# Kleine Einsammel-Animation: nach oben schweben und ausblenden
+	var tween := create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(_visual, "position:y", _visual.position.y - 60.0, 0.4)
+	tween.tween_property(_visual, "scale", Vector2(1.6, 1.6), 0.4)
+	tween.tween_property(_visual, "modulate:a", 0.0, 0.4)
+	await tween.finished
+	queue_free()
+
+
+# --- Münzgrafik (gelber Kreis mit Rand) -------------------------
+func _build_coin_visual() -> void:
+	var outer := Polygon2D.new()
+	outer.color = Color(1.0, 0.82, 0.15)  # goldgelb
+	var inner := Polygon2D.new()
+	inner.color = Color(1.0, 0.92, 0.45)  # heller Kern
+	var pts_outer := PackedVector2Array()
+	var pts_inner := PackedVector2Array()
+	var segments := 20
+	for i in range(segments):
+		var a := TAU * float(i) / float(segments)
+		var d := Vector2(cos(a), sin(a))
+		pts_outer.append(d * 24.0)
+		pts_inner.append(d * 16.0)
+	outer.polygon = pts_outer
+	inner.polygon = pts_inner
+	_visual.add_child(outer)
+	_visual.add_child(inner)

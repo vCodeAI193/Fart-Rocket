@@ -1,0 +1,15 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/LevelEnd.gd" id="1_end"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_end"]
+size = Vector2(120, 240)
+
+[node name="LevelEnd" type="Area2D" groups=["level_end"]]
+script = ExtResource("1_end")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(20, -40)
+shape = SubResource("RectangleShape2D_end")
+
+[node name="WinSound" type="AudioStreamPlayer" parent="."]

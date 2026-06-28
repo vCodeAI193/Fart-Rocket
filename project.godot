@@ -1,0 +1,52 @@
+; Engine configuration file.
+; Fart Rocket – 2D Physik-Spiel für Android Tablets (Godot 4.x)
+; ===============================================================
+; Die meisten Werte werden im Editor unter "Projekteinstellungen"
+; gepflegt. Hier sind die wichtigsten Einstellungen für Touch,
+; Landscape-Orientierung und die Basisauflösung 1920x1200 gesetzt.
+
+config_version=5
+
+[application]
+
+config/name="Fart Rocket"
+config/description="Ein physikbasiertes 2D-Spiel: Steuere ein Strichmännchen mit Furz-Antrieb durch Hindernis-Level."
+run/main_scene="res://scenes/MainMenu.tscn"
+config/features=PackedStringArray("4.3", "GL Compatibility")
+config/icon="res://icon.svg"
+boot_splash/show_image=false
+
+[autoload]
+
+; Globaler Spielzustand: Punkte, aktuelles Level, Sterne usw.
+GameManager="*res://scripts/GameManager.gd"
+
+[display]
+
+; Basisauflösung für 16:10 Tablets (1920x1200)
+window/size/viewport_width=1920
+window/size/viewport_height=1200
+; Nur Querformat (Landscape) erlauben (0 = Landscape)
+window/handheld/orientation=0
+; Skalierung der UI/2D-Elemente -> canvas_items für gleichmäßige Skalierung
+window/stretch/mode="canvas_items"
+; "expand" füllt verschiedene Seitenverhältnisse (16:10 und 4:3) aus
+window/stretch/aspect="expand"
+
+[input_devices]
+
+; Touch-Eingabe aktivieren und Maus für Desktop-Tests emulieren
+pointing/emulate_touch_from_mouse=true
+pointing/emulate_mouse_from_touch=true
+
+[physics]
+
+; 2D-Schwerkraft (wird zusätzlich pro Spieler über gravity_scale skaliert)
+2d/default_gravity=980.0
+
+[rendering]
+
+; GL Compatibility Renderer -> beste Kompatibilität für Android API 21+
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+textures/vram_compression/import_etc2_astc=true

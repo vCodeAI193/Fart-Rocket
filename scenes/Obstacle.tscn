@@ -1,0 +1,11 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/Obstacle.gd" id="1_obstacle"]
+
+[node name="Obstacle" type="StaticBody2D" groups=["obstacles"]]
+script = ExtResource("1_obstacle")
+type = 0
+obstacle_size = Vector2(200, 40)
+saw_radius = 70.0
+rotation_speed = 3.0
+obstacle_color = Color(0.55, 0.55, 0.6, 1)
