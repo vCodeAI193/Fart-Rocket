@@ -38,6 +38,19 @@ class_name Player
 @export var max_fuel: float = 100.0
 @export var fuel_regen_rate: float = 20.0       # Kraftstoff pro Sekunde
 
+# --- FR-007: Dauerstrahl-Furz (kontinuierlicher Schub) ---------
+@export var continuous_thrust_enabled: bool = false
+@export var continuous_thrust_power: float = 300.0
+@export var continuous_thrust_cost: float = 15.0  # Treibstoff pro Sekunde
+
+# --- FR-020: Anpassbare Furz-Schubkurven ---------------------
+@export var power_curve: Curve = Curve.new()
+var _initialized_curve: bool = false
+
+# --- FR-053: Auto-Aim-Modus (Assist) ------------------------
+@export var auto_aim_enabled: bool = false
+@export var auto_aim_radius: float = 300.0  # Suchradius für Ziele
+
 # --- FR-001: Optionale Furz-Regeneration (pro Level einstellbar) -
 @export var charge_regen_enabled: bool = false  # Ladungen mit der Zeit nachfüllen?
 @export var charge_regen_time: float = 5.0      # Sekunden bis eine Ladung nachlädt
@@ -107,6 +120,11 @@ func _ready() -> void:
 	body_entered.connect(_on_body_entered)
 	_build_stick_figure()
 	_build_aim_arrow()
+	# FR-020: Standard-Kurve initialisieren (linear, falls nicht gesetzt)
+	if power_curve.point_count == 0:
+		power_curve.add_point(Vector2(0, 0))
+		power_curve.add_point(Vector2(1, 1))
+		_initialized_curve = true
 	# Trail und Speed-Lines nach dem nächsten Frame aufbauen
 	call_deferred("_build_trail")
 
@@ -133,6 +151,9 @@ func _process(delta: float) -> void:
 	if _is_aiming:
 		_aim_hold += delta
 		_update_aim_visual()
+		# FR-007: Dauerstrahl-Furz — kontinuierlicher Schub beim Halten
+		if continuous_thrust_enabled and _aim_hold > 0.2:  # Nach 0.2s kontinuierlich
+			_apply_continuous_thrust()
 
 	# FR-001/004: Ladungen/Treibstoff über Zeit regenerieren
 	if fuel_mode:
@@ -215,6 +236,11 @@ func _update_aim_visual() -> void:
 	var drag := _aim_current - _aim_start
 	var strength := clampf(drag.length() / max_drag_distance, 0.0, 1.0)
 	var dir := drag.normalized()
+	# FR-053: Auto-Aim-Modus — suche nächstes Ziel bei kurzen Zügen
+	if auto_aim_enabled and drag.length() < max_drag_distance * 0.3:
+		var target_dir := _find_nearest_target()
+		if target_dir != Vector2.ZERO:
+			dir = target_dir
 	_draw_aim_arrow(dir, strength)
 	# FR-005: Pfeil färbt sich mit zunehmender Aufladung von Gelb nach Rot
 	var charge := _hold_factor()
@@ -264,7 +290,9 @@ func _release_fart() -> void:
 	var dir := drag.normalized()
 	# FR-009: Winkel-Präzisions-Bonus — perfekte Winkel bekommen Schub-Bonus
 	var precision_mult := _calculate_precision_bonus(dir)
-	var impulse: float = fart_power * strength * fart["power"] * charge_mult * precision_mult
+	# FR-020: Anpassbare Furz-Schubkurve anwenden (Kurven-Mapping)
+	var curve_factor := power_curve.sample(strength)
+	var impulse: float = fart_power * curve_factor * fart["power"] * charge_mult * precision_mult
 	var bursts: int = fart["bursts"]
 	var tint: Color = fart["color"]
 
@@ -308,6 +336,35 @@ func _calculate_precision_bonus(dir: Vector2) -> float:
 	var tolerance := PI * 0.15
 	var bonus := (1.0 - clampf(min_angle_diff / tolerance, 0.0, 1.0)) * 0.5
 	return 1.0 + bonus
+
+
+## FR-053: Findet das nächste Ziel im Auto-Aim-Modus.
+func _find_nearest_target() -> Vector2:
+	var nearest_dist := auto_aim_radius
+	var nearest_dir := Vector2.ZERO
+	# Suche nach Münzen, Sternen und anderen Sammelobjekten
+	for coin in get_tree().get_nodes_in_group("coins"):
+		if coin.has_method("_collected") and coin._collected:
+			continue
+		var dist := global_position.distance_to(coin.global_position)
+		if dist < nearest_dist:
+			nearest_dist = dist
+			nearest_dir = (coin.global_position - global_position).normalized()
+	return nearest_dir
+
+
+## FR-007: Kontinuierlicher Schub beim Zielen (Dauerstrahl-Furz).
+func _apply_continuous_thrust() -> void:
+	var drag := _aim_current - _aim_start
+	if drag.length() < 20.0:
+		return
+	var dir := drag.normalized()
+	if fuel_mode:
+		var fuel_cost := continuous_thrust_cost * get_physics_process_delta_time()
+		if _current_fuel < fuel_cost:
+			return
+		_current_fuel -= fuel_cost
+	apply_central_impulse(dir * continuous_thrust_power * get_physics_process_delta_time())
 
 
 ## Wendet einen einzelnen Schub an und erzeugt die passende Furz-Wolke.

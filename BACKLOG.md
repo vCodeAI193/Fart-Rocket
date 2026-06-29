@@ -43,7 +43,7 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 - [x] **FR-004** Treibstoff-Modus mit Ladungsbalken statt fester Ladungen
 - [x] **FR-005** Aufgeladener Furz — laenger halten ergibt staerkeren Stoss
 - [x] **FR-006** Seitlicher Furz-Rueckstoss dreht das Maennchen kontrolliert
-- [ ] **FR-007** Dauerstrahl-Furz bei gehaltenem Finger (kontinuierlicher Schub)
+- [x] **FR-007** Dauerstrahl-Furz bei gehaltenem Finger (kontinuierlicher Schub)
 - [x] **FR-008** Cooldown/Kuehlzeit zwischen einzelnen Furz-Stoessen
 - [x] **FR-009** Winkel-Praezisions-Bonus — perfekter Zielwinkel gibt mehr Schub
 - [x] **FR-010** Furz-Schild — kurzer Schutz unmittelbar nach einem Stoss
@@ -56,7 +56,7 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 - [ ] **FR-017** Verweilende Geruchswolke als optionale Schadenszone
 - [ ] **FR-018** Sticky-Furz — kurzes Haften an Waenden nach Aufprall
 - [x] **FR-019** Furz-Boost-Ringe laden beim Durchfliegen sofort eine Ladung
-- [ ] **FR-020** Anpassbare Furz-Schubkurven fuer Tuning im Editor
+- [x] **FR-020** Anpassbare Furz-Schubkurven fuer Tuning im Editor
 
 ## Physik & Bewegung
 
@@ -83,7 +83,7 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 
 ## Steuerung & Eingabe
 
-- [ ] **FR-041** Zwei-Finger-Zoom der Kamera
+- [x] **FR-041** Zwei-Finger-Zoom der Kamera
 - [ ] **FR-042** Umschaltbare Steuerschemata (Slingshot vs. Direktstoss)
 - [ ] **FR-043** Links-/Rechtshaender-Modus mit gespiegeltem HUD
 - [ ] **FR-044** Einstellbare Touch-Empfindlichkeit und Dead-Zone
@@ -95,7 +95,7 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 - [x] **FR-050** Doppel-Tipp fuer Schnell-Neustart
 - [ ] **FR-051** Wisch-Geste zum Pausieren
 - [ ] **FR-052** Zielen mit Zeitlupe zur Feinjustierung
-- [ ] **FR-053** Auto-Aim-Unterstuetzung als Assist-Modus
+- [x] **FR-053** Auto-Aim-Unterstuetzung als Assist-Modus
 - [ ] **FR-054** Konfigurierbare Safe-Area fuer Notch/Raender
 - [ ] **FR-055** Multitouch-robuste Eingabe (zweiter Finger ignoriert)
 - [ ] **FR-056** Eingabe-Pufferung fuer reaktionsschnelle Stoesse
@@ -136,7 +136,7 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 - [x] **FR-085** Verlangsamungs-Power-up (Zeitlupe)
 - [x] **FR-086** Zeitlich begrenztes Doppel-Muenzen-Power-up
 - [x] **FR-087** Extra-Furz-Ladung als Pickup
-- [ ] **FR-088** Versteckte Sterne als Sammelobjekt pro Level
+- [x] **FR-088** Versteckte Sterne als Sammelobjekt pro Level
 - [ ] **FR-089** Sammelkarten-/Sticker-System
 - [ ] **FR-090** Truhen mit Zufallsbelohnung
 - [ ] **FR-091** Schluessel und Schloesser (Tuer-Mechanik)
