@@ -48,10 +48,10 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 - [x] **FR-009** Winkel-Praezisions-Bonus — perfekter Zielwinkel gibt mehr Schub
 - [x] **FR-010** Furz-Schild — kurzer Schutz unmittelbar nach einem Stoss
 - [x] **FR-011** Treibstoff-Pickups fuellen Ladungen mitten im Level auf
-- [ ] **FR-012** Ueberhitzung bei zu vielen Fuerzen (Risiko/Belohnung)
+- [x] **FR-012** Ueberhitzung bei zu vielen Fuerzen (Risiko/Belohnung)
 - [x] **FR-013** Wind-Interaktion — Gegenwind reduziert den Furz-Schub
 - [x] **FR-014** Unterwasser-Furz mit Blasen und Auftriebsverhalten
-- [ ] **FR-015** Schwerelosigkeits-Zonen veraendern die Furz-Wirkung
+- [x] **FR-015** Schwerelosigkeits-Zonen veraendern die Furz-Wirkung
 - [ ] **FR-016** Furz-Sound variiert dynamisch mit der Stoss-Staerke
 - [ ] **FR-017** Verweilende Geruchswolke als optionale Schadenszone
 - [ ] **FR-018** Sticky-Furz — kurzes Haften an Waenden nach Aufprall
@@ -62,7 +62,7 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 
 - [x] **FR-021** Variable Schwerkraft pro Level (Mond, Jupiter, ...)
 - [x] **FR-022** Umkehrbare Schwerkraftrichtung fuer Decken-Sektionen
-- [ ] **FR-023** Auftrieb-/Wasserzonen mit eigener Physik
+- [x] **FR-023** Auftrieb-/Wasserzonen mit eigener Physik
 - [x] **FR-024** Bewegliche Plattformen als sichere Landeflaechen
 - [x] **FR-025** Foerderbaender, die das Maennchen verschieben
 - [x] **FR-026** Sprungfedern/Trampoline zum Abprallen
@@ -78,8 +78,8 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 - [x] **FR-036** Bullet-Time-/Zeitlupen-Zonen
 - [x] **FR-037** Pendel-/Seilschwung-Mechanik an Greifpunkten
 - [x] **FR-038** Massen-Pickups veraendern kurzzeitig die Traegheit
-- [ ] **FR-039** Umschaltbare realistische Luftreibung
-- [ ] **FR-040** Ragdoll-Physik fuer die Tod-Animation
+- [x] **FR-039** Umschaltbare realistische Luftreibung
+- [x] **FR-040** Ragdoll-Physik fuer die Tod-Animation
 
 ## Steuerung & Eingabe
 

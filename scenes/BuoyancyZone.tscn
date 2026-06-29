@@ -1,0 +1,8 @@
+[gd_scene load_steps=2 format=3 uid="uid://buoyancy"]
+
+[ext_resource type="Script" path="res://scripts/BuoyancyZone.gd" id="1_buoy"]
+
+[node name="BuoyancyZone" type="Area2D"]
+script = ExtResource("1_buoy")
+collision_layer = 8
+collision_mask = 1

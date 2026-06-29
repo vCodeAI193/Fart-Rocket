@@ -24,6 +24,12 @@ class_name Player
 # --- FR-033: Drall-Dämpfung (abklingende Rotation) -------------
 @export var rotation_damping: float = 1.5
 
+# --- FR-039: Realistische Luftreibung (optional) ----------------
+@export var realistic_drag_enabled: bool = false
+@export var drag_coefficient: float = 0.5
+@export var air_density: float = 1.2
+@export var reference_area: float = 50.0
+
 # --- FR-162: Maennchen-Farbe (Skin) ----------------------------
 @export var skin_color: Color = Color(0.95, 0.95, 0.95)
 
@@ -79,6 +85,9 @@ var _fart_type_index: int = 1                # aktiver Furz-Typ (Standard: Norma
 var _aim_hold: float = 0.0                   # wie lange schon gezielt wird (FR-005)
 var _cooldown_remaining: float = 0.0         # verbleibende Abklingzeit (FR-008)
 var _current_fuel: float = 100.0             # FR-004: Aktueller Treibstoff
+var _heat_level: float = 0.0                 # FR-012: Überhitzungs-Level (0..1)
+var _overheat_cooldown: float = 0.0          # FR-012: Abklingzeit nach Überhitzung
+var _ragdoll_active: bool = false            # FR-040: Ragdoll-Modus aktiv
 
 # Referenzen auf untergeordnete Knoten
 var _aim_arrow: Line2D
@@ -130,6 +139,10 @@ func _process(delta: float) -> void:
 		_current_fuel = minf(_current_fuel + fuel_regen_rate * delta, max_fuel)
 	else:
 		_process_regen(delta)
+
+	# FR-012: Überhitzungs-Level abkühlen
+	_heat_level = maxf(0.0, _heat_level - delta * 0.5)
+	_overheat_cooldown = maxf(0.0, _overheat_cooldown - delta)
 
 	# FR-168: Flug-Spur aktualisieren
 	_update_trail()
@@ -228,6 +241,10 @@ func _release_fart() -> void:
 	if _cooldown_remaining > 0.0:
 		return
 
+	# FR-012: Überhitzt? Dann kein Stoß möglich bis abgekühlt
+	if _heat_level >= 1.0 and _overheat_cooldown > 0.0:
+		return
+
 	var fart: Dictionary = FART_TYPES[_fart_type_index]
 
 	# FR-004: Im Treibstoff-Modus Energie verbrauchen statt Ladungen
@@ -254,6 +271,13 @@ func _release_fart() -> void:
 	# FR-008: Abklingzeit starten, FR-045: kurze Vibration
 	_cooldown_remaining = fart_cooldown
 	GameManager.vibrate(40)
+
+	# FR-012: Überhitzungs-Level erhöhen (Mega-Furz = mehr Hitze)
+	_heat_level += (fart["power"] * 0.25)
+	if _heat_level >= 1.0:
+		_heat_level = 1.0
+		_overheat_cooldown = 2.0  # 2 Sekunden nicht furzen können
+		GameManager.vibrate(100)  # Intensive Vibration bei Überhitzung
 
 	# Ersten Stoß sofort auslösen
 	_do_thrust(dir, impulse, tint)
@@ -337,6 +361,16 @@ func _integrate_forces(state: PhysicsDirectBodyState2D) -> void:
 	if _is_dead:
 		return
 	var vel := state.linear_velocity
+
+	# FR-039: Realistische Luftreibung (optional, statt standard linear_damp)
+	if realistic_drag_enabled:
+		var speed := vel.length()
+		if speed > 0.1:
+			# Aerodynamischer Widerstand: F = 0.5 * ρ * v² * Cd * A
+			var drag_force := 0.5 * air_density * (speed * speed) * drag_coefficient * reference_area
+			var drag_accel := -drag_force / mass * vel.normalized()
+			state.linear_velocity += drag_accel * state.step
+
 	# FR-032: Maximale Fluggeschwindigkeit begrenzen
 	if vel.length() > max_speed:
 		state.linear_velocity = vel.normalized() * max_speed
@@ -383,15 +417,22 @@ func _die() -> void:
 	Engine.time_scale = 1.0
 	# FR-262: Crash-Partikel-Explosion
 	_spawn_crash_particles()
-	# Wild durch die Luft wirbeln (lustiger Effekt)
-	gravity_scale = 0.3
-	angular_velocity = 12.0
-	apply_central_impulse(Vector2(0, -350))
+	# FR-040: Ragdoll-Modus aktivieren (Figur wird zur Puppe)
+	_activate_ragdoll()
 	# Letzten Furz als "Ohnmacht" ausstoßen
 	_spawn_fart_burst(Vector2.DOWN)
 	# Kurze Verzögerung, damit man die Animation sieht
 	await get_tree().create_timer(0.9).timeout
 	died.emit()
+
+
+## FR-040: Ragdoll-Modus aktivieren — Figur wird zur Puppe.
+func _activate_ragdoll() -> void:
+	_ragdoll_active = true
+	gravity_scale = 1.0
+	angular_velocity = randf_range(-15.0, 15.0)
+	linear_damp = 0.5
+	apply_central_impulse(Vector2(randf_range(-200, 200), -300))
 
 
 ## FR-262: Partikel-Explosion beim Aufprall.
