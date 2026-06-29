@@ -45,7 +45,7 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 - [x] **FR-006** Seitlicher Furz-Rueckstoss dreht das Maennchen kontrolliert
 - [ ] **FR-007** Dauerstrahl-Furz bei gehaltenem Finger (kontinuierlicher Schub)
 - [x] **FR-008** Cooldown/Kuehlzeit zwischen einzelnen Furz-Stoessen
-- [ ] **FR-009** Winkel-Praezisions-Bonus — perfekter Zielwinkel gibt mehr Schub
+- [x] **FR-009** Winkel-Praezisions-Bonus — perfekter Zielwinkel gibt mehr Schub
 - [x] **FR-010** Furz-Schild — kurzer Schutz unmittelbar nach einem Stoss
 - [x] **FR-011** Treibstoff-Pickups fuellen Ladungen mitten im Level auf
 - [ ] **FR-012** Ueberhitzung bei zu vielen Fuerzen (Risiko/Belohnung)
@@ -68,16 +68,16 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 - [x] **FR-026** Sprungfedern/Trampoline zum Abprallen
 - [x] **FR-027** Magnetfelder, die das Maennchen ziehen oder abstossen
 - [x] **FR-028** Schleim-/Klebezonen verlangsamen die Bewegung
-- [ ] **FR-029** Eis-/Glaettezonen mit reduzierter Reibung
+- [x] **FR-029** Eis-/Glaettezonen mit reduzierter Reibung
 - [x] **FR-030** Luftstroemungen und Wind-Tunnel
 - [ ] **FR-031** Schwarze Loecher mit Anziehungskraft
 - [x] **FR-032** Konfigurierbare Terminalgeschwindigkeit/Speed-Limit
 - [x] **FR-033** Einstellbare Drall-Daempfung (abklingende Rotation)
 - [ ] **FR-034** Bouncy-Walls mit Energieerhalt beim Abprall
 - [ ] **FR-035** Zerstoerbare Waende abhaengig von der Aufprallgeschwindigkeit
-- [ ] **FR-036** Bullet-Time-/Zeitlupen-Zonen
-- [ ] **FR-037** Pendel-/Seilschwung-Mechanik an Greifpunkten
-- [ ] **FR-038** Massen-Pickups veraendern kurzzeitig die Traegheit
+- [x] **FR-036** Bullet-Time-/Zeitlupen-Zonen
+- [x] **FR-037** Pendel-/Seilschwung-Mechanik an Greifpunkten
+- [x] **FR-038** Massen-Pickups veraendern kurzzeitig die Traegheit
 - [ ] **FR-039** Umschaltbare realistische Luftreibung
 - [ ] **FR-040** Ragdoll-Physik fuer die Tod-Animation
 

@@ -229,7 +229,9 @@ func _release_fart() -> void:
 	var charge_mult := 1.0 + _hold_factor() * charge_hold_bonus
 	var strength := clampf(drag.length() / max_drag_distance, 0.0, 1.0)
 	var dir := drag.normalized()
-	var impulse: float = fart_power * strength * fart["power"] * charge_mult
+	# FR-009: Winkel-Präzisions-Bonus — perfekte Winkel bekommen Schub-Bonus
+	var precision_mult := _calculate_precision_bonus(dir)
+	var impulse: float = fart_power * strength * fart["power"] * charge_mult * precision_mult
 	var bursts: int = fart["bursts"]
 	var tint: Color = fart["color"]
 
@@ -249,6 +251,23 @@ func _release_fart() -> void:
 		if not is_instance_valid(self) or _is_dead:
 			return
 		_do_thrust(dir, impulse * 0.85, tint)
+
+
+## FR-009: Berechnet den Präzisions-Bonus für einen gegebenen Zielwinkel.
+## Perfekte Winkel (Kardinalrichtungen) erhalten bis zu 1.5x Bonus.
+func _calculate_precision_bonus(dir: Vector2) -> float:
+	var angle := dir.angle()
+	angle = fmod(angle + TAU, TAU)
+	var perfect_angles := [0.0, PI * 0.5, PI, PI * 1.5]
+	var min_angle_diff := PI
+	for perfect in perfect_angles:
+		var diff := abs(angle - perfect)
+		if diff > PI:
+			diff = TAU - diff
+		min_angle_diff = minf(min_angle_diff, diff)
+	var tolerance := PI * 0.15
+	var bonus := (1.0 - clampf(min_angle_diff / tolerance, 0.0, 1.0)) * 0.5
+	return 1.0 + bonus
 
 
 ## Wendet einen einzelnen Schub an und erzeugt die passende Furz-Wolke.
