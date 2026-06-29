@@ -1,0 +1,92 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/LevelComplete.gd" id="1_lc"]
+
+[node name="LevelComplete" type="CanvasLayer"]
+layer = 5
+script = ExtResource("1_lc")
+
+[node name="Root" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Dim" type="ColorRect" parent="Root"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.6)
+
+[node name="Panel" type="Panel" parent="Root"]
+layout_mode = 1
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -380.0
+offset_top = -320.0
+offset_right = 380.0
+offset_bottom = 320.0
+
+[node name="VBox" type="VBoxContainer" parent="Root/Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 40.0
+offset_top = 40.0
+offset_right = -40.0
+offset_bottom = -40.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 30
+alignment = 1
+
+[node name="Title" type="Label" parent="Root/Panel/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 64
+text = "Level geschafft!"
+horizontal_alignment = 1
+
+[node name="StarsLabel" type="Label" parent="Root/Panel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.82, 0.15, 1)
+theme_override_font_sizes/font_size = 110
+text = "★★★"
+horizontal_alignment = 1
+
+[node name="InfoLabel" type="Label" parent="Root/Panel/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 40
+text = "Münzen: 0
+Zeit: 00:00"
+horizontal_alignment = 1
+
+[node name="Buttons" type="HBoxContainer" parent="Root/Panel/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 24
+alignment = 1
+
+[node name="NextButton" type="Button" parent="Root/Panel/VBox/Buttons"]
+custom_minimum_size = Vector2(200, 90)
+layout_mode = 2
+theme_override_font_sizes/font_size = 40
+text = "Weiter"
+
+[node name="RetryButton" type="Button" parent="Root/Panel/VBox/Buttons"]
+custom_minimum_size = Vector2(200, 90)
+layout_mode = 2
+theme_override_font_sizes/font_size = 40
+text = "Nochmal"
+
+[node name="MenuButton" type="Button" parent="Root/Panel/VBox/Buttons"]
+custom_minimum_size = Vector2(200, 90)
+layout_mode = 2
+theme_override_font_sizes/font_size = 40
+text = "Menü"

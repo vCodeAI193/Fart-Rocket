@@ -1,0 +1,8 @@
+[gd_scene load_steps=2 format=3 uid="uid://windzone"]
+
+[ext_resource type="Script" path="res://scripts/WindZone.gd" id="1_wz"]
+
+[node name="WindZone" type="Area2D"]
+script = ExtResource("1_wz")
+collision_layer = 8
+collision_mask = 1

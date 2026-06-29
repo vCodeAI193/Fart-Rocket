@@ -1,0 +1,8 @@
+[gd_scene load_steps=2 format=3 uid="uid://conveyorbelt"]
+
+[ext_resource type="Script" path="res://scripts/ConveyorBelt.gd" id="1_cb"]
+
+[node name="ConveyorBelt" type="StaticBody2D"]
+script = ExtResource("1_cb")
+collision_layer = 2
+collision_mask = 1

@@ -1,0 +1,8 @@
+[gd_scene load_steps=2 format=3 uid="uid://stickyzone"]
+
+[ext_resource type="Script" path="res://scripts/StickyZone.gd" id="1_sz"]
+
+[node name="StickyZone" type="Area2D"]
+script = ExtResource("1_sz")
+collision_layer = 8
+collision_mask = 1
