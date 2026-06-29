@@ -1,0 +1,8 @@
+[gd_scene load_steps=2 format=3 uid="uid://bouncywall"]
+
+[ext_resource type="Script" path="res://scripts/BouncyWall.gd" id="1_bounce"]
+
+[node name="BouncyWall" type="StaticBody2D"]
+script = ExtResource("1_bounce")
+collision_layer = 1
+collision_mask = 0

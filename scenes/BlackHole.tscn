@@ -1,0 +1,8 @@
+[gd_scene load_steps=2 format=3 uid="uid://blackhole"]
+
+[ext_resource type="Script" path="res://scripts/BlackHole.gd" id="1_hole"]
+
+[node name="BlackHole" type="Area2D"]
+script = ExtResource("1_hole")
+collision_layer = 8
+collision_mask = 1

@@ -40,7 +40,7 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 - [x] **FR-001** Furz-Aufladung ueber Zeit — optional regenerierende Ladungen pro Level
 - [x] **FR-002** Mehrere Furz-Typen (Mega-Furz, Mini-Furz, Doppel-Stoss)
 - [x] **FR-003** Furz-Combo-System — schnelle Folgefuerze geben Bonus-Schub
-- [ ] **FR-004** Treibstoff-Modus mit Ladungsbalken statt fester Ladungen
+- [x] **FR-004** Treibstoff-Modus mit Ladungsbalken statt fester Ladungen
 - [x] **FR-005** Aufgeladener Furz — laenger halten ergibt staerkeren Stoss
 - [x] **FR-006** Seitlicher Furz-Rueckstoss dreht das Maennchen kontrolliert
 - [ ] **FR-007** Dauerstrahl-Furz bei gehaltenem Finger (kontinuierlicher Schub)
@@ -50,7 +50,7 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 - [x] **FR-011** Treibstoff-Pickups fuellen Ladungen mitten im Level auf
 - [ ] **FR-012** Ueberhitzung bei zu vielen Fuerzen (Risiko/Belohnung)
 - [x] **FR-013** Wind-Interaktion — Gegenwind reduziert den Furz-Schub
-- [ ] **FR-014** Unterwasser-Furz mit Blasen und Auftriebsverhalten
+- [x] **FR-014** Unterwasser-Furz mit Blasen und Auftriebsverhalten
 - [ ] **FR-015** Schwerelosigkeits-Zonen veraendern die Furz-Wirkung
 - [ ] **FR-016** Furz-Sound variiert dynamisch mit der Stoss-Staerke
 - [ ] **FR-017** Verweilende Geruchswolke als optionale Schadenszone
@@ -70,11 +70,11 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 - [x] **FR-028** Schleim-/Klebezonen verlangsamen die Bewegung
 - [x] **FR-029** Eis-/Glaettezonen mit reduzierter Reibung
 - [x] **FR-030** Luftstroemungen und Wind-Tunnel
-- [ ] **FR-031** Schwarze Loecher mit Anziehungskraft
+- [x] **FR-031** Schwarze Loecher mit Anziehungskraft
 - [x] **FR-032** Konfigurierbare Terminalgeschwindigkeit/Speed-Limit
 - [x] **FR-033** Einstellbare Drall-Daempfung (abklingende Rotation)
-- [ ] **FR-034** Bouncy-Walls mit Energieerhalt beim Abprall
-- [ ] **FR-035** Zerstoerbare Waende abhaengig von der Aufprallgeschwindigkeit
+- [x] **FR-034** Bouncy-Walls mit Energieerhalt beim Abprall
+- [x] **FR-035** Zerstoerbare Waende abhaengig von der Aufprallgeschwindigkeit
 - [x] **FR-036** Bullet-Time-/Zeitlupen-Zonen
 - [x] **FR-037** Pendel-/Seilschwung-Mechanik an Greifpunkten
 - [x] **FR-038** Massen-Pickups veraendern kurzzeitig die Traegheit

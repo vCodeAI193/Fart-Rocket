@@ -27,6 +27,11 @@ class_name Player
 # --- FR-162: Maennchen-Farbe (Skin) ----------------------------
 @export var skin_color: Color = Color(0.95, 0.95, 0.95)
 
+# --- FR-004: Treibstoff-Modus (Alternative zu festen Ladungen) ---
+@export var fuel_mode: bool = false
+@export var max_fuel: float = 100.0
+@export var fuel_regen_rate: float = 20.0       # Kraftstoff pro Sekunde
+
 # --- FR-001: Optionale Furz-Regeneration (pro Level einstellbar) -
 @export var charge_regen_enabled: bool = false  # Ladungen mit der Zeit nachfüllen?
 @export var charge_regen_time: float = 5.0      # Sekunden bis eine Ladung nachlädt
@@ -73,6 +78,7 @@ var _regen_accum: float = 0.0                # aufgelaufene Zeit für die Regene
 var _fart_type_index: int = 1                # aktiver Furz-Typ (Standard: Normal)
 var _aim_hold: float = 0.0                   # wie lange schon gezielt wird (FR-005)
 var _cooldown_remaining: float = 0.0         # verbleibende Abklingzeit (FR-008)
+var _current_fuel: float = 100.0             # FR-004: Aktueller Treibstoff
 
 # Referenzen auf untergeordnete Knoten
 var _aim_arrow: Line2D
@@ -119,8 +125,11 @@ func _process(delta: float) -> void:
 		_aim_hold += delta
 		_update_aim_visual()
 
-	# FR-001: Ladungen über Zeit regenerieren
-	_process_regen(delta)
+	# FR-001/004: Ladungen/Treibstoff über Zeit regenerieren
+	if fuel_mode:
+		_current_fuel = minf(_current_fuel + fuel_regen_rate * delta, max_fuel)
+	else:
+		_process_regen(delta)
 
 	# FR-168: Flug-Spur aktualisieren
 	_update_trail()
@@ -221,9 +230,16 @@ func _release_fart() -> void:
 
 	var fart: Dictionary = FART_TYPES[_fart_type_index]
 
-	# Genug Ladungen für diesen Furz-Typ vorhanden?
-	if not GameManager.use_charges(fart["cost"]):
-		return
+	# FR-004: Im Treibstoff-Modus Energie verbrauchen statt Ladungen
+	if fuel_mode:
+		var fuel_cost := fart["cost"] * 20.0  # Ein "Punkt" = 20 Treibstoff
+		if _current_fuel < fuel_cost:
+			return
+		_current_fuel -= fuel_cost
+	else:
+		# Genug Ladungen für diesen Furz-Typ vorhanden?
+		if not GameManager.use_charges(fart["cost"]):
+			return
 
 	# FR-005: Haltedauer erhöht den Schub zusätzlich
 	var charge_mult := 1.0 + _hold_factor() * charge_hold_bonus
