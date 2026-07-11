@@ -353,6 +353,7 @@ func _make_edge_arrow(dir: Vector2) -> Control:
 func _load_current_level() -> void:
 	_level_finished = false
 	_checkpoint_pos = Vector2(INF, INF)  # FR-135: Checkpoint zurücksetzen
+	GameManager.last_played_level = GameManager.current_level  # FR-238
 	var path := GameManager.get_level_scene_path(GameManager.current_level)
 	var level_scene: PackedScene = load(path)
 	var level := level_scene.instantiate()
@@ -500,6 +501,7 @@ func is_photo_mode() -> bool:
 func _on_player_died() -> void:
 	_camera_shake(0.3, 0.35)
 	_hud.flash_damage()  # FR-209: rote Vignette
+	GameManager.record_death()  # FR-226: Statistik
 	# FR-135: Am Checkpoint wiederbeleben, falls einer aktiviert wurde
 	if _checkpoint_pos.x < INF:
 		_player.revive(_checkpoint_pos)
@@ -531,6 +533,9 @@ func _on_level_reached() -> void:
 
 	# FR-219: Versuch in die lokale Rang-Historie eintragen
 	GameManager.record_attempt_time(GameManager.current_level, time_sec)
+
+	# FR-224: Erspielten Punktestand als dauerhaftes Guthaben einzahlen
+	GameManager.bank_level_coins(GameManager.total_score)
 
 	# FR-187: Kurzer Kino-Modus (Zoom + Letterbox) vor dem Abschlussbildschirm
 	await _play_cinematic_ending()

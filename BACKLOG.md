@@ -290,25 +290,25 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 
 ## Menues & Navigation
 
-- [ ] **FR-221** Welt-/Kapitelauswahl als Karte
+- [x] **FR-221** Welt-/Kapitelauswahl als Karte
 - [x] **FR-222** Animierte Menue-Uebergaenge
 - [x] **FR-223** Einstellungs-Untermenues
-- [ ] **FR-224** Shop-Bildschirm
-- [ ] **FR-225** Sammlungs-/Galerie-Bildschirm
-- [ ] **FR-226** Statistik-Bildschirm
-- [ ] **FR-227** Credits-Bildschirm
-- [ ] **FR-228** Bestaetigungsdialoge (Beenden/Zuruecksetzen)
-- [ ] **FR-229** Lade-Bildschirm mit Tipps
-- [ ] **FR-230** Splash-Screen/Logo-Intro
+- [x] **FR-224** Shop-Bildschirm
+- [x] **FR-225** Sammlungs-/Galerie-Bildschirm
+- [x] **FR-226** Statistik-Bildschirm
+- [x] **FR-227** Credits-Bildschirm
+- [x] **FR-228** Bestaetigungsdialoge (Beenden/Zuruecksetzen)
+- [x] **FR-229** Lade-Bildschirm mit Tipps
+- [x] **FR-230** Splash-Screen/Logo-Intro
 - [x] **FR-231** Animierter Hauptmenue-Hintergrund
-- [ ] **FR-232** Level-Detail-Popup (Sterne/Bestzeit)
+- [x] **FR-232** Level-Detail-Popup (Sterne/Bestzeit)
 - [x] **FR-233** Korrekte Android-Zurueck-Button-Behandlung
-- [ ] **FR-234** Tab-Navigation in Menues
-- [ ] **FR-235** Such-/Filterfunktion fuer Level
-- [ ] **FR-236** Favoriten-Level markieren
-- [ ] **FR-237** Fortschritts-Uebersicht (Gesamt-Prozent)
-- [ ] **FR-238** Schnellstart: letztes Level fortsetzen
-- [ ] **FR-239** Sound-Feedback in Menues
+- [x] **FR-234** Tab-Navigation in Menues
+- [x] **FR-235** Such-/Filterfunktion fuer Level
+- [x] **FR-236** Favoriten-Level markieren
+- [x] **FR-237** Fortschritts-Uebersicht (Gesamt-Prozent)
+- [x] **FR-238** Schnellstart: letztes Level fortsetzen
+- [x] **FR-239** Sound-Feedback in Menues
 - [x] **FR-240** Onboarding-Begruessungsbildschirm
 
 ## Audio & Musik

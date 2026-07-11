@@ -11,7 +11,7 @@ config_version=5
 
 config/name="Fart Rocket"
 config/description="Ein physikbasiertes 2D-Spiel: Steuere ein Strichmännchen mit Furz-Antrieb durch Hindernis-Level."
-run/main_scene="res://scenes/MainMenu.tscn"
+run/main_scene="res://scenes/SplashScreen.tscn"
 config/features=PackedStringArray("4.3", "GL Compatibility")
 config/icon="res://icon.svg"
 boot_splash/show_image=false

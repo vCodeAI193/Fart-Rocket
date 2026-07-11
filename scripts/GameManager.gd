@@ -99,6 +99,29 @@ var level_attempt_times: Dictionary = {}  # {level_index: Array[float]}
 # --- FR-210: Tutorial-Hinweis-Overlays (dauerhaft, nicht pro Level) --
 var tutorial_hint_seen: bool = false
 
+# --- FR-226: Statistik-Bildschirm (dauerhafte Zähler) --------------
+var stat_total_farts: int = 0
+var stat_total_deaths: int = 0
+var stat_total_playtime_sec: float = 0.0
+
+# --- FR-236: Favoriten-Level ----------------------------------------
+var favorite_levels: Array[int] = []
+
+# --- FR-238: Schnellstart letztes Level ------------------------------
+var last_played_level: int = 0
+
+# --- FR-224: Shop / freischaltbare Skin-Farben -----------------------
+var unlocked_skin_colors: Array[String] = ["default"]
+var active_skin_color: String = "default"
+
+# --- FR-224: Persistente Währung fürs Menü/Shop --------------------
+# Hinweis: total_coins/total_score sind reine Session-Werte pro Level-
+# Versuch (werden bei jedem start_level() zurückgesetzt). Für den Shop
+# braucht es echtes dauerhaftes Guthaben, das beim Levelabschluss
+# "eingezahlt" wird.
+signal persistent_coins_changed(amount)
+var persistent_coins: int = 0
+
 # --- FR-099: Sammel-Fortschritt pro Level (x/y Münzen) ------------
 var level_coin_total: int = 0
 var level_coin_collected: int = 0
@@ -253,6 +276,60 @@ func set_camera_shake_intensity(value: float) -> void:
 func set_camera_smoothing(value: float) -> void:
 	camera_smoothing = clampf(value, 2.0, 16.0)
 	_save_progress()
+
+
+## FR-226: Erhöht den Furz-Zähler (von Player bei jedem Stoß aufgerufen).
+func record_fart() -> void:
+	stat_total_farts += 1
+
+
+## FR-226: Erhöht den Tod-Zähler (von Main bei jedem Tod aufgerufen).
+func record_death() -> void:
+	stat_total_deaths += 1
+	_save_progress()
+
+
+## FR-236: Schaltet den Favoriten-Status eines Levels um.
+func toggle_favorite_level(level_index: int) -> void:
+	if level_index in favorite_levels:
+		favorite_levels.erase(level_index)
+	else:
+		favorite_levels.append(level_index)
+	_save_progress()
+
+
+## FR-237: Gesamtfortschritt in Prozent (erreichte Sterne / maximal mögliche).
+func get_overall_progress_percent() -> float:
+	var earned := 0
+	for lvl in level_stars.keys():
+		earned += level_stars[lvl]
+	var max_possible := TOTAL_LEVELS * 3
+	if max_possible <= 0:
+		return 0.0
+	return (float(earned) / float(max_possible)) * 100.0
+
+
+## FR-224: Bankt den erspielten Punktestand eines abgeschlossenen Levels
+## als dauerhaftes Guthaben ein (von Main beim Levelabschluss aufgerufen).
+func bank_level_coins(score_amount: int) -> void:
+	if score_amount <= 0:
+		return
+	persistent_coins += score_amount
+	persistent_coins_changed.emit(persistent_coins)
+	_save_progress()
+
+
+## FR-224: Schaltet eine Skin-Farbe per dauerhaftem Guthaben frei.
+func unlock_skin_color(id: String, cost: int) -> bool:
+	if id in unlocked_skin_colors:
+		return true
+	if persistent_coins < cost:
+		return false
+	persistent_coins -= cost
+	persistent_coins_changed.emit(persistent_coins)
+	unlocked_skin_colors.append(id)
+	_save_progress()
+	return true
 
 
 ## FR-210: Markiert den Tutorial-Hinweis dauerhaft als gesehen.
@@ -456,6 +533,59 @@ func _apply_mute() -> void:
 	AudioServer.set_bus_mute(0, sound_muted)
 
 
+# --- FR-239: Prozedurales UI-Sound-Feedback (kein externes Audio) -
+var _ui_click_stream: AudioStreamWAV
+var _ui_click_players: Array[AudioStreamPlayer] = []
+const UI_CLICK_POOL_SIZE := 4
+
+
+## FR-239: Spielt einen kurzen, prozedural erzeugten Klick-Ton für
+## Menü-Interaktionen ab (Button-Hover/-Press, Tab-Wechsel etc.).
+func play_ui_click(pitch: float = 1.0) -> void:
+	if sound_muted:
+		return
+	if _ui_click_stream == null:
+		_ui_click_stream = _generate_click_tone()
+	var player := _get_free_ui_player()
+	player.stream = _ui_click_stream
+	player.pitch_scale = pitch
+	player.play()
+
+
+func _get_free_ui_player() -> AudioStreamPlayer:
+	for p in _ui_click_players:
+		if not p.playing:
+			return p
+	if _ui_click_players.size() < UI_CLICK_POOL_SIZE:
+		var new_player := AudioStreamPlayer.new()
+		add_child(new_player)
+		_ui_click_players.append(new_player)
+		return new_player
+	return _ui_click_players[0]  # Pool voll: ältesten wiederverwenden
+
+
+## FR-239: Erzeugt einen kurzen, sich abklingenden Sinuston (kein Asset).
+func _generate_click_tone() -> AudioStreamWAV:
+	var sample_rate := 22050
+	var duration := 0.08
+	var frequency := 880.0
+	var sample_count := int(sample_rate * duration)
+	var data := PackedByteArray()
+	data.resize(sample_count * 2)  # 16-bit mono
+	for i in range(sample_count):
+		var t := float(i) / sample_rate
+		var envelope := 1.0 - (float(i) / sample_count)  # linear ausklingend
+		var sample := sin(TAU * frequency * t) * envelope * 0.5
+		var value := int(clampf(sample, -1.0, 1.0) * 32767.0)
+		data.encode_s16(i * 2, value)
+	var stream := AudioStreamWAV.new()
+	stream.data = data
+	stream.format = AudioStreamWAV.FORMAT_16_BITS
+	stream.mix_rate = sample_rate
+	stream.stereo = false
+	return stream
+
+
 ## Berechnet die Stern-Bewertung (1..3) anhand der übrigen Ladungen.
 func calculate_stars(max_charges: int) -> int:
 	if max_charges <= 0:
@@ -544,7 +674,41 @@ func _save_progress() -> void:
 	cfg.set_value("hud", "scale", hud_scale)  # FR-216
 	cfg.set_value("hud", "attempt_times", level_attempt_times)  # FR-219
 	cfg.set_value("hud", "tutorial_hint_seen", tutorial_hint_seen)  # FR-210
+	cfg.set_value("stats", "total_farts", stat_total_farts)  # FR-226
+	cfg.set_value("stats", "total_deaths", stat_total_deaths)  # FR-226
+	cfg.set_value("menu", "favorites", favorite_levels)  # FR-236
+	cfg.set_value("menu", "last_played_level", last_played_level)  # FR-238
+	cfg.set_value("shop", "unlocked_skins", unlocked_skin_colors)  # FR-224
+	cfg.set_value("shop", "active_skin", active_skin_color)  # FR-224
+	cfg.set_value("shop", "persistent_coins", persistent_coins)  # FR-224
 	cfg.save(SAVE_PATH)
+
+
+## FR-228: Setzt den gesamten Spielstand auf den Ausgangszustand zurück
+## (Sterne, Statistiken, Sammlungen, Guthaben, Einstellungen) und löscht
+## die Speicherdatei. Wird nach Bestätigung im Reset-Dialog aufgerufen.
+func reset_all_progress() -> void:
+	level_stars = {1: 0, 2: 0, 3: 0}
+	total_xp = 0
+	player_level = 1
+	discovered_enemies.clear()
+	collected_stickers.clear()
+	last_daily_coin_date = ""
+	tutorial_hint_seen = false
+	stat_total_farts = 0
+	stat_total_deaths = 0
+	favorite_levels.clear()
+	last_played_level = 0
+	unlocked_skin_colors = ["default"]
+	active_skin_color = "default"
+	persistent_coins = 0
+	level_attempt_times.clear()
+	time_attack_best_times = {1: INF, 2: INF, 3: INF}
+
+	var dir := DirAccess.open("user://")
+	if dir != null and dir.file_exists(SAVE_PATH.trim_prefix("user://")):
+		dir.remove(SAVE_PATH.trim_prefix("user://"))
+	_save_progress()
 
 
 func _load_progress() -> void:
@@ -569,6 +733,15 @@ func _load_progress() -> void:
 	hud_scale = cfg.get_value("hud", "scale", 1.0)  # FR-216
 	level_attempt_times = cfg.get_value("hud", "attempt_times", {})  # FR-219
 	tutorial_hint_seen = cfg.get_value("hud", "tutorial_hint_seen", false)  # FR-210
+	stat_total_farts = cfg.get_value("stats", "total_farts", 0)  # FR-226
+	stat_total_deaths = cfg.get_value("stats", "total_deaths", 0)  # FR-226
+	var saved_favorites: Array = cfg.get_value("menu", "favorites", [])  # FR-236
+	favorite_levels.assign(saved_favorites)
+	last_played_level = cfg.get_value("menu", "last_played_level", 0)  # FR-238
+	var saved_skins: Array = cfg.get_value("shop", "unlocked_skins", ["default"])  # FR-224
+	unlocked_skin_colors.assign(saved_skins)
+	active_skin_color = cfg.get_value("shop", "active_skin", "default")  # FR-224
+	persistent_coins = cfg.get_value("shop", "persistent_coins", 0)  # FR-224
 
 
 ## FR-118: Registriert einen Gegner-Typ als entdeckt (persistiert).

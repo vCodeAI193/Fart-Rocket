@@ -21,6 +21,8 @@ var _smoothing_btn: Button
 # FR-215/216: HUD-Einstellungen
 var _minimal_hud_btn: Button
 var _hud_scale_btn: Button
+# FR-228: Bestätigungsdialog für den Fortschritts-Reset
+var _confirm_dialog: ConfirmDialog
 
 
 func _ready() -> void:
@@ -28,6 +30,8 @@ func _ready() -> void:
 	visible = false
 	layer = 10
 	_build_ui()
+	_confirm_dialog = preload("res://scenes/ConfirmDialog.tscn").instantiate()
+	add_child(_confirm_dialog)
 
 
 func show_settings() -> void:
@@ -155,6 +159,15 @@ func _build_ui() -> void:
 	_hud_scale_btn.pressed.connect(_on_hud_scale_pressed)
 	vbox.add_child(_hud_scale_btn)
 
+	# --- FR-228: Fortschritt zurücksetzen ---------------------------
+	var reset_btn := Button.new()
+	reset_btn.text = "Fortschritt zurücksetzen"
+	reset_btn.custom_minimum_size = Vector2(400, 76)
+	reset_btn.add_theme_font_size_override("font_size", 28)
+	reset_btn.add_theme_color_override("font_color", Color(1.0, 0.4, 0.3))
+	reset_btn.pressed.connect(_on_reset_pressed)
+	vbox.add_child(reset_btn)
+
 	# Schliessen-Button
 	var close_btn := Button.new()
 	close_btn.text = "Schliessen"
@@ -263,6 +276,23 @@ func _on_hud_scale_pressed() -> void:
 	GameManager.set_hud_scale(next)
 	GameManager.vibrate(15)
 	_update_buttons()
+
+
+## FR-228: Zeigt den Bestätigungsdialog vor dem Zurücksetzen des Fortschritts.
+func _on_reset_pressed() -> void:
+	GameManager.play_ui_click()
+	_confirm_dialog.confirmed.connect(_on_reset_confirmed, CONNECT_ONE_SHOT)
+	_confirm_dialog.show_dialog(
+		"Fortschritt zurücksetzen?",
+		"Alle Sterne, Sammlungen, Statistiken und Einstellungen werden\nunwiderruflich gelöscht. Dies kann nicht rückgängig gemacht werden."
+	)
+
+
+func _on_reset_confirmed() -> void:
+	GameManager.reset_all_progress()
+	GameManager.vibrate(80)
+	_update_buttons()
+	get_tree().reload_current_scene()
 
 
 func _on_close_pressed() -> void:

@@ -19,9 +19,9 @@ signal menu_pressed
 
 func _ready() -> void:
 	visible = false
-	_next_button.pressed.connect(func(): next_level_pressed.emit())
-	_retry_button.pressed.connect(func(): retry_pressed.emit())
-	_menu_button.pressed.connect(func(): menu_pressed.emit())
+	_next_button.pressed.connect(func(): GameManager.play_ui_click(); next_level_pressed.emit())
+	_retry_button.pressed.connect(func(): GameManager.play_ui_click(); retry_pressed.emit())
+	_menu_button.pressed.connect(func(): GameManager.play_ui_click(); menu_pressed.emit())
 
 
 ## Zeigt das Ergebnis an.

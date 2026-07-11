@@ -138,6 +138,7 @@ func _ready() -> void:
 	gravity_scale = level_gravity_scale  # FR-021
 	angular_damp = rotation_damping      # FR-033
 	body_entered.connect(_on_body_entered)
+	_apply_shop_skin()  # FR-224: im Shop gekaufte/ausgerüstete Skin-Farbe übernehmen
 	_build_stick_figure()
 	_build_aim_arrow()
 	# FR-020: Standard-Kurve initialisieren (linear, falls nicht gesetzt)
@@ -370,6 +371,7 @@ func _execute_fart(drag: Vector2) -> void:
 	# FR-008: Abklingzeit starten, FR-045: kurze Vibration
 	_cooldown_remaining = fart_cooldown
 	GameManager.vibrate(40)
+	GameManager.record_fart()  # FR-226: Statistik
 
 	# FR-012: Überhitzungs-Level erhöhen (Mega-Furz = mehr Hitze)
 	_heat_level += (fart["power"] * 0.25)
@@ -617,6 +619,16 @@ func _spawn_crash_particles() -> void:
 			if is_instance_valid(p):
 				p.queue_free()
 	)
+
+
+## FR-224: Übernimmt die im Shop ausgerüstete Skin-Farbe (falls nicht Standard).
+func _apply_shop_skin() -> void:
+	if GameManager.active_skin_color == "default":
+		return
+	for offer in ShopScreen.SKIN_OFFERS:
+		if offer["id"] == GameManager.active_skin_color:
+			skin_color = offer["color"]
+			return
 
 
 # ----------------------------------------------------------------
