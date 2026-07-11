@@ -17,6 +17,11 @@ enum ObstacleType { BALKEN, STACHELN, SAEGE }
 @export var rotation_speed: float = 3.0                 # Drehgeschwindigkeit der Säge (rad/s)
 @export var obstacle_color: Color = Color(0.55, 0.55, 0.6)  # graue Färbung
 
+# --- FR-061: Weitere Sägeblatt-Größen und -Muster ----------------
+enum SawPattern { NORMAL, DOUBLE_RING, ASYMMETRISCH }
+@export var saw_teeth: int = 12          # Anzahl der Sägezähne
+@export var saw_pattern: SawPattern = SawPattern.NORMAL
+
 
 func _ready() -> void:
 	add_to_group("obstacles")
@@ -84,19 +89,40 @@ func _build_spikes() -> void:
 
 
 # --- Sägeblatt --------------------------------------------------
+## FR-061: Unterstützt mehrere Zahn-Muster für visuelle Abwechslung.
 func _build_saw() -> void:
-	var teeth := 12
+	var teeth := maxi(4, saw_teeth)
 	var points := PackedVector2Array()
 	for i in range(teeth * 2):
 		var a := TAU * float(i) / float(teeth * 2)
-		# abwechselnd äußerer und innerer Radius -> Sägezähne
-		var r := saw_radius if i % 2 == 0 else saw_radius * 0.78
+		var r: float
+		match saw_pattern:
+			SawPattern.DOUBLE_RING:
+				# Feineres Zickzack für einen doppelten Ring-Look
+				r = saw_radius if i % 2 == 0 else saw_radius * 0.86
+			SawPattern.ASYMMETRISCH:
+				# Ungleichmäßige Zahnlänge für unregelmäßiges Muster
+				r = saw_radius * (1.0 if i % 2 == 0 else 0.6 + 0.2 * sin(float(i)))
+			_:
+				r = saw_radius if i % 2 == 0 else saw_radius * 0.78
 		points.append(Vector2(cos(a), sin(a)) * r)
 
 	var poly := Polygon2D.new()
 	poly.color = obstacle_color
 	poly.polygon = points
 	add_child(poly)
+
+	# Innerer zweiter Ring bei DOUBLE_RING-Muster
+	if saw_pattern == SawPattern.DOUBLE_RING:
+		var inner_ring := Polygon2D.new()
+		inner_ring.color = obstacle_color.darkened(0.15)
+		var inner_pts := PackedVector2Array()
+		for i in range(teeth):
+			var a := TAU * float(i) / float(teeth) + (TAU / float(teeth * 2))
+			var r := saw_radius * 0.55 if i % 2 == 0 else saw_radius * 0.45
+			inner_pts.append(Vector2(cos(a), sin(a)) * r)
+		inner_ring.polygon = inner_pts
+		add_child(inner_ring)
 
 	# Mittelpunkt (dunkler Kreis) als Deko
 	var hub := Polygon2D.new()

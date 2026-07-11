@@ -106,7 +106,7 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 
 ## Hindernisse & Gefahren
 
-- [ ] **FR-061** Weitere Saegeblatt-Groessen und -Muster
+- [x] **FR-061** Weitere Saegeblatt-Groessen und -Muster
 - [x] **FR-062** Bewegliche Stachel-Walzen
 - [x] **FR-063** Pendelnde Stachelkugeln (Morgenstern)
 - [x] **FR-064** Ein-/ausfahrende Stacheln als Timing-Raetsel
@@ -117,15 +117,15 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 - [x] **FR-069** Elektro-Zaeune und Stromfelder
 - [x] **FR-070** Rotierende Hindernis-Raeder mit Luecken
 - [x] **FR-071** Wandernde Laserwaende (Quetsch-Gefahr)
-- [ ] **FR-072** Giftgaswolken als zeitbegrenzte Zonen
+- [x] **FR-072** Giftgaswolken als zeitbegrenzte Zonen
 - [x] **FR-073** Schliessende Tueren/Tore mit Timing
-- [ ] **FR-074** Kreissaegen auf Schienen
-- [ ] **FR-075** Komplexe Hindernis-Maschinen (Verbuende)
-- [ ] **FR-076** Wasserfaelle, die nach unten druecken
-- [ ] **FR-077** Klebrige Spinnweben (Verzoegerung oder Tod)
+- [x] **FR-074** Kreissaegen auf Schienen
+- [x] **FR-075** Komplexe Hindernis-Maschinen (Verbuende)
+- [x] **FR-076** Wasserfaelle, die nach unten druecken
+- [x] **FR-077** Klebrige Spinnweben (Verzoegerung oder Tod)
 - [x] **FR-078** Tickende Minen, die bei Naehe explodieren
-- [ ] **FR-079** Zufaellig generierte Hindernis-Layouts per Seed
-- [ ] **FR-080** Telegrafierte Angriffe mit Vorwarn-Animationen
+- [x] **FR-079** Zufaellig generierte Hindernis-Layouts per Seed
+- [x] **FR-080** Telegrafierte Angriffe mit Vorwarn-Animationen
 
 ## Sammelobjekte & Power-ups
 

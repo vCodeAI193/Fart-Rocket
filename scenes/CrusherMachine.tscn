@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://crushermachine"]
+
+[ext_resource type="Script" path="res://scripts/CrusherMachine.gd" id="1_crusher"]
+
+[node name="CrusherMachine" type="Node2D"]
+script = ExtResource("1_crusher")
