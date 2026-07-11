@@ -118,6 +118,8 @@ var _ragdoll_active: bool = false            # FR-040: Ragdoll-Modus aktiv
 
 # Referenzen auf untergeordnete Knoten
 var _aim_arrow: Line2D
+var _arms: Line2D  # FR-177: für Sieges-Pose-Animation
+var _face_node: Node2D  # FR-167: für Gesichtsausdrücke
 
 
 var _trail: Line2D = null              # FR-168: Flug-Spur
@@ -304,9 +306,9 @@ func _update_aim_visual() -> void:
 		if target_dir != Vector2.ZERO:
 			dir = target_dir
 	_draw_aim_arrow(dir, strength)
-	# FR-005: Pfeil färbt sich mit zunehmender Aufladung von Gelb nach Rot
+	# FR-005/175: Pfeil-Farbe je nach Aufladung und gewähltem Pfeil-Design
 	var charge := _hold_factor()
-	_aim_arrow.default_color = Color(1.0, 0.85, 0.2, 0.9).lerp(Color(1.0, 0.3, 0.2, 1.0), charge)
+	_aim_arrow.default_color = _aim_arrow_color(charge)
 	_aim_arrow.width = 8.0 + charge * 8.0
 	aim_changed.emit(dir, strength)
 	# FR-048: Flugbahn-Vorschau zeichnen
@@ -372,6 +374,7 @@ func _execute_fart(drag: Vector2) -> void:
 	_cooldown_remaining = fart_cooldown
 	GameManager.vibrate(40)
 	GameManager.record_fart()  # FR-226: Statistik
+	GameManager.play_fart_sound(strength)  # FR-165
 
 	# FR-012: Überhitzungs-Level erhöhen (Mega-Furz = mehr Hitze)
 	_heat_level += (fart["power"] * 0.25)
@@ -450,9 +453,21 @@ func _do_thrust(dir: Vector2, impulse: float, tint: Color) -> void:
 		if side_component.length() > 0.1:
 			apply_torque_impulse(side_component.x * impulse * 0.008)
 	fart_fired.emit(impulse, dir)  # FR-265/192: Kamera-Wackeln/-Stoß signalisieren
-	_spawn_fart_burst(-dir, tint)
+	_spawn_fart_burst(-dir, _apply_fart_color_style(tint))
 	# FR-115: Nahe Gegner in der Gruppe "blowable" werden vom Furz weggeblasen
 	_blow_away_nearby_enemies(-dir, impulse)
+
+
+## FR-164: Überschreibt die Furz-Wolken-Farbe je nach ausgerüstetem Stil.
+func _apply_fart_color_style(base_tint: Color) -> Color:
+	match GameManager.equipped_fart_color_style:
+		"fart_toxic":
+			return Color(0.4, 1.0, 0.2)
+		"fart_rainbow":
+			var hue := fmod(Time.get_ticks_msec() * 0.0008, 1.0)
+			return Color.from_hsv(hue, 0.8, 1.0)
+		_:
+			return base_tint
 
 
 ## Erzeugt die FartBurst-Szene (eingefärbte Partikelwolke) hinter dem Männchen.
@@ -589,13 +604,46 @@ func _die() -> void:
 	died.emit()
 
 
-## FR-040: Ragdoll-Modus aktivieren — Figur wird zur Puppe.
+## FR-040/176: Ragdoll-Modus aktivieren — Verhalten je nach gewählter
+## Tod-Animation (GameManager.equipped_death_anim).
 func _activate_ragdoll() -> void:
 	_ragdoll_active = true
-	gravity_scale = 1.0
-	angular_velocity = randf_range(-15.0, 15.0)
-	linear_damp = 0.5
-	apply_central_impulse(Vector2(randf_range(-200, 200), -300))
+	match GameManager.equipped_death_anim:
+		"death_confetti":
+			gravity_scale = 1.0
+			angular_velocity = randf_range(-15.0, 15.0)
+			linear_damp = 0.5
+			apply_central_impulse(Vector2(randf_range(-200, 200), -300))
+			_spawn_confetti_burst()
+		"death_ghost":
+			gravity_scale = 0.05
+			linear_damp = 3.0
+			angular_velocity = randf_range(-3.0, 3.0)
+			apply_central_impulse(Vector2(randf_range(-60, 60), -180))
+			var tween := create_tween()
+			tween.tween_property(self, "modulate:a", 0.15, 0.7)
+		_:  # "death_spin" (Standard)
+			gravity_scale = 1.0
+			angular_velocity = randf_range(-15.0, 15.0)
+			linear_damp = 0.5
+			apply_central_impulse(Vector2(randf_range(-200, 200), -300))
+
+
+## FR-176: Bunter Partikel-Burst für die "Konfetti-Explosion"-Tod-Animation.
+func _spawn_confetti_burst() -> void:
+	var p := CPUParticles2D.new()
+	get_parent().add_child(p)
+	p.global_position = global_position
+	p.emitting = true
+	p.one_shot = true
+	p.amount = 30
+	p.lifetime = 0.8
+	p.explosiveness = 1.0
+	p.spread = 180.0
+	p.initial_velocity_min = 150.0
+	p.initial_velocity_max = 400.0
+	p.color = Color(randf(), randf(), randf())
+	get_tree().create_timer(0.9).timeout.connect(func(): if is_instance_valid(p): p.queue_free())
 
 
 ## FR-262: Partikel-Explosion beim Aufprall.
@@ -621,9 +669,13 @@ func _spawn_crash_particles() -> void:
 	)
 
 
-## FR-224: Übernimmt die im Shop ausgerüstete Skin-Farbe (falls nicht Standard).
+## FR-224/180: Übernimmt die im Shop ausgerüstete Skin-Farbe (falls nicht
+## Standard) oder die frei gewählte Farbe aus dem Farb-Editor.
 func _apply_shop_skin() -> void:
 	if GameManager.active_skin_color == "default":
+		return
+	if GameManager.active_skin_color == "custom":
+		skin_color = GameManager.custom_skin_color
 		return
 	for offer in ShopScreen.SKIN_OFFERS:
 		if offer["id"] == GameManager.active_skin_color:
@@ -636,20 +688,11 @@ func _apply_shop_skin() -> void:
 # ----------------------------------------------------------------
 func _build_stick_figure() -> void:
 	var col := skin_color  # FR-162: konfigurierbare Maennchen-Farbe
+	var head_center := Vector2(0, -34)
+	var head_radius := 16.0
 
-	# Helm (Kreis aus Line2D-Punkten)
-	var helmet := Line2D.new()
-	helmet.name = "Helmet"
-	helmet.width = 4.0
-	helmet.default_color = Color(0.55, 0.85, 1.0)  # hellblauer Helm
-	helmet.closed = true
-	var segments := 16
-	var radius := 16.0
-	var center := Vector2(0, -34)
-	for i in range(segments):
-		var a := TAU * float(i) / float(segments)
-		helmet.add_point(center + Vector2(cos(a), sin(a)) * radius)
-	add_child(helmet)
+	# FR-161: Helm-Design (abhängig von GameManager.equipped_helmet)
+	_build_helmet(head_center, head_radius)
 
 	# Körper (Torso)
 	var torso := Line2D.new()
@@ -661,14 +704,14 @@ func _build_stick_figure() -> void:
 	add_child(torso)
 
 	# Arme
-	var arms := Line2D.new()
-	arms.name = "Arms"
-	arms.width = 5.0
-	arms.default_color = col
-	arms.add_point(Vector2(-16, 6))
-	arms.add_point(Vector2(0, -10))
-	arms.add_point(Vector2(16, 6))
-	add_child(arms)
+	_arms = Line2D.new()
+	_arms.name = "Arms"
+	_arms.width = 5.0
+	_arms.default_color = col
+	_arms.add_point(Vector2(-16, 6))
+	_arms.add_point(Vector2(0, -10))
+	_arms.add_point(Vector2(16, 6))
+	add_child(_arms)
 
 	# Beine
 	var legs := Line2D.new()
@@ -679,6 +722,199 @@ func _build_stick_figure() -> void:
 	legs.add_point(Vector2(0, 18))
 	legs.add_point(Vector2(14, 40))
 	add_child(legs)
+
+	# FR-163: Kostüm-Overlay (Astronaut/Superheld/Tier)
+	_build_outfit(head_center, head_radius)
+	# FR-166: Hut/Accessoire (über dem Helm)
+	_build_hat(head_center, head_radius)
+	# FR-167: Gesichtsausdruck
+	_build_face(head_center)
+
+
+## FR-161: Zeichnet das gewählte Helm-Design.
+func _build_helmet(head_center: Vector2, radius: float) -> void:
+	var style := GameManager.equipped_helmet
+	if style == "helmet_none":
+		return
+
+	var helmet := Line2D.new()
+	helmet.name = "Helmet"
+	helmet.width = 4.0
+	helmet.closed = true
+	var segments := 16
+
+	match style:
+		"helmet_viking":
+			helmet.default_color = Color(0.6, 0.6, 0.65)
+			for i in range(segments):
+				var a := TAU * float(i) / float(segments)
+				helmet.add_point(head_center + Vector2(cos(a), sin(a)) * radius)
+			add_child(helmet)
+			for side in [-1, 1]:
+				var horn := Line2D.new()
+				horn.width = 3.0
+				horn.default_color = Color(0.9, 0.85, 0.7)
+				horn.add_point(head_center + Vector2(side * radius * 0.6, -radius * 0.3))
+				horn.add_point(head_center + Vector2(side * radius * 1.6, -radius * 1.4))
+				add_child(horn)
+		"helmet_mohawk":
+			helmet.default_color = Color(0.5, 0.5, 0.55)
+			for i in range(segments):
+				var a := TAU * float(i) / float(segments)
+				helmet.add_point(head_center + Vector2(cos(a), sin(a)) * radius)
+			add_child(helmet)
+			var mohawk := Polygon2D.new()
+			mohawk.color = Color(0.9, 0.2, 0.5)
+			mohawk.polygon = PackedVector2Array([
+				head_center + Vector2(-4, -radius), head_center + Vector2(4, -radius),
+				head_center + Vector2(0, -radius * 2.2),
+			])
+			add_child(mohawk)
+		"helmet_crown":
+			helmet.default_color = Color(1.0, 0.85, 0.2)
+			for i in range(segments):
+				var a := TAU * float(i) / float(segments)
+				helmet.add_point(head_center + Vector2(cos(a), sin(a)) * radius)
+			add_child(helmet)
+			var crown := Polygon2D.new()
+			crown.color = Color(1.0, 0.85, 0.2)
+			var pts := PackedVector2Array()
+			for i in range(5):
+				var x := -radius + i * (radius * 2.0 / 4.0)
+				pts.append(head_center + Vector2(x, -radius * (1.6 if i % 2 == 0 else 1.1)))
+			pts.append(head_center + Vector2(radius, -radius))
+			pts.append(head_center + Vector2(-radius, -radius))
+			crown.polygon = pts
+			add_child(crown)
+		_:  # "helmet_visor" und Fallback
+			helmet.default_color = Color(0.55, 0.85, 1.0)
+			for i in range(segments):
+				var a := TAU * float(i) / float(segments)
+				helmet.add_point(head_center + Vector2(cos(a), sin(a)) * radius)
+			add_child(helmet)
+			var visor := Line2D.new()
+			visor.width = 3.0
+			visor.default_color = Color(0.2, 0.5, 0.8, 0.8)
+			visor.add_point(head_center + Vector2(-radius * 0.7, 0))
+			visor.add_point(head_center + Vector2(radius * 0.7, 0))
+			add_child(visor)
+
+
+## FR-163: Zeichnet das gewählte Kostüm-Overlay.
+func _build_outfit(head_center: Vector2, head_radius: float) -> void:
+	match GameManager.equipped_outfit:
+		"outfit_astronaut":
+			var suit := Polygon2D.new()
+			suit.color = Color(0.9, 0.9, 0.95, 0.85)
+			suit.polygon = PackedVector2Array([
+				Vector2(-10, -18), Vector2(10, -18), Vector2(12, 18), Vector2(-12, 18),
+			])
+			add_child(suit)
+			var backpack := ColorRect.new()
+			backpack.size = Vector2(10, 20)
+			backpack.position = Vector2(-5, -8)
+			backpack.color = Color(0.7, 0.7, 0.75)
+			add_child(backpack)
+		"outfit_hero":
+			var cape := Polygon2D.new()
+			cape.color = Color(0.8, 0.1, 0.1, 0.85)
+			cape.z_index = -1
+			cape.polygon = PackedVector2Array([
+				Vector2(-8, -14), Vector2(8, -14), Vector2(14, 30), Vector2(-14, 30),
+			])
+			add_child(cape)
+			var emblem := Polygon2D.new()
+			emblem.color = Color(1.0, 0.85, 0.2)
+			emblem.polygon = PackedVector2Array([
+				Vector2(0, -6), Vector2(5, 0), Vector2(0, 6), Vector2(-5, 0),
+			])
+			add_child(emblem)
+		"outfit_animal":
+			for side in [-1, 1]:
+				var ear := Polygon2D.new()
+				ear.color = skin_color.darkened(0.2)
+				ear.polygon = PackedVector2Array([
+					head_center + Vector2(side * head_radius * 0.5, -head_radius),
+					head_center + Vector2(side * head_radius * 1.1, -head_radius * 1.8),
+					head_center + Vector2(side * head_radius * 0.1, -head_radius * 1.3),
+				])
+				add_child(ear)
+			var tail := Line2D.new()
+			tail.width = 4.0
+			tail.default_color = skin_color.darkened(0.2)
+			tail.add_point(Vector2(-4, 30))
+			tail.add_point(Vector2(-16, 20))
+			tail.add_point(Vector2(-14, 34))
+			add_child(tail)
+
+
+## FR-166: Zeichnet ein Hut-Accessoire über dem Helm.
+func _build_hat(head_center: Vector2, head_radius: float) -> void:
+	match GameManager.equipped_hat:
+		"hat_top":
+			var brim := ColorRect.new()
+			brim.size = Vector2(head_radius * 2.2, 4)
+			brim.position = head_center + Vector2(-head_radius * 1.1, -head_radius * 1.3)
+			brim.color = Color(0.1, 0.1, 0.12)
+			add_child(brim)
+			var top := ColorRect.new()
+			top.size = Vector2(head_radius * 1.1, head_radius * 1.2)
+			top.position = head_center + Vector2(-head_radius * 0.55, -head_radius * 2.5)
+			top.color = Color(0.1, 0.1, 0.12)
+			add_child(top)
+		"hat_cap":
+			var cap := Polygon2D.new()
+			cap.color = Color(0.2, 0.5, 0.8)
+			var pts := PackedVector2Array()
+			for i in range(10):
+				var a := PI + TAU * 0.5 * float(i) / 9.0
+				pts.append(head_center + Vector2(cos(a), sin(a)) * head_radius * 1.05)
+			cap.polygon = pts
+			add_child(cap)
+			var brim := Polygon2D.new()
+			brim.color = Color(0.15, 0.4, 0.65)
+			brim.polygon = PackedVector2Array([
+				head_center + Vector2(0, -head_radius * 0.2),
+				head_center + Vector2(head_radius * 1.4, -head_radius * 0.1),
+				head_center + Vector2(head_radius * 1.2, head_radius * 0.15),
+			])
+			add_child(brim)
+		"hat_shades":
+			var shades := ColorRect.new()
+			shades.size = Vector2(head_radius * 1.6, 6)
+			shades.position = head_center + Vector2(-head_radius * 0.8, -3)
+			shades.color = Color(0.05, 0.05, 0.05, 0.9)
+			add_child(shades)
+
+
+## FR-167: Zeichnet einen Gesichtsausdruck (aktualisierbar via set_face_expression).
+func _build_face(head_center: Vector2) -> void:
+	_face_node = Node2D.new()
+	_face_node.position = head_center
+	add_child(_face_node)
+	_render_face(GameManager.equipped_face)
+
+
+func _render_face(expression: String) -> void:
+	if _face_node == null:
+		return
+	for child in _face_node.get_children():
+		child.queue_free()
+	var mouth := Line2D.new()
+	mouth.width = 2.0
+	mouth.default_color = Color(0.2, 0.1, 0.1)
+	match expression:
+		"happy":
+			mouth.add_point(Vector2(-5, 6))
+			mouth.add_point(Vector2(0, 9))
+			mouth.add_point(Vector2(5, 6))
+		"scared":
+			mouth.add_point(Vector2(-3, 8))
+			mouth.add_point(Vector2(3, 8))
+		_:
+			mouth.add_point(Vector2(-4, 7))
+			mouth.add_point(Vector2(4, 7))
+	_face_node.add_child(mouth)
 
 
 ## Bereitet den Zielpfeil (Line2D) vor – wird beim Zielen sichtbar.
@@ -780,6 +1016,38 @@ func revive(at_pos: Vector2) -> void:
 	get_tree().create_timer(0.3).timeout.connect(func(): input_locked = false)
 
 
+## FR-177: Setzt den Mittelpunkt (Hand-Spitze) der Arme-Line2D neu.
+## (PackedVector2Array-Einträge lassen sich nicht per "points:N"-Tween-
+## Subpfad animieren, daher über tween_method mit Neuzuweisung.)
+func _set_arm_point(index: int, value: Vector2) -> void:
+	if _arms == null:
+		return
+	var pts := _arms.points
+	pts[index] = value
+	_arms.points = pts
+
+
+## FR-177: Spielt die ausgerüstete Sieges-Pose beim Levelabschluss ab.
+func play_victory_pose() -> void:
+	if _arms == null:
+		return
+	var tween := create_tween()
+	match GameManager.equipped_victory_pose:
+		"pose_flex":
+			tween.set_loops(2)
+			tween.tween_method(_set_arm_point.bind(1), Vector2(0, -10), Vector2(0, -26), 0.25)
+			tween.tween_method(_set_arm_point.bind(1), Vector2(0, -26), Vector2(0, -10), 0.25)
+		"pose_dance":
+			tween.set_loops(4)
+			tween.tween_property(self, "rotation", 0.25, 0.15)
+			tween.tween_property(self, "rotation", -0.25, 0.15)
+			tween.tween_property(self, "rotation", 0.0, 0.1)
+		_:  # "pose_wave" (Standard)
+			tween.set_loops(3)
+			tween.tween_method(_set_arm_point.bind(2), Vector2(16, 6), Vector2(20, -14), 0.2)
+			tween.tween_method(_set_arm_point.bind(2), Vector2(20, -14), Vector2(16, 6), 0.2)
+
+
 # ----------------------------------------------------------------
 # FR-168: Flug-Spur (Trail)
 # ----------------------------------------------------------------
@@ -811,6 +1079,18 @@ func _update_trail() -> void:
 			_trail.remove_point(0)
 	var alpha := clampf(speed / 1000.0, 0.0, 0.55)
 	_trail.default_color = Color(0.55, 1.0, 0.45, alpha)
+
+
+## FR-175: Liefert die Pfeil-Farbe passend zum ausgerüsteten Pfeil-Design.
+func _aim_arrow_color(charge: float) -> Color:
+	match GameManager.equipped_arrow_style:
+		"arrow_neon":
+			return Color(0.2, 1.0, 0.9, 0.9).lerp(Color(1.0, 0.1, 0.9, 1.0), charge)
+		"arrow_rainbow":
+			var hue := fmod(Time.get_ticks_msec() * 0.0005, 1.0)
+			return Color.from_hsv(hue, 0.85, 1.0, 0.9)
+		_:
+			return Color(1.0, 0.85, 0.2, 0.9).lerp(Color(1.0, 0.3, 0.2, 1.0), charge)
 
 
 ## Zeichnet den Zielpfeil in lokaler Ausrichtung (entgegen der Rotation,

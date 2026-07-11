@@ -221,26 +221,26 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 
 ## Maennchen-Anpassung & Skins
 
-- [ ] **FR-161** Verschiedene Helm-Designs
+- [x] **FR-161** Verschiedene Helm-Designs
 - [x] **FR-162** Farbauswahl fuer das Maennchen
-- [ ] **FR-163** Kostueme/Outfits (Astronaut, Superheld, Tier)
-- [ ] **FR-164** Furz-Wolken-Farben und -Effekte
-- [ ] **FR-165** Furz-Sound-Pakete
-- [ ] **FR-166** Huete und Accessoires
-- [ ] **FR-167** Gesichtsausdruecke und Emotes
+- [x] **FR-163** Kostueme/Outfits (Astronaut, Superheld, Tier)
+- [x] **FR-164** Furz-Wolken-Farben und -Effekte
+- [x] **FR-165** Furz-Sound-Pakete
+- [x] **FR-166** Huete und Accessoires
+- [x] **FR-167** Gesichtsausdruecke und Emotes
 - [x] **FR-168** Trail-/Spur-Effekte beim Fliegen
-- [ ] **FR-169** Ueber Muenzen freischaltbare Skins
-- [ ] **FR-170** Seltenheitsstufen fuer Skins
-- [ ] **FR-171** Skin-Vorschau im Menue
-- [ ] **FR-172** Saisonale Skins
-- [ ] **FR-173** Animierte Skins
-- [ ] **FR-174** Skin-des-Tages
-- [ ] **FR-175** Anpassbare Pfeil-Designs
-- [ ] **FR-176** Varianten der Tod-Animation
-- [ ] **FR-177** Sieges-Pose/Emote bei Levelende
-- [ ] **FR-178** Skin-Sammlung mit Fortschrittsanzeige
-- [ ] **FR-179** Mix&Match-Anpassung (Teile kombinieren)
-- [ ] **FR-180** Eigener Farb-Editor fuer den Standard-Skin
+- [x] **FR-169** Ueber Muenzen freischaltbare Skins
+- [x] **FR-170** Seltenheitsstufen fuer Skins
+- [x] **FR-171** Skin-Vorschau im Menue
+- [x] **FR-172** Saisonale Skins
+- [x] **FR-173** Animierte Skins
+- [x] **FR-174** Skin-des-Tages
+- [x] **FR-175** Anpassbare Pfeil-Designs
+- [x] **FR-176** Varianten der Tod-Animation
+- [x] **FR-177** Sieges-Pose/Emote bei Levelende
+- [x] **FR-178** Skin-Sammlung mit Fortschrittsanzeige
+- [x] **FR-179** Mix&Match-Anpassung (Teile kombinieren)
+- [x] **FR-180** Eigener Farb-Editor fuer den Standard-Skin
 
 ## Kamera & Sicht
 

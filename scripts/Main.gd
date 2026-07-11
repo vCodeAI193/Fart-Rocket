@@ -181,6 +181,7 @@ func _play_cinematic_ending() -> void:
 	tween.tween_property(_camera, "zoom", Vector2.ONE * 1.35, 0.6).set_trans(Tween.TRANS_SINE)
 	tween.parallel().tween_property(_camera, "global_position", _player.global_position, 0.6).set_trans(Tween.TRANS_SINE)
 	await tween.finished
+	_player.play_victory_pose()  # FR-177: Sieges-Pose während der Kino-Sequenz
 	await get_tree().create_timer(0.6).timeout
 	set_letterbox_active(false)
 	_cinematic_active = false
