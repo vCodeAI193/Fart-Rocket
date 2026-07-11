@@ -50,4 +50,12 @@ func _build_flag() -> void:
 		Vector2(110, -125),
 		Vector2(0, -90),
 	])
+	# FR-285: Explizites 0..1-UV-Mapping, damit der Outline-Shader
+	# (rand-basierte Rim-Erkennung) korrekt funktioniert.
+	flag.uv = PackedVector2Array([
+		Vector2(0.0, 0.0), Vector2(1.0, 0.5), Vector2(0.0, 1.0),
+	])
+	var outline_mat := ShaderMaterial.new()
+	outline_mat.shader = load("res://shaders/outline.gdshader")
+	flag.material = outline_mat
 	add_child(flag)

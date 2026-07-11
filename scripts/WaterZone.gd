@@ -73,6 +73,11 @@ func _build_visual() -> void:
 	rect.size = zone_size
 	rect.position = -zone_size * 0.5
 	rect.color = color
+	# FR-283: Wasser-Brechungs-Shader (verzerrt den Hintergrund wellenförmig)
+	var mat := ShaderMaterial.new()
+	mat.shader = load("res://shaders/water_refraction.gdshader")
+	mat.set_shader_parameter("water_tint", color)
+	rect.material = mat
 	add_child(rect)
 
 	# Wasser-Wellen-Pattern (oben)

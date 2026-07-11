@@ -359,26 +359,26 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 
 ## Shader & Rendering
 
-- [ ] **FR-281** Weltraum-Hintergrund-Shader (Nebel/Sterne)
-- [ ] **FR-282** Optionaler CRT-/Retro-Filter
-- [ ] **FR-283** Wasser-Brechungs-Shader
-- [ ] **FR-284** Hitzeflimmer-Shader fuer Lava
-- [ ] **FR-285** Outline-Shader fuer wichtige Objekte
+- [x] **FR-281** Weltraum-Hintergrund-Shader (Nebel/Sterne)
+- [x] **FR-282** Optionaler CRT-/Retro-Filter
+- [x] **FR-283** Wasser-Brechungs-Shader
+- [x] **FR-284** Hitzeflimmer-Shader fuer Lava
+- [x] **FR-285** Outline-Shader fuer wichtige Objekte
 - [x] **FR-286** Vignette-Post-Processing
-- [ ] **FR-287** Bloom fuer Glueh-Effekte
-- [ ] **FR-288** Chromatische Aberration bei hohem Tempo
-- [ ] **FR-289** Dunkelheits-/Sichtkegel-Shader
-- [ ] **FR-290** Tag-/Nacht-Verlauf-Shader
-- [ ] **FR-291** Aufloesungsskalierung fuer schwache Geraete
-- [ ] **FR-292** Farb-Grading pro Welt
-- [ ] **FR-293** Furz-Wolken-Verzerrungs-Shader
-- [ ] **FR-294** Motion Blur (Geschwindigkeits-Unschaerfe)
-- [ ] **FR-295** Sterne-Parallax-Shader
-- [ ] **FR-296** 2D-Beleuchtung und Schatten
-- [ ] **FR-297** Schild-Energie-Shader
-- [ ] **FR-298** Dissolve-Effekt bei Tod
-- [ ] **FR-299** Pixel-Perfect-Render-Option
-- [ ] **FR-300** Performance-Schalter fuer Shader-Qualitaet
+- [x] **FR-287** Bloom fuer Glueh-Effekte
+- [x] **FR-288** Chromatische Aberration bei hohem Tempo
+- [x] **FR-289** Dunkelheits-/Sichtkegel-Shader
+- [x] **FR-290** Tag-/Nacht-Verlauf-Shader
+- [x] **FR-291** Aufloesungsskalierung fuer schwache Geraete
+- [x] **FR-292** Farb-Grading pro Welt
+- [x] **FR-293** Furz-Wolken-Verzerrungs-Shader
+- [x] **FR-294** Motion Blur (Geschwindigkeits-Unschaerfe)
+- [x] **FR-295** Sterne-Parallax-Shader
+- [x] **FR-296** 2D-Beleuchtung und Schatten
+- [x] **FR-297** Schild-Energie-Shader
+- [x] **FR-298** Dissolve-Effekt bei Tod
+- [x] **FR-299** Pixel-Perfect-Render-Option
+- [x] **FR-300** Performance-Schalter fuer Shader-Qualitaet
 
 ## Fortschritt & Meta-Progression
 

@@ -120,6 +120,7 @@ var _ragdoll_active: bool = false            # FR-040: Ragdoll-Modus aktiv
 var _aim_arrow: Line2D
 var _arms: Line2D  # FR-177: für Sieges-Pose-Animation
 var _face_node: Node2D  # FR-167: für Gesichtsausdrücke
+var _shield_aura: Polygon2D  # FR-297: Schild-Energie-Shader-Aura
 
 
 var _trail: Line2D = null              # FR-168: Flug-Spur
@@ -180,6 +181,7 @@ func _process(delta: float) -> void:
 		_shield_remaining = maxf(0.0, _shield_remaining - delta)
 		if _shield_remaining == 0.0:
 			shield_changed.emit(false)
+			_update_shield_aura(false)  # FR-297
 
 	# FR-005: Solange gezielt wird, lädt der Furz auf
 	if _is_aiming:
@@ -558,6 +560,7 @@ func _on_body_entered(body: Node) -> void:
 		if _shield_remaining > 0.0:
 			_shield_remaining = 0.0
 			shield_changed.emit(false)
+			_update_shield_aura(false)  # FR-297
 			GameManager.vibrate(60)
 			return
 		_die()
@@ -568,6 +571,30 @@ func activate_shield(duration: float) -> void:
 	_shield_remaining = duration
 	shield_changed.emit(true)
 	GameManager.vibrate(30)
+	_update_shield_aura(true)  # FR-297: Schild-Energie-Shader-Aura einblenden
+
+
+## FR-297: Baut/zeigt die Schild-Aura mit dem Energie-Shader um den Spieler.
+func _update_shield_aura(active: bool) -> void:
+	if not is_instance_valid(_shield_aura):
+		_shield_aura = Polygon2D.new()
+		_shield_aura.name = "ShieldAura"
+		var pts := PackedVector2Array()
+		var uv_pts := PackedVector2Array()
+		for i in range(20):
+			var a := TAU * float(i) / 20.0
+			pts.append(Vector2(cos(a), sin(a)) * 42.0)
+			# FR-297: 0..1-UV-Mapping für den Shield-Shader (erwartet UV im
+			# 0..1-Raum, nicht die rohen Vertex-Koordinaten).
+			uv_pts.append(Vector2(cos(a), sin(a)) * 0.5 + Vector2(0.5, 0.5))
+		_shield_aura.polygon = pts
+		_shield_aura.uv = uv_pts
+		var mat := ShaderMaterial.new()
+		mat.shader = load("res://shaders/shield_energy.gdshader")
+		mat.set_shader_parameter("shield_color", Color(0.3, 0.7, 1.0, 0.4))
+		_shield_aura.material = mat
+		add_child(_shield_aura)
+	_shield_aura.visible = active
 
 
 ## FR-100: Wendet ein aus dem Inventar manuell ausgelöstes Power-up an.
@@ -620,8 +647,7 @@ func _activate_ragdoll() -> void:
 			linear_damp = 3.0
 			angular_velocity = randf_range(-3.0, 3.0)
 			apply_central_impulse(Vector2(randf_range(-60, 60), -180))
-			var tween := create_tween()
-			tween.tween_property(self, "modulate:a", 0.15, 0.7)
+			_dissolve_visual()  # FR-298: Dissolve-Shader statt einfacher Alpha-Blende
 		_:  # "death_spin" (Standard)
 			gravity_scale = 1.0
 			angular_velocity = randf_range(-15.0, 15.0)
@@ -644,6 +670,19 @@ func _spawn_confetti_burst() -> void:
 	p.initial_velocity_max = 400.0
 	p.color = Color(randf(), randf(), randf())
 	get_tree().create_timer(0.9).timeout.connect(func(): if is_instance_valid(p): p.queue_free())
+
+
+## FR-298: Wendet den Dissolve-Shader auf alle sichtbaren Körperteile an
+## und blendet das Männchen darüber auf (statt einer einfachen Alpha-Blende).
+func _dissolve_visual() -> void:
+	var mat := ShaderMaterial.new()
+	mat.shader = load("res://shaders/dissolve.gdshader")
+	mat.set_shader_parameter("dissolve_amount", 0.0)
+	for child in get_children():
+		if child is CanvasItem:
+			child.material = mat
+	var tween := create_tween()
+	tween.tween_method(func(v): mat.set_shader_parameter("dissolve_amount", v), 0.0, 1.0, 0.9)
 
 
 ## FR-262: Partikel-Explosion beim Aufprall.
@@ -729,6 +768,32 @@ func _build_stick_figure() -> void:
 	_build_hat(head_center, head_radius)
 	# FR-167: Gesichtsausdruck
 	_build_face(head_center)
+	# FR-296: 2D-Beleuchtung — sanftes Glühen um den Spieler
+	_build_player_light()
+
+
+## FR-296: Fügt ein PointLight2D hinzu, das das Männchen sanft beleuchtet
+## (nutzt Godots eingebautes 2D-Beleuchtungssystem).
+func _build_player_light() -> void:
+	var light := PointLight2D.new()
+	light.name = "PlayerGlow"
+	light.energy = 0.6
+	light.texture_scale = 4.0
+	light.color = Color(1.0, 0.95, 0.8)
+	light.range_item_cull_mask = 1
+	# Prozedurale weiche Kreis-Textur als Licht-Textur (Radial-Gradient)
+	var gradient := Gradient.new()
+	gradient.set_color(0, Color(1, 1, 1, 1))
+	gradient.set_color(1, Color(1, 1, 1, 0))
+	var grad_tex := GradientTexture2D.new()
+	grad_tex.gradient = gradient
+	grad_tex.width = 128
+	grad_tex.height = 128
+	grad_tex.fill = GradientTexture2D.FILL_RADIAL
+	grad_tex.fill_from = Vector2(0.5, 0.5)
+	grad_tex.fill_to = Vector2(1.0, 0.5)
+	light.texture = grad_tex
+	add_child(light)
 
 
 ## FR-161: Zeichnet das gewählte Helm-Design.
@@ -1008,6 +1073,7 @@ func revive(at_pos: Vector2) -> void:
 	gravity_scale = level_gravity_scale
 	_aim_arrow.visible = false
 	shield_changed.emit(false)
+	_update_shield_aura(false)  # FR-297
 	if _trail != null:
 		_trail.clear_points()
 	# FR-058: Kurze Eingabesperre nach dem Respawn, damit kein versehentlicher

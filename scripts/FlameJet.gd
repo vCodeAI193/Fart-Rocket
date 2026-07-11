@@ -83,6 +83,25 @@ func _build_visual() -> void:
 		flame.color = Color(1.0, 0.5 + i * 0.15, 0.1, 0.8 - i * 0.15)
 		_flame_node.add_child(flame)
 
+	# FR-284: Hitzeflimmer-Shader — als eigene Überlagerung ÜBER der Flamme
+	# platziert (nicht als Material der Flammen-Polygone selbst, da der
+	# Shader den kompletten Bildschirminhalt darunter samplet/verzerrt und
+	# sonst die orangene Flammenfarbe unsichtbar machen würde). So verzerrt
+	# die Überlagerung die bereits gezeichnete Flamme + Hintergrund darunter
+	# und erzeugt den gewünschten Flimmer-Effekt, ohne die Flamme zu ersetzen.
+	var shimmer_rect := Polygon2D.new()
+	shimmer_rect.color = Color(1, 1, 1, 1)
+	shimmer_rect.polygon = PackedVector2Array([
+		Vector2(-direction.y, direction.x) * flame_width * 0.6,
+		Vector2(direction.y, -direction.x) * flame_width * 0.6,
+		direction * flame_length * 1.15 + Vector2(direction.y, -direction.x) * flame_width * 0.2,
+		direction * flame_length * 1.15 + Vector2(-direction.y, direction.x) * flame_width * 0.2,
+	])
+	var shimmer_mat := ShaderMaterial.new()
+	shimmer_mat.shader = load("res://shaders/heat_shimmer.gdshader")
+	shimmer_rect.material = shimmer_mat
+	_flame_node.add_child(shimmer_rect)
+
 	# Partikel-Effekt
 	_particles = CPUParticles2D.new()
 	_particles.emitting = false

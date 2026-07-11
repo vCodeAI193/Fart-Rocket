@@ -56,6 +56,18 @@ var _transition_active: bool = false
 var _near_miss_cooldown: float = 0.0
 const NEAR_MISS_RADIUS := 55.0
 
+# --- FR-281–300: Shader & Rendering (Post-Processing-Stack) --------
+var _postfx_layer: CanvasLayer
+var _fx_chromatic: ColorRect
+var _fx_motion_blur: ColorRect
+var _fx_bloom: ColorRect
+var _fx_color_grading: ColorRect
+var _fx_crt: ColorRect
+var _fx_vision_cone: ColorRect
+var _bg_texture_rect: TextureRect  # FR-281/290/292: Weltraum/Tag-Nacht/Grading-Ziel
+var _daynight_material: ShaderMaterial  # FR-290: Tag-/Nacht-Verlauf-Overlay
+var _daynight_elapsed: float = 0.0
+
 # Fällt das Männchen unter diese Grenze (oder fliegt weit darüber hinaus),
 # gilt das Level als verloren und wird neu gestartet.
 const FALL_LIMIT_Y := 1700.0
@@ -82,6 +94,12 @@ func _ready() -> void:
 	_build_edge_indicator()
 	# FR-197: Letterbox für Zwischensequenzen/Kino-Modus
 	_build_letterbox()
+	# FR-281/290/292: Shader auf den Weltraum-Hintergrund anwenden
+	_apply_background_shader()
+	# FR-282/287/288/292/294: Screen-Space-Post-Processing-Stack
+	_build_postfx_stack()
+	GameManager.render_settings_changed.connect(_update_postfx_visibility)
+	set_crt_filter_active(GameManager.crt_filter_enabled)
 
 	_load_current_level()
 
@@ -170,6 +188,127 @@ func set_letterbox_active(active: bool) -> void:
 	tween.tween_property(_letterbox_bottom, "offset_top", -target_height, 0.4)
 
 
+## FR-281/290/292: Wendet Weltraum-Hintergrund-, Tag/Nacht- und Farb-
+## Grading-Shader auf den Hintergrund an (kombiniert über eine kleine
+## Shader-Kette: space_background zuerst, day_night/grading als Tint
+## direkt in dessen Parametern nachgebildet, um Passes zu sparen).
+func _apply_background_shader() -> void:
+	_bg_texture_rect = get_node_or_null("Background/BG") as TextureRect
+	if _bg_texture_rect == null:
+		return
+
+	var shader := load("res://shaders/space_background.gdshader")
+	var mat := ShaderMaterial.new()
+	mat.shader = shader
+	# FR-292: Farb-Grading pro Welt — je Level ein anderer Nebel-Farbton
+	var palette := [
+		[Color(0.15, 0.05, 0.35), Color(0.02, 0.05, 0.15)],
+		[Color(0.05, 0.25, 0.2), Color(0.02, 0.1, 0.08)],
+		[Color(0.35, 0.1, 0.08), Color(0.12, 0.02, 0.02)],
+	]
+	var idx := clampi(GameManager.current_level - 1, 0, palette.size() - 1)
+	mat.set_shader_parameter("nebula_color_a", palette[idx][0])
+	mat.set_shader_parameter("nebula_color_b", palette[idx][1])
+	_bg_texture_rect.material = mat
+
+	# FR-295: Funkelnde Parallax-Sterne als zusätzliche Shader-Ebene
+	var star_layer := get_node_or_null("Background")
+	if star_layer != null:
+		var star_rect := ColorRect.new()
+		star_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+		star_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var star_mat := ShaderMaterial.new()
+		star_mat.shader = load("res://shaders/star_parallax.gdshader")
+		star_rect.material = star_mat
+		star_layer.add_child(star_rect)
+
+		# FR-290: Langsamer Tag-/Nacht-Verlauf als zusätzliches Tint-Overlay
+		var daynight_rect := ColorRect.new()
+		daynight_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+		daynight_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var daynight_mat := ShaderMaterial.new()
+		daynight_mat.shader = load("res://shaders/day_night_cycle.gdshader")
+		daynight_mat.set_shader_parameter("night_tint", Color(0.1, 0.12, 0.35, 0.35))
+		daynight_mat.set_shader_parameter("cycle_progress", 0.0)
+		daynight_rect.material = daynight_mat
+		star_layer.add_child(daynight_rect)
+		_daynight_material = daynight_mat
+
+
+## FR-282/287/288/292/294: Baut den Screen-Space-Post-Processing-Stack auf.
+## Jeder Effekt ist ein eigenes ColorRect mit hint_screen_texture-Shader,
+## übereinander gestapelt in einem CanvasLayer über dem Spielgeschehen.
+func _build_postfx_stack() -> void:
+	_postfx_layer = CanvasLayer.new()
+	_postfx_layer.layer = 80  # unter HUD (90+), über dem Spielfeld
+	add_child(_postfx_layer)
+
+	_fx_color_grading = _make_fx_rect("res://shaders/color_grading.gdshader")
+	_fx_bloom = _make_fx_rect("res://shaders/bloom.gdshader")
+	_fx_chromatic = _make_fx_rect("res://shaders/chromatic_aberration.gdshader")
+	_fx_motion_blur = _make_fx_rect("res://shaders/motion_blur.gdshader")
+	_fx_crt = _make_fx_rect("res://shaders/crt_filter.gdshader")
+	_fx_vision_cone = _make_fx_rect("res://shaders/vision_cone.gdshader")
+	_fx_crt.visible = false      # FR-282: standardmäßig aus, per Einstellung aktivierbar
+	_fx_vision_cone.visible = false  # FR-289: nur in Dunkelheits-Leveln aktiv
+
+	_update_postfx_visibility()
+
+
+func _make_fx_rect(shader_path: String) -> ColorRect:
+	var rect := ColorRect.new()
+	rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+	rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	rect.color = Color(1, 1, 1, 1)
+	var mat := ShaderMaterial.new()
+	mat.shader = load(shader_path)
+	rect.material = mat
+	_postfx_layer.add_child(rect)
+	return rect
+
+
+## FR-300: Schaltet teure Shader-Passes je nach Qualitätsstufe ab, damit
+## schwächere Geräte flüssig bleiben.
+func _update_postfx_visibility() -> void:
+	var quality := GameManager.shader_quality
+	_fx_bloom.visible = quality == "high"
+	_fx_motion_blur.visible = quality != "low"
+	_fx_chromatic.visible = quality != "low"
+	_fx_color_grading.visible = true  # günstig, bleibt immer an
+
+
+## FR-288/294: Aktualisiert Aberrations-/Blur-Stärke anhand der Spielergeschwindigkeit.
+func _update_speed_postfx(vel: Vector2) -> void:
+	var speed_factor := clampf(vel.length() / MAX_SPEED_FOR_ZOOM, 0.0, 1.0)
+
+	if _fx_chromatic.visible:
+		var mat: ShaderMaterial = _fx_chromatic.material
+		mat.set_shader_parameter("aberration_strength", speed_factor * speed_factor * 0.012)
+
+	if _fx_motion_blur.visible:
+		var mat: ShaderMaterial = _fx_motion_blur.material
+		var dir := vel.normalized() * speed_factor * 0.02
+		mat.set_shader_parameter("blur_direction", dir)
+
+	# FR-289: Sichtkegel folgt dem Spieler (Bildschirmmitte, da Kamera zentriert)
+	if _fx_vision_cone != null and _fx_vision_cone.visible:
+		var mat: ShaderMaterial = _fx_vision_cone.material
+		mat.set_shader_parameter("light_center", Vector2(0.5, 0.5))
+
+
+## FR-282: CRT-Filter umschalten (z.B. per Einstellung/Retro-Modus).
+func set_crt_filter_active(active: bool) -> void:
+	if _fx_crt != null:
+		_fx_crt.visible = active and GameManager.shader_quality != "low"
+
+
+## FR-289: Sichtkegel-Shader für Dunkelheits-Level aktivieren; folgt der
+## Spielerposition auf dem Bildschirm.
+func set_vision_cone_active(active: bool) -> void:
+	if _fx_vision_cone != null:
+		_fx_vision_cone.visible = active and GameManager.shader_quality != "low"
+
+
 ## FR-187: Kurze Kino-Sequenz beim Levelende — Letterbox einblenden und
 ## sanft auf den Spieler heranzoomen, bevor der Abschlussbildschirm erscheint.
 func _play_cinematic_ending() -> void:
@@ -209,6 +348,13 @@ func play_camera_transition(focus_pos: Vector2, focus_zoom: float, duration: flo
 
 
 func _process(delta: float) -> void:
+	# FR-290: Tag-/Nacht-Verlauf — langsame Oszillation zwischen Tag (0.0)
+	# und Nacht (1.0), unabhängig vom Spielerzustand.
+	if _daynight_material != null:
+		_daynight_elapsed += delta
+		var cycle_progress := (sin(_daynight_elapsed * 0.05) + 1.0) * 0.5
+		_daynight_material.set_shader_parameter("cycle_progress", cycle_progress)
+
 	if not is_instance_valid(_player):
 		return
 
@@ -267,6 +413,8 @@ func _process(delta: float) -> void:
 	_update_minimap()
 	# FR-193: Rand-Indikatoren aktualisieren
 	_update_edge_indicators()
+	# FR-288/294: Chromatische Aberration + Motion Blur je nach Tempo
+	_update_speed_postfx(vel)
 
 	# Aus dem Spielfeld gefallen? -> Level neu starten
 	if not _level_finished:

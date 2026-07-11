@@ -49,10 +49,19 @@ func _build_visual() -> void:
 	var glow := Polygon2D.new()
 	glow.color = Color(0.65, 0.85, 1.0, 0.65)
 	var gpts := PackedVector2Array()
+	var guv := PackedVector2Array()
 	for i in range(8):
 		var a := TAU * float(i) / 8.0
 		gpts.append(Vector2(cos(a), sin(a)) * 14.0)
+		# FR-297: 0..1-UV-Mapping, damit der Shield-Shader (erwartet UV im
+		# 0..1-Raum) korrekt zentriert ist statt der rohen Vertex-Koordinaten.
+		guv.append(Vector2(cos(a), sin(a)) * 0.5 + Vector2(0.5, 0.5))
 	glow.polygon = gpts
+	glow.uv = guv
+	# FR-297: Schild-Energie-Shader (hexagonales Energiefeld-Muster)
+	var mat := ShaderMaterial.new()
+	mat.shader = load("res://shaders/shield_energy.gdshader")
+	glow.material = mat
 	add_child(glow)
 	# Schild-Symbol (kleines "S")
 	var lbl := Label.new()

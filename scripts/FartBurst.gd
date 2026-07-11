@@ -18,6 +18,10 @@ func _ready() -> void:
 	# Falls im Editor ein Sound gesetzt wurde, diesen verwenden
 	if fart_sound != null:
 		_audio.stream = fart_sound
+	# FR-293: Furz-Wolken-Verzerrungs-Shader für einen gasigen Wabber-Look
+	var mat := ShaderMaterial.new()
+	mat.shader = load("res://shaders/fart_distortion.gdshader")
+	_particles.material = mat
 
 
 ## Startet die Partikel und den Sound. Räumt sich danach selbst auf.

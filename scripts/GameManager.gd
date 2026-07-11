@@ -88,6 +88,51 @@ signal camera_reset_requested
 var camera_shake_intensity: float = 1.0   # FR-189 (0.0..2.0)
 var camera_smoothing: float = 8.0         # FR-200 (2.0..16.0, höher = straffer)
 
+# --- FR-300: Performance-Schalter für Shader-Qualität --------------
+signal render_settings_changed
+var shader_quality: String = "high"  # "low" | "medium" | "high"
+var crt_filter_enabled: bool = false  # FR-282
+
+# --- FR-291: Auflösungsskalierung für schwache Geräte ---------------
+var render_scale: float = 1.0  # 0.5..1.0
+
+# --- FR-299: Pixel-Perfect-Render-Option ----------------------------
+var pixel_perfect_mode: bool = false
+
+
+## FR-300: Setzt die Shader-Qualitätsstufe (steuert, welche teuren
+## Screen-Space-Shader in Main.gd aktiv sind).
+func set_shader_quality(quality: String) -> void:
+	shader_quality = quality
+	render_settings_changed.emit()
+	_save_progress()
+
+
+## FR-282: Schaltet den optionalen CRT-/Retro-Filter um.
+func set_crt_filter_enabled(enabled: bool) -> void:
+	crt_filter_enabled = enabled
+	_save_progress()
+
+
+## FR-291: Setzt die Render-Auflösungsskalierung (niedriger = schneller,
+## aber unschärfer — hilfreich auf schwachen Geräten).
+func set_render_scale(scale: float) -> void:
+	render_scale = clampf(scale, 0.5, 1.0)
+	get_tree().root.content_scale_factor = render_scale
+	_save_progress()
+
+
+## FR-299: Schaltet den Pixel-Perfect-Modus um (Nearest-Filter,
+## kein Antialiasing an Kanten — retro-Optik).
+func set_pixel_perfect_mode(enabled: bool) -> void:
+	pixel_perfect_mode = enabled
+	get_tree().root.canvas_item_default_texture_filter = (
+		Viewport.DEFAULT_CANVAS_ITEM_TEXTURE_FILTER_NEAREST if enabled
+		else Viewport.DEFAULT_CANVAS_ITEM_TEXTURE_FILTER_LINEAR
+	)
+	_save_progress()
+
+
 # --- FR-215/216/220: HUD-Einstellungen -----------------------------
 signal hud_settings_changed
 var hud_minimal_mode: bool = false   # FR-215
@@ -904,6 +949,10 @@ func _save_progress() -> void:
 	cfg.set_value("camera", "smoothing", camera_smoothing)  # FR-200
 	cfg.set_value("hud", "minimal_mode", hud_minimal_mode)  # FR-215
 	cfg.set_value("hud", "scale", hud_scale)  # FR-216
+	cfg.set_value("render", "shader_quality", shader_quality)  # FR-300
+	cfg.set_value("render", "render_scale", render_scale)  # FR-291
+	cfg.set_value("render", "pixel_perfect", pixel_perfect_mode)  # FR-299
+	cfg.set_value("render", "crt_filter", crt_filter_enabled)  # FR-282
 	cfg.set_value("hud", "attempt_times", level_attempt_times)  # FR-219
 	cfg.set_value("hud", "tutorial_hint_seen", tutorial_hint_seen)  # FR-210
 	cfg.set_value("stats", "total_farts", stat_total_farts)  # FR-226
@@ -988,6 +1037,10 @@ func _load_progress() -> void:
 	camera_smoothing = cfg.get_value("camera", "smoothing", 8.0)  # FR-200
 	hud_minimal_mode = cfg.get_value("hud", "minimal_mode", false)  # FR-215
 	hud_scale = cfg.get_value("hud", "scale", 1.0)  # FR-216
+	shader_quality = cfg.get_value("render", "shader_quality", "high")  # FR-300
+	render_scale = cfg.get_value("render", "render_scale", 1.0)  # FR-291
+	pixel_perfect_mode = cfg.get_value("render", "pixel_perfect", false)  # FR-299
+	crt_filter_enabled = cfg.get_value("render", "crt_filter", false)  # FR-282
 	level_attempt_times = cfg.get_value("hud", "attempt_times", {})  # FR-219
 	tutorial_hint_seen = cfg.get_value("hud", "tutorial_hint_seen", false)  # FR-210
 	stat_total_farts = cfg.get_value("stats", "total_farts", 0)  # FR-226

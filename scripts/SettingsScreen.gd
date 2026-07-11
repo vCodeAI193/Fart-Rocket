@@ -23,6 +23,11 @@ var _minimal_hud_btn: Button
 var _hud_scale_btn: Button
 # FR-228: Bestätigungsdialog für den Fortschritts-Reset
 var _confirm_dialog: ConfirmDialog
+# FR-282/291/299/300: Grafik-Einstellungen
+var _quality_btn: Button
+var _render_scale_btn: Button
+var _pixel_perfect_btn: Button
+var _crt_btn: Button
 
 
 func _ready() -> void:
@@ -159,6 +164,37 @@ func _build_ui() -> void:
 	_hud_scale_btn.pressed.connect(_on_hud_scale_pressed)
 	vbox.add_child(_hud_scale_btn)
 
+	# --- FR-282/291/299/300: Grafik-Einstellungen -------------------
+	var graphics_title := Label.new()
+	graphics_title.text = "Grafik"
+	graphics_title.add_theme_font_size_override("font_size", 30)
+	graphics_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vbox.add_child(graphics_title)
+
+	_quality_btn = Button.new()
+	_quality_btn.custom_minimum_size = Vector2(400, 76)
+	_quality_btn.add_theme_font_size_override("font_size", 28)
+	_quality_btn.pressed.connect(_on_quality_pressed)
+	vbox.add_child(_quality_btn)
+
+	_render_scale_btn = Button.new()
+	_render_scale_btn.custom_minimum_size = Vector2(400, 76)
+	_render_scale_btn.add_theme_font_size_override("font_size", 28)
+	_render_scale_btn.pressed.connect(_on_render_scale_pressed)
+	vbox.add_child(_render_scale_btn)
+
+	_pixel_perfect_btn = Button.new()
+	_pixel_perfect_btn.custom_minimum_size = Vector2(400, 76)
+	_pixel_perfect_btn.add_theme_font_size_override("font_size", 28)
+	_pixel_perfect_btn.pressed.connect(_on_pixel_perfect_pressed)
+	vbox.add_child(_pixel_perfect_btn)
+
+	_crt_btn = Button.new()
+	_crt_btn.custom_minimum_size = Vector2(400, 76)
+	_crt_btn.add_theme_font_size_override("font_size", 28)
+	_crt_btn.pressed.connect(_on_crt_pressed)
+	vbox.add_child(_crt_btn)
+
 	# --- FR-228: Fortschritt zurücksetzen ---------------------------
 	var reset_btn := Button.new()
 	reset_btn.text = "Fortschritt zurücksetzen"
@@ -194,6 +230,10 @@ func _update_buttons() -> void:
 	_smoothing_btn.text = "Kamera-Glättung: %.0f" % GameManager.camera_smoothing
 	_minimal_hud_btn.text = "Minimal-HUD: EIN" if GameManager.hud_minimal_mode else "Minimal-HUD: AUS"
 	_hud_scale_btn.text = "HUD-Größe: %.2fx" % GameManager.hud_scale
+	_quality_btn.text = "Shader-Qualität: %s" % GameManager.shader_quality.capitalize()
+	_render_scale_btn.text = "Auflösung: %d%%" % int(GameManager.render_scale * 100)
+	_pixel_perfect_btn.text = "Pixel-Perfect: EIN" if GameManager.pixel_perfect_mode else "Pixel-Perfect: AUS"
+	_crt_btn.text = "CRT-Filter: EIN" if GameManager.crt_filter_enabled else "CRT-Filter: AUS"
 
 
 func _on_haptics_pressed() -> void:
@@ -274,6 +314,43 @@ func _on_hud_scale_pressed() -> void:
 	if next > 1.5:
 		next = 0.75
 	GameManager.set_hud_scale(next)
+	GameManager.vibrate(15)
+	_update_buttons()
+
+
+## FR-300: Shader-Qualität durchschalten (low -> medium -> high).
+func _on_quality_pressed() -> void:
+	var order := ["low", "medium", "high"]
+	var next_idx := (order.find(GameManager.shader_quality) + 1) % order.size()
+	GameManager.set_shader_quality(order[next_idx])
+	GameManager.vibrate(15)
+	_update_buttons()
+
+
+## FR-291: Render-Auflösung in 10%-Schritten durchschalten (50..100%).
+func _on_render_scale_pressed() -> void:
+	var next := GameManager.render_scale - 0.1
+	if next < 0.5:
+		next = 1.0
+	GameManager.set_render_scale(next)
+	GameManager.vibrate(15)
+	_update_buttons()
+
+
+## FR-299: Pixel-Perfect-Modus umschalten.
+func _on_pixel_perfect_pressed() -> void:
+	GameManager.set_pixel_perfect_mode(not GameManager.pixel_perfect_mode)
+	GameManager.vibrate(15)
+	_update_buttons()
+
+
+## FR-282: CRT-Filter umschalten (wirkt im laufenden Level sofort).
+func _on_crt_pressed() -> void:
+	GameManager.set_crt_filter_enabled(not GameManager.crt_filter_enabled)
+	# Variant statt statischem Typ, da nur per Duck-Typing angesprochen
+	var main = get_tree().get_first_node_in_group("main_controller")
+	if main != null and main.has_method("set_crt_filter_active"):
+		main.set_crt_filter_active(GameManager.crt_filter_enabled)
 	GameManager.vibrate(15)
 	_update_buttons()
 
