@@ -153,16 +153,16 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 ## Gegner & KI
 
 - [x] **FR-101** Patrouillierende Flug-Gegner
-- [ ] **FR-102** Verfolger-Gegner, die dem Maennchen folgen
+- [x] **FR-102** Verfolger-Gegner, die dem Maennchen folgen
 - [x] **FR-103** Schiessende Gegner mit Projektilen
-- [ ] **FR-104** Stationaere Geschuetztuerme
+- [x] **FR-104** Stationaere Geschuetztuerme
 - [x] **FR-105** Gegner, die Muenzen klauen
-- [ ] **FR-106** Ausweichende Gegner
+- [x] **FR-106** Ausweichende Gegner
 - [x] **FR-107** Springende Boden-Gegner
-- [ ] **FR-108** Schwarm-Gegner (Insekten)
-- [ ] **FR-109** Schild-Gegner (nur von hinten verwundbar)
-- [ ] **FR-110** Teleportierende Gegner
-- [ ] **FR-111** Gegner mit telegrafierten Angriffen
+- [x] **FR-108** Schwarm-Gegner (Insekten)
+- [x] **FR-109** Schild-Gegner (nur von hinten verwundbar)
+- [x] **FR-110** Teleportierende Gegner
+- [x] **FR-111** Gegner mit telegrafierten Angriffen
 - [ ] **FR-112** Mini-Boss pro Welt
 - [ ] **FR-113** End-Boss mit mehreren Phasen
 - [ ] **FR-114** Gegner-Spawner und Nester

@@ -1,0 +1,8 @@
+[gd_scene load_steps=2 format=3 uid="uid://teleportenemy"]
+
+[ext_resource type="Script" path="res://scripts/TeleportingEnemy.gd" id="1_teleport"]
+
+[node name="TeleportingEnemy" type="CharacterBody2D"]
+script = ExtResource("1_teleport")
+collision_layer = 2
+collision_mask = 0
