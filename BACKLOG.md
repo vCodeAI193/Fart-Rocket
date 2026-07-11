@@ -107,14 +107,14 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 ## Hindernisse & Gefahren
 
 - [ ] **FR-061** Weitere Saegeblatt-Groessen und -Muster
-- [ ] **FR-062** Bewegliche Stachel-Walzen
-- [ ] **FR-063** Pendelnde Stachelkugeln (Morgenstern)
+- [x] **FR-062** Bewegliche Stachel-Walzen
+- [x] **FR-063** Pendelnde Stachelkugeln (Morgenstern)
 - [x] **FR-064** Ein-/ausfahrende Stacheln als Timing-Raetsel
 - [ ] **FR-065** Laserstrahlen mit Intervall-Schaltung
 - [ ] **FR-066** Feuerspeier-/Flammenwerfer-Duesen
 - [x] **FR-067** Fallende Felsbrocken und Truemmer
 - [x] **FR-068** Zerbroeckelnde Plattformen
-- [ ] **FR-069** Elektro-Zaeune und Stromfelder
+- [x] **FR-069** Elektro-Zaeune und Stromfelder
 - [ ] **FR-070** Rotierende Hindernis-Raeder mit Luecken
 - [ ] **FR-071** Wandernde Laserwaende (Quetsch-Gefahr)
 - [ ] **FR-072** Giftgaswolken als zeitbegrenzte Zonen
@@ -138,7 +138,7 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 - [x] **FR-087** Extra-Furz-Ladung als Pickup
 - [x] **FR-088** Versteckte Sterne als Sammelobjekt pro Level
 - [ ] **FR-089** Sammelkarten-/Sticker-System
-- [ ] **FR-090** Truhen mit Zufallsbelohnung
+- [x] **FR-090** Truhen mit Zufallsbelohnung
 - [ ] **FR-091** Schluessel und Schloesser (Tuer-Mechanik)
 - [x] **FR-092** Buchstaben sammeln (F-A-R-T Bonus)
 - [ ] **FR-093** Tagesmuenze als Login-Bonus-Objekt
@@ -156,7 +156,7 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 - [ ] **FR-102** Verfolger-Gegner, die dem Maennchen folgen
 - [x] **FR-103** Schiessende Gegner mit Projektilen
 - [ ] **FR-104** Stationaere Geschuetztuerme
-- [ ] **FR-105** Gegner, die Muenzen klauen
+- [x] **FR-105** Gegner, die Muenzen klauen
 - [ ] **FR-106** Ausweichende Gegner
 - [x] **FR-107** Springende Boden-Gegner
 - [ ] **FR-108** Schwarm-Gegner (Insekten)

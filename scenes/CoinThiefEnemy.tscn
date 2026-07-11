@@ -1,0 +1,8 @@
+[gd_scene load_steps=2 format=3 uid="uid://cointhief"]
+
+[ext_resource type="Script" path="res://scripts/CoinThiefEnemy.gd" id="1_thief"]
+
+[node name="CoinThiefEnemy" type="CharacterBody2D"]
+script = ExtResource("1_thief")
+collision_layer = 2
+collision_mask = 0

@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://pendulumball"]
+
+[ext_resource type="Script" path="res://scripts/PendulumSpikeBall.gd" id="1_pendulum"]
+
+[node name="PendulumSpikeBall" type="Node2D"]
+script = ExtResource("1_pendulum")

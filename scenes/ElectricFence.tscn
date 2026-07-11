@@ -1,0 +1,8 @@
+[gd_scene load_steps=2 format=3 uid="uid://electricfence"]
+
+[ext_resource type="Script" path="res://scripts/ElectricFence.gd" id="1_fence"]
+
+[node name="ElectricFence" type="Area2D"]
+script = ExtResource("1_fence")
+collision_layer = 8
+collision_mask = 1
