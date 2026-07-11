@@ -52,6 +52,7 @@ func _ready() -> void:
 func show_shop() -> void:
 	_refresh()
 	visible = true
+	GameManager.apply_menu_ui_scale(self, get_viewport().get_visible_rect().size)  # FR-424
 
 
 func _refresh() -> void:

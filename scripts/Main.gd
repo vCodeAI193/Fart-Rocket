@@ -58,6 +58,7 @@ const NEAR_MISS_RADIUS := 55.0
 
 # --- FR-281–300: Shader & Rendering (Post-Processing-Stack) --------
 var _postfx_layer: CanvasLayer
+var _fps_label: Label  # FR-431
 var _fx_chromatic: ColorRect
 var _fx_motion_blur: ColorRect
 var _fx_bloom: ColorRect
@@ -65,6 +66,7 @@ var _fx_color_grading: ColorRect
 var _fx_crt: ColorRect
 var _fx_vision_cone: ColorRect
 var _fx_slowmo: ColorRect  # FR-270: Slow-Mo-Visualfilter
+var _fx_colorblind: ColorRect  # FR-421/433: Farbenblind-Assistenz
 var _bg_texture_rect: TextureRect  # FR-281/290/292: Weltraum/Tag-Nacht/Grading-Ziel
 var _daynight_material: ShaderMaterial  # FR-290: Tag-/Nacht-Verlauf-Overlay
 var _daynight_elapsed: float = 0.0
@@ -77,6 +79,14 @@ var _survival_base_gravity: float = 1.0
 # gilt das Level als verloren und wird neu gestartet.
 const FALL_LIMIT_Y := 1700.0
 const SKY_LIMIT_Y := -1200.0
+
+
+## FR-436: Pausiert automatisch, wenn die App den Fokus verliert
+## (z.B. Task-Wechsel, eingehender Anruf) — sofern aktiviert.
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_APPLICATION_FOCUS_OUT and GameManager.pause_on_focus_loss:
+		if is_instance_valid(_hud) and _hud.has_method("force_pause"):
+			_hud.force_pause()
 
 
 func _ready() -> void:
@@ -278,9 +288,22 @@ func _build_postfx_stack() -> void:
 	_fx_crt = _make_fx_rect("res://shaders/crt_filter.gdshader")
 	_fx_vision_cone = _make_fx_rect("res://shaders/vision_cone.gdshader")
 	_fx_slowmo = _make_fx_rect("res://shaders/slowmo_filter.gdshader")
+	_fx_colorblind = _make_fx_rect("res://shaders/colorblind_assist.gdshader")  # FR-421/433
 	_fx_crt.visible = false      # FR-282: standardmäßig aus, per Einstellung aktivierbar
 	_fx_vision_cone.visible = false  # FR-289: nur in Dunkelheits-Leveln aktiv
 
+	# FR-431: Umschaltbare FPS-Anzeige
+	_fps_label = Label.new()
+	_fps_label.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	_fps_label.offset_left = 10
+	_fps_label.offset_top = 10
+	_fps_label.add_theme_font_size_override("font_size", 22)
+	_fps_label.add_theme_color_override("font_color", Color(0.4, 1.0, 0.4))
+	_fps_label.visible = GameManager.fps_counter_enabled
+	_postfx_layer.add_child(_fps_label)
+
+	_apply_accessibility_settings()  # FR-421/422/429
+	GameManager.accessibility_changed.connect(_apply_accessibility_settings)
 	_update_postfx_visibility()
 
 
@@ -294,6 +317,23 @@ func _make_fx_rect(shader_path: String) -> ColorRect:
 	rect.material = mat
 	_postfx_layer.add_child(rect)
 	return rect
+
+
+## FR-421/422/429/433: Wendet Farbenblind-Filter, Hoher-Kontrast-Modus und
+## Bildschirm-Helligkeit auf den Post-Processing-Stack an.
+func _apply_accessibility_settings() -> void:
+	if _fx_colorblind != null:
+		var cb_mat: ShaderMaterial = _fx_colorblind.material
+		cb_mat.set_shader_parameter("mode", int(GameManager.colorblind_mode))
+		_fx_colorblind.visible = GameManager.colorblind_mode != GameManager.ColorblindMode.NONE
+	if _fx_color_grading != null:
+		var cg_mat: ShaderMaterial = _fx_color_grading.material
+		# FR-422: Hoher Kontrast erhöht Kontrast/Sättigung deutlich
+		cg_mat.set_shader_parameter("contrast", 1.5 if GameManager.high_contrast_enabled else 1.0)
+		cg_mat.set_shader_parameter("saturation", 1.3 if GameManager.high_contrast_enabled else 1.0)
+		# FR-429: Bildschirm-Helligkeit als RGB-Multiplikator
+		var b := GameManager.screen_brightness
+		cg_mat.set_shader_parameter("color_balance", Vector3(b, b, b))
 
 
 ## FR-300: Schaltet teure Shader-Passes je nach Qualitätsstufe ab, damit
@@ -377,6 +417,12 @@ func play_camera_transition(focus_pos: Vector2, focus_zoom: float, duration: flo
 
 
 func _process(delta: float) -> void:
+	# FR-431: Umschaltbare FPS-Anzeige
+	if _fps_label != null:
+		_fps_label.visible = GameManager.fps_counter_enabled
+		if _fps_label.visible:
+			_fps_label.text = "%d FPS" % Engine.get_frames_per_second()
+
 	# FR-290: Tag-/Nacht-Verlauf — langsame Oszillation zwischen Tag (0.0)
 	# und Nacht (1.0), unabhängig vom Spielerzustand.
 	if _daynight_material != null:
@@ -685,7 +731,10 @@ func _spawn_ghost_runner() -> void:
 
 # --- FR-265: Kamera-Wackeln ------------------------------------
 func _camera_shake(strength: float, duration: float) -> void:
-	# FR-189: Globale Rüttel-Intensität aus den Einstellungen anwenden
+	# FR-189/423: Globale Rüttel-Intensität, komplett unterdrückt im
+	# Reduzierte-Bewegung-Modus
+	if GameManager.reduced_motion_enabled:
+		return
 	var effective_strength := strength * GameManager.camera_shake_intensity
 	if effective_strength <= 0.0:
 		return
@@ -702,7 +751,7 @@ func _camera_shake(strength: float, duration: float) -> void:
 
 ## FR-192: Kurzer gerichteter Kamera-Stoß in Furz-Richtung (Impuls-Feedback).
 func _camera_punch(direction: Vector2, strength: float) -> void:
-	if GameManager.camera_shake_intensity <= 0.0:
+	if GameManager.reduced_motion_enabled or GameManager.camera_shake_intensity <= 0.0:
 		return
 	var punch_offset := -direction * strength * 18.0 * GameManager.camera_shake_intensity
 	var tween := create_tween()

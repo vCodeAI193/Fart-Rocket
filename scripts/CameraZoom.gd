@@ -39,6 +39,11 @@ func _unhandled_input(event: InputEvent) -> void:
 		_handle_photo_pan(event)
 		return
 
+	# FR-426: Im Einhand-Modus sind Zwei-Finger-Gesten (Zoom/Reset) nicht
+	# erreichbar — diese Verarbeitung komplett überspringen.
+	if GameManager.one_handed_mode:
+		return
+
 	if event is InputEventScreenTouch:
 		if event.pressed:
 			_finger_positions[event.index] = event.position

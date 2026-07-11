@@ -279,6 +279,9 @@ func _unhandled_input(event: InputEvent) -> void:
 			_aim_current = event.position
 			_aim_hold = 0.0  # FR-005: Aufladung neu beginnen
 			_update_aim_visual()
+			# FR-435: Visuelle Tipp-Bestätigung am Berührungspunkt
+			if GameManager.tap_confirmations_enabled:
+				_show_tap_confirmation(event.position)
 			# FR-052: Beim Zielen leichte Zeitlupe für Feinjustierung
 			if aim_slowmo_enabled and not _aim_slowmo_active:
 				_aim_slowmo_active = true
@@ -318,8 +321,11 @@ func _update_aim_visual() -> void:
 	var drag := _aim_current - _aim_start
 	var strength := clampf(drag.length() / _effective_max_drag(), 0.0, 1.0)
 	var dir := _scheme_direction(drag)
-	# FR-053: Auto-Aim-Modus — suche nächstes Ziel bei kurzen Zügen
-	if auto_aim_enabled and drag.length() < _effective_max_drag() * 0.3:
+	# FR-053/427: Auto-Aim bzw. globaler Assist-Modus — suche nächstes Ziel
+	# bei kurzen Zügen (Assist-Modus nutzt einen großzügigeren Schwellwert)
+	var auto_aim_active := auto_aim_enabled or GameManager.assist_aim_enabled
+	var auto_aim_threshold := 0.45 if GameManager.assist_aim_enabled else 0.3
+	if auto_aim_active and drag.length() < _effective_max_drag() * auto_aim_threshold:
 		var target_dir := _find_nearest_target()
 		if target_dir != Vector2.ZERO:
 			dir = target_dir
@@ -395,6 +401,7 @@ func _execute_fart(drag: Vector2) -> void:
 	GameManager.vibrate(40)
 	GameManager.record_fart()  # FR-226: Statistik
 	GameManager.play_fart_sound(strength)  # FR-165
+	GameManager.show_sound_caption("Furz!")  # FR-425
 
 	# FR-012: Überhitzungs-Level erhöhen (Mega-Furz = mehr Hitze)
 	_heat_level += (fart["power"] * 0.25)
@@ -598,8 +605,11 @@ func _on_body_entered(body: Node) -> void:
 
 ## FR-010: Aktiviert den Furz-Schild für `duration` Sekunden.
 func activate_shield(duration: float) -> void:
-	# FR-305: "Längerer Schild"-Upgrades verlängern die Schild-Dauer
+	# FR-305/437: "Längerer Schild"-Upgrades und Schwierigkeits-Assist
+	# verlängern die Schild-Dauer
 	var skill_bonus := 1.0 + GameManager.get_skill_effect_level("shield_duration") * 0.2
+	if GameManager.difficulty_assist_enabled:
+		skill_bonus += 0.3
 	_shield_remaining = duration * skill_bonus
 	shield_changed.emit(true)
 	GameManager.vibrate(30)
@@ -757,6 +767,31 @@ func _dissolve_visual() -> void:
 			child.material = mat
 	var tween := create_tween()
 	tween.tween_method(func(v): mat.set_shader_parameter("dissolve_amount", v), 0.0, 1.0, 0.9)
+
+
+## FR-435: Kurzer, sich ausdehnender Ring am Berührungspunkt (Bildschirm-
+## Koordinaten) als visuelle Bestätigung, dass die Eingabe registriert wurde.
+func _show_tap_confirmation(screen_pos: Vector2) -> void:
+	var tree := get_tree()
+	if tree == null:
+		return
+	var layer := CanvasLayer.new()
+	layer.layer = 95
+	tree.root.add_child(layer)
+	var ring := Line2D.new()
+	ring.width = 4.0
+	ring.default_color = Color(1.0, 1.0, 1.0, 0.8)
+	ring.position = screen_pos
+	var pts := PackedVector2Array()
+	for i in range(17):
+		var a := TAU * float(i) / 16.0
+		pts.append(Vector2(cos(a), sin(a)) * 10.0)
+	ring.points = pts
+	layer.add_child(ring)
+	var tween := tree.create_tween()
+	tween.tween_property(ring, "scale", Vector2(2.5, 2.5), 0.3)
+	tween.parallel().tween_property(ring, "modulate:a", 0.0, 0.3)
+	tween.tween_callback(layer.queue_free)
 
 
 ## FR-262: Partikel-Explosion beim Aufprall.

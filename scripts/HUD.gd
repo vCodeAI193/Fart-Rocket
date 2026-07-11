@@ -624,6 +624,13 @@ func _check_swipe_pause_gesture() -> bool:
 	return false
 
 
+## FR-436: Pausiert das Spiel von außen (z.B. bei Fokusverlust der App),
+## ohne den Pause-Zustand umzuschalten, falls bereits pausiert.
+func force_pause() -> void:
+	if not _is_paused:
+		_on_pause_pressed()
+
+
 ## FR-201: Pausiert oder setzt das Spiel fort.
 func _on_pause_pressed() -> void:
 	_is_paused = not _is_paused
@@ -752,10 +759,3 @@ func _on_regen_progress(fraction: float) -> void:
 		var fill := _charge_fill_overlays[idx]
 		fill.size.y = 44.0 * fraction
 		fill.position.y = 44.0 - fill.size.y
-
-
-# --- Hilfsfunktionen --------------------------------------------
-func _format_time(t: float) -> String:
-	var minutes := int(t) / 60
-	var seconds := int(t) % 60
-	return "%02d:%02d" % [minutes, seconds]

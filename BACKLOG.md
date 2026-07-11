@@ -520,26 +520,26 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 
 ## Einstellungen & Barrierefreiheit
 
-- [ ] **FR-421** Farbenblind-Modi
-- [ ] **FR-422** Hoher-Kontrast-Modus
-- [ ] **FR-423** Reduzierte-Bewegung-Option (weniger Screen-Shake)
-- [ ] **FR-424** Einstellbare Schriftgroesse
-- [ ] **FR-425** Untertitel fuer Soundeffekte
-- [ ] **FR-426** Einhand-Modus
-- [ ] **FR-427** Auto-Furz-/Assist-Modus
-- [ ] **FR-428** Haptik ein/aus
-- [ ] **FR-429** Bildschirm-Helligkeit im Spiel
-- [ ] **FR-430** Einstellbare Steuerungs-Empfindlichkeit
-- [ ] **FR-431** Umschaltbare FPS-Anzeige
-- [ ] **FR-432** Bildraten-Begrenzung zum Akkusparen
-- [ ] **FR-433** Daltonismus-Palettenvorschau
-- [ ] **FR-434** Bildschirmleser-Hinweise (TalkBack)
-- [ ] **FR-435** Tipp-Bestaetigungen fuer Aktionen
-- [ ] **FR-436** Pause bei Fokusverlust
-- [ ] **FR-437** Konfigurierbare Schwierigkeits-Assists
-- [ ] **FR-438** Lautstaerke-Voreinstellungen
-- [ ] **FR-439** Sprachwahl
-- [ ] **FR-440** Zuruecksetzen-auf-Standard-Button
+- [x] **FR-421** Farbenblind-Modi
+- [x] **FR-422** Hoher-Kontrast-Modus
+- [x] **FR-423** Reduzierte-Bewegung-Option (weniger Screen-Shake)
+- [x] **FR-424** Einstellbare Schriftgroesse
+- [x] **FR-425** Untertitel fuer Soundeffekte
+- [x] **FR-426** Einhand-Modus
+- [x] **FR-427** Auto-Furz-/Assist-Modus
+- [x] **FR-428** Haptik ein/aus
+- [x] **FR-429** Bildschirm-Helligkeit im Spiel
+- [x] **FR-430** Einstellbare Steuerungs-Empfindlichkeit
+- [x] **FR-431** Umschaltbare FPS-Anzeige
+- [x] **FR-432** Bildraten-Begrenzung zum Akkusparen
+- [x] **FR-433** Daltonismus-Palettenvorschau
+- [x] **FR-434** Bildschirmleser-Hinweise (TalkBack)
+- [x] **FR-435** Tipp-Bestaetigungen fuer Aktionen
+- [x] **FR-436** Pause bei Fokusverlust
+- [x] **FR-437** Konfigurierbare Schwierigkeits-Assists
+- [x] **FR-438** Lautstaerke-Voreinstellungen
+- [x] **FR-439** Sprachwahl
+- [x] **FR-440** Zuruecksetzen-auf-Standard-Button
 
 ## Lokalisierung & i18n
 
