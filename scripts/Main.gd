@@ -839,6 +839,9 @@ func _on_level_reached() -> void:
 	if GameManager.active_game_mode == GameManager.GameMode.COIN_HUNT:
 		GameManager.coin_hunt_best_score = maxi(GameManager.coin_hunt_best_score, GameManager.total_coins)
 
+	# FR-404: Auto-Speichern nach jedem abgeschlossenen Level
+	GameManager.save_now()
+
 	# FR-342: Endlos-Modus — Level statt eines Abschlussbildschirms sofort
 	# mit steigendem Tempo wiederholen
 	if GameManager.active_game_mode == GameManager.GameMode.ENDLESS:

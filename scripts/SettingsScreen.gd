@@ -29,6 +29,7 @@ var _render_scale_btn: Button
 var _pixel_perfect_btn: Button
 var _crt_btn: Button
 var _hard_mode_btn: Button  # FR-316
+var _slot_buttons: Array[Button] = []  # FR-403/418
 
 
 func _ready() -> void:
@@ -203,6 +204,44 @@ func _build_ui() -> void:
 	_hard_mode_btn.pressed.connect(_on_hard_mode_pressed)
 	vbox.add_child(_hard_mode_btn)
 
+	# --- FR-403/418: Speicherplatz-Verwaltung -----------------------
+	var slots_title := Label.new()
+	slots_title.text = "Speicherplätze"
+	slots_title.add_theme_font_size_override("font_size", 30)
+	slots_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vbox.add_child(slots_title)
+
+	var slots_row := HBoxContainer.new()
+	slots_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	slots_row.add_theme_constant_override("separation", 10)
+	vbox.add_child(slots_row)
+	_slot_buttons.clear()
+	for slot in range(1, GameManager.SAVE_SLOT_COUNT + 1):
+		var slot_btn := Button.new()
+		slot_btn.custom_minimum_size = Vector2(120, 70)
+		slot_btn.add_theme_font_size_override("font_size", 24)
+		slot_btn.pressed.connect(_on_slot_pressed.bind(slot))
+		slots_row.add_child(slot_btn)
+		_slot_buttons.append(slot_btn)
+
+	# --- FR-406/407/411: Backup anlegen/wiederherstellen ------------
+	var backup_row := HBoxContainer.new()
+	backup_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	backup_row.add_theme_constant_override("separation", 10)
+	vbox.add_child(backup_row)
+	var backup_btn := Button.new()
+	backup_btn.text = "Backup anlegen"
+	backup_btn.custom_minimum_size = Vector2(190, 64)
+	backup_btn.add_theme_font_size_override("font_size", 22)
+	backup_btn.pressed.connect(_on_backup_pressed)
+	backup_row.add_child(backup_btn)
+	var restore_btn := Button.new()
+	restore_btn.text = "Letztes Backup laden"
+	restore_btn.custom_minimum_size = Vector2(190, 64)
+	restore_btn.add_theme_font_size_override("font_size", 22)
+	restore_btn.pressed.connect(_on_restore_pressed)
+	backup_row.add_child(restore_btn)
+
 	# --- FR-228: Fortschritt zurücksetzen ---------------------------
 	var reset_btn := Button.new()
 	reset_btn.text = "Fortschritt zurücksetzen"
@@ -211,6 +250,15 @@ func _build_ui() -> void:
 	reset_btn.add_theme_color_override("font_color", Color(1.0, 0.4, 0.3))
 	reset_btn.pressed.connect(_on_reset_pressed)
 	vbox.add_child(reset_btn)
+
+	# --- FR-420: DSGVO-konformes vollständiges Löschen ---------------
+	var delete_all_btn := Button.new()
+	delete_all_btn.text = "Alle Daten löschen (DSGVO)"
+	delete_all_btn.custom_minimum_size = Vector2(400, 76)
+	delete_all_btn.add_theme_font_size_override("font_size", 26)
+	delete_all_btn.add_theme_color_override("font_color", Color(1.0, 0.2, 0.15))
+	delete_all_btn.pressed.connect(_on_delete_all_pressed)
+	vbox.add_child(delete_all_btn)
 
 	# Schliessen-Button
 	var close_btn := Button.new()
@@ -243,6 +291,16 @@ func _update_buttons() -> void:
 	_pixel_perfect_btn.text = "Pixel-Perfect: EIN" if GameManager.pixel_perfect_mode else "Pixel-Perfect: AUS"
 	_crt_btn.text = "CRT-Filter: EIN" if GameManager.crt_filter_enabled else "CRT-Filter: AUS"
 	_hard_mode_btn.text = "Hard-Mode: EIN" if GameManager.hard_mode_enabled else "Hard-Mode: AUS"
+	# FR-403/418: Speicherplatz-Buttons
+	for i in range(_slot_buttons.size()):
+		var slot := i + 1
+		var btn := _slot_buttons[i]
+		if slot == GameManager.current_save_slot:
+			btn.text = "● %d" % slot
+			btn.disabled = true
+		else:
+			btn.text = "%d" % slot if GameManager.save_slot_exists(slot) else "%d (leer)" % slot
+			btn.disabled = false
 
 
 func _on_haptics_pressed() -> void:
@@ -385,6 +443,57 @@ func _on_reset_confirmed() -> void:
 	GameManager.reset_all_progress()
 	GameManager.vibrate(80)
 	_update_buttons()
+	get_tree().reload_current_scene()
+
+
+## FR-403: Wechselt das aktive Speicherprofil und lädt die Szene neu,
+## damit alle UI-Elemente den neuen Spielstand konsistent anzeigen.
+func _on_slot_pressed(slot: int) -> void:
+	GameManager.play_ui_click()
+	GameManager.switch_save_slot(slot)
+	GameManager.vibrate(30)
+	get_tree().reload_current_scene()
+
+
+## FR-406: Legt sofort ein Backup des aktuellen Spielstands an.
+func _on_backup_pressed() -> void:
+	GameManager.export_save()
+	GameManager.play_ui_click()
+	GameManager.vibrate(30)
+
+
+## FR-407/411: Stellt das neueste Backup des aktuellen Profils wieder her.
+func _on_restore_pressed() -> void:
+	var backups := GameManager.list_backups()
+	if backups.is_empty():
+		GameManager.play_ui_click()
+		return
+	GameManager.play_ui_click()
+	_confirm_dialog.confirmed.connect(func():
+		GameManager.restore_backup(backups[0])
+		GameManager.vibrate(60)
+		get_tree().reload_current_scene()
+	, CONNECT_ONE_SHOT)
+	_confirm_dialog.show_dialog(
+		"Backup wiederherstellen?",
+		"Der aktuelle Spielstand wird durch das letzte Backup ersetzt."
+	)
+
+
+## FR-420: Zeigt den DSGVO-Lösch-Bestätigungsdialog vor dem
+## vollständigen, unwiderruflichen Löschen aller lokalen Daten.
+func _on_delete_all_pressed() -> void:
+	GameManager.play_ui_click()
+	_confirm_dialog.confirmed.connect(_on_delete_all_confirmed, CONNECT_ONE_SHOT)
+	_confirm_dialog.show_dialog(
+		"Wirklich ALLE Daten löschen?",
+		"Alle Speicherplätze, Einstellungen und Erfolge werden unwiderruflich\ngelöscht — auch alle Backups. Dies kann nicht rückgängig gemacht werden."
+	)
+
+
+func _on_delete_all_confirmed() -> void:
+	GameManager.delete_all_user_data()
+	GameManager.vibrate(100)
 	get_tree().reload_current_scene()
 
 

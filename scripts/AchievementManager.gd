@@ -341,3 +341,20 @@ func _load() -> void:
 	_weekly_task_index = cfg.get_value("weekly", "task_index", 0)
 	weekly_challenge_progress = cfg.get_value("weekly", "progress", 0)
 	weekly_challenge_claimed = cfg.get_value("weekly", "claimed", false)
+
+
+## FR-420: Setzt den kompletten Erfolgs-/Herausforderungs-Zustand im
+## Speicher auf den Ausgangswert zurück (die Speicherdatei selbst wird
+## vom Aufrufer separat gelöscht, siehe GameManager.delete_all_user_data()).
+func reset_all() -> void:
+	unlocked.clear()
+	_max_combo_seen = 0
+	_daily_date_id = ""
+	_daily_task_index = 0
+	_daily_modifier_id = "none"
+	daily_challenge_progress = 0
+	daily_challenge_claimed = false
+	_weekly_week_id = ""
+	_weekly_task_index = 0
+	weekly_challenge_progress = 0
+	weekly_challenge_claimed = false

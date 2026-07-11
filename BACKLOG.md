@@ -497,26 +497,26 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 
 ## Speichern & Cloud
 
-- [ ] **FR-401** Lokales Speichersystem haerten
+- [x] **FR-401** Lokales Speichersystem haerten
 - [ ] **FR-402** Cloud-Speicher (Google Play Games Saves)
-- [ ] **FR-403** Mehrere Speicherstaende/Profile
-- [ ] **FR-404** Auto-Speichern nach jedem Level
+- [x] **FR-403** Mehrere Speicherstaende/Profile
+- [x] **FR-404** Auto-Speichern nach jedem Level
 - [ ] **FR-405** Konfliktaufloesung bei Speicherstaenden
-- [ ] **FR-406** Speicher-Backup/Export
-- [ ] **FR-407** Speicher-Import
+- [x] **FR-406** Speicher-Backup/Export
+- [x] **FR-407** Speicher-Import
 - [ ] **FR-408** Daten-Migration zwischen Versionen
-- [ ] **FR-409** Verschluesselte Speicherdaten
-- [ ] **FR-410** Speicher-Reset-Option
-- [ ] **FR-411** Fortschritt-Wiederherstellung
+- [x] **FR-409** Verschluesselte Speicherdaten
+- [x] **FR-410** Speicher-Reset-Option
+- [x] **FR-411** Fortschritt-Wiederherstellung
 - [ ] **FR-412** Offline-Fortschritt-Synchronisierung
-- [ ] **FR-413** Speicher-Integritaetspruefung
-- [ ] **FR-414** Einstellungen separat speichern
+- [x] **FR-413** Speicher-Integritaetspruefung
+- [x] **FR-414** Einstellungen separat speichern
 - [ ] **FR-415** Geraeteuebergreifende Synchronisierung
-- [ ] **FR-416** Speicher-Versionierung
-- [ ] **FR-417** Wiederherstellung bei Korruption
-- [ ] **FR-418** UI zur Speicher-Slot-Verwaltung
+- [x] **FR-416** Speicher-Versionierung
+- [x] **FR-417** Wiederherstellung bei Korruption
+- [x] **FR-418** UI zur Speicher-Slot-Verwaltung
 - [ ] **FR-419** Anzeige des Cloud-Sync-Status
-- [ ] **FR-420** DSGVO-konformes Daten-Loeschen
+- [x] **FR-420** DSGVO-konformes Daten-Loeschen
 
 ## Einstellungen & Barrierefreiheit
 

@@ -186,13 +186,13 @@ var pixel_perfect_mode: bool = false
 func set_shader_quality(quality: String) -> void:
 	shader_quality = quality
 	render_settings_changed.emit()
-	_save_progress()
+	_save_settings()  # FR-414
 
 
 ## FR-282: Schaltet den optionalen CRT-/Retro-Filter um.
 func set_crt_filter_enabled(enabled: bool) -> void:
 	crt_filter_enabled = enabled
-	_save_progress()
+	_save_settings()  # FR-414
 
 
 ## FR-291: Setzt die Render-Auflösungsskalierung (niedriger = schneller,
@@ -200,7 +200,7 @@ func set_crt_filter_enabled(enabled: bool) -> void:
 func set_render_scale(scale: float) -> void:
 	render_scale = clampf(scale, 0.5, 1.0)
 	get_tree().root.content_scale_factor = render_scale
-	_save_progress()
+	_save_settings()  # FR-414
 
 
 ## FR-299: Schaltet den Pixel-Perfect-Modus um (Nearest-Filter,
@@ -211,7 +211,7 @@ func set_pixel_perfect_mode(enabled: bool) -> void:
 		Viewport.DEFAULT_CANVAS_ITEM_TEXTURE_FILTER_NEAREST if enabled
 		else Viewport.DEFAULT_CANVAS_ITEM_TEXTURE_FILTER_LINEAR
 	)
-	_save_progress()
+	_save_settings()  # FR-414
 
 
 # --- FR-215/216/220: HUD-Einstellungen -----------------------------
@@ -546,10 +546,17 @@ var discovered_enemies: Array[String] = []
 
 
 func _ready() -> void:
+	# FR-414: Einstellungen zuerst laden (bestimmt u.a. den aktiven Speicherplatz)
+	_load_settings()
 	# Beim Start einmal den gespeicherten Fortschritt laden (falls vorhanden)
 	_load_progress()
-	# Gespeicherte Audio-Einstellung anwenden
+	# Gespeicherte Audio-/Grafik-Einstellungen anwenden
 	_apply_mute()
+	get_tree().root.content_scale_factor = render_scale  # FR-291
+	get_tree().root.canvas_item_default_texture_filter = (
+		Viewport.DEFAULT_CANVAS_ITEM_TEXTURE_FILTER_NEAREST if pixel_perfect_mode
+		else Viewport.DEFAULT_CANVAS_ITEM_TEXTURE_FILTER_LINEAR
+	)  # FR-299
 
 
 func _process(delta: float) -> void:
@@ -623,40 +630,40 @@ func get_difficulty_multiplier() -> float:
 func set_control_scheme(scheme: String) -> void:
 	control_scheme = scheme
 	control_settings_changed.emit()
-	_save_progress()
+	_save_settings()  # FR-414
 
 
 ## FR-043: Schaltet den Linkshänder-Modus (gespiegeltes HUD) um.
 func set_left_handed(enabled: bool) -> void:
 	left_handed_mode = enabled
 	control_settings_changed.emit()
-	_save_progress()
+	_save_settings()  # FR-414
 
 
 ## FR-044: Setzt die Touch-Empfindlichkeit (0.5 = träge, 2.0 = sehr empfindlich).
 func set_touch_sensitivity(value: float) -> void:
 	touch_sensitivity = clampf(value, 0.5, 2.0)
 	control_settings_changed.emit()
-	_save_progress()
+	_save_settings()  # FR-414
 
 
 ## FR-044: Setzt die Dead-Zone in Pixeln (minimale Zugweite fürs Zielen).
 func set_touch_dead_zone(value: float) -> void:
 	touch_dead_zone = clampf(value, 0.0, 60.0)
 	control_settings_changed.emit()
-	_save_progress()
+	_save_settings()  # FR-414
 
 
 ## FR-189: Setzt die globale Kamera-Rüttel-Intensität (0.0 = aus, 2.0 = stark).
 func set_camera_shake_intensity(value: float) -> void:
 	camera_shake_intensity = clampf(value, 0.0, 2.0)
-	_save_progress()
+	_save_settings()  # FR-414
 
 
 ## FR-200: Setzt die Kamera-Glättung (Lerp-Geschwindigkeit beim Folgen).
 func set_camera_smoothing(value: float) -> void:
 	camera_smoothing = clampf(value, 2.0, 16.0)
-	_save_progress()
+	_save_settings()  # FR-414
 
 
 ## FR-226: Erhöht den Furz-Zähler (von Player bei jedem Stoß aufgerufen).
@@ -730,14 +737,14 @@ func mark_tutorial_hint_seen() -> void:
 func set_hud_minimal_mode(enabled: bool) -> void:
 	hud_minimal_mode = enabled
 	hud_settings_changed.emit()
-	_save_progress()
+	_save_settings()  # FR-414
 
 
 ## FR-216: Setzt die HUD-Skalierung (0.75..1.5).
 func set_hud_scale(value: float) -> void:
 	hud_scale = clampf(value, 0.75, 1.5)
 	hud_settings_changed.emit()
-	_save_progress()
+	_save_settings()  # FR-414
 
 
 ## FR-219: Registriert eine abgeschlossene Levelzeit für die lokale
@@ -907,12 +914,14 @@ func vibrate(duration_ms: int = 30) -> void:
 
 func set_haptics(enabled: bool) -> void:
 	haptics_enabled = enabled
+	_save_settings()  # FR-414 (vorher fälschlich gar nicht persistiert)
 
 
 # --- FR-249: Stummschaltung -------------------------------------
 func set_muted(muted: bool) -> void:
 	sound_muted = muted
 	_apply_mute()
+	_save_settings()  # FR-414 (vorher fälschlich gar nicht persistiert)
 
 
 func toggle_muted() -> void:
@@ -1420,27 +1429,35 @@ func get_level_scene_path(level_index: int) -> String:
 
 
 # --- Speichern / Laden des Fortschritts -------------------------
-const SAVE_PATH := "user://fartrocket_save.cfg"
+const SAVE_VERSION := 1                                   # FR-416
+const SETTINGS_PATH := "user://fartrocket_settings.cfg"    # FR-414
+const BACKUP_DIR := "user://backups/"                       # FR-406/407/411/417
+const MAX_BACKUPS_PER_SLOT := 5
+const SAVE_SLOT_COUNT := 3                                  # FR-403
+# FR-409: Rein clientseitige Verschleierung gegen beiläufiges Editieren
+# der Speicherdatei mit einem Texteditor — kein Schutz vor einem
+# entschlossenen Angreifer (der Schlüssel liegt im Spiel-Code selbst).
+const SAVE_PASSPHRASE := "fartrocket-local-save-v1"
 
+var current_save_slot: int = 1                              # FR-403
+
+
+func _save_path(slot: int = -1) -> String:
+	var s: int = current_save_slot if slot < 0 else slot
+	return "user://fartrocket_save_slot%d.cfg" % s
+
+
+## FR-401/409/413/416: Serialisiert den kompletten Fortschritt
+## (Prüfsumme + Versionsnummer), verschlüsselt und atomar gespeichert,
+## mit anschließendem Backup (FR-406/411/417).
 func _save_progress() -> void:
 	var cfg := ConfigFile.new()
+	cfg.set_value("meta", "version", SAVE_VERSION)  # FR-416
 	for lvl in level_stars.keys():
 		cfg.set_value("stars", str(lvl), level_stars[lvl])
 	cfg.set_value("bestiary", "discovered", discovered_enemies)
 	cfg.set_value("daily", "last_coin_date", last_daily_coin_date)  # FR-093
 	cfg.set_value("stickers", "collected", collected_stickers)  # FR-089
-	cfg.set_value("input", "control_scheme", control_scheme)  # FR-042/043/044
-	cfg.set_value("input", "left_handed", left_handed_mode)
-	cfg.set_value("input", "touch_sensitivity", touch_sensitivity)
-	cfg.set_value("input", "touch_dead_zone", touch_dead_zone)
-	cfg.set_value("camera", "shake_intensity", camera_shake_intensity)  # FR-189
-	cfg.set_value("camera", "smoothing", camera_smoothing)  # FR-200
-	cfg.set_value("hud", "minimal_mode", hud_minimal_mode)  # FR-215
-	cfg.set_value("hud", "scale", hud_scale)  # FR-216
-	cfg.set_value("render", "shader_quality", shader_quality)  # FR-300
-	cfg.set_value("render", "render_scale", render_scale)  # FR-291
-	cfg.set_value("render", "pixel_perfect", pixel_perfect_mode)  # FR-299
-	cfg.set_value("render", "crt_filter", crt_filter_enabled)  # FR-282
 	cfg.set_value("hud", "attempt_times", level_attempt_times)  # FR-219
 	cfg.set_value("hud", "tutorial_hint_seen", tutorial_hint_seen)  # FR-210
 	cfg.set_value("stats", "total_farts", stat_total_farts)  # FR-226
@@ -1483,13 +1500,216 @@ func _save_progress() -> void:
 	cfg.set_value("modes", "ghost_paths", ghost_paths)                       # FR-353
 	cfg.set_value("modes", "daily_seed_date", daily_seed_date)                # FR-350
 	cfg.set_value("modes", "daily_seed_modifier_id", daily_seed_modifier_id)  # FR-350
-	cfg.save(SAVE_PATH)
+	cfg.set_value("meta", "checksum", _compute_checksum(cfg))  # FR-413
+	_write_config_atomic(cfg, _save_path())
+	_create_backup(_save_path())  # FR-406/411/417
+
+
+## FR-404: Öffentlicher Alias, damit Aufrufer (z.B. nach jedem Level)
+## nicht auf die intern-benannte Funktion zugreifen müssen.
+func save_now() -> void:
+	_save_progress()
+
+
+## FR-414: Speichert Einstellungen (Steuerung/Kamera/HUD/Grafik/Audio +
+## aktiver Speicherplatz) in einer eigenen, vom Spielfortschritt
+## unabhängigen Datei — ein Fortschritts-Reset (FR-228/420) wirkt sich
+## dadurch nie auf diese Einstellungen aus (und umgekehrt).
+func _save_settings() -> void:
+	var cfg := ConfigFile.new()
+	cfg.set_value("meta", "version", SAVE_VERSION)
+	cfg.set_value("profile", "current_slot", current_save_slot)  # FR-403
+	cfg.set_value("input", "control_scheme", control_scheme)  # FR-042/043/044
+	cfg.set_value("input", "left_handed", left_handed_mode)
+	cfg.set_value("input", "touch_sensitivity", touch_sensitivity)
+	cfg.set_value("input", "touch_dead_zone", touch_dead_zone)
+	cfg.set_value("camera", "shake_intensity", camera_shake_intensity)  # FR-189
+	cfg.set_value("camera", "smoothing", camera_smoothing)  # FR-200
+	cfg.set_value("hud", "minimal_mode", hud_minimal_mode)  # FR-215
+	cfg.set_value("hud", "scale", hud_scale)  # FR-216
+	cfg.set_value("render", "shader_quality", shader_quality)  # FR-300
+	cfg.set_value("render", "render_scale", render_scale)  # FR-291
+	cfg.set_value("render", "pixel_perfect", pixel_perfect_mode)  # FR-299
+	cfg.set_value("render", "crt_filter", crt_filter_enabled)  # FR-282
+	cfg.set_value("audio", "haptics_enabled", haptics_enabled)
+	cfg.set_value("audio", "sound_muted", sound_muted)
+	_write_config_atomic(cfg, SETTINGS_PATH)
+
+
+func _load_settings() -> void:
+	var cfg := ConfigFile.new()
+	if cfg.load_encrypted_pass(SETTINGS_PATH, SAVE_PASSPHRASE) != OK:
+		return  # Noch keine Einstellungen gespeichert – Standardwerte gelten
+	current_save_slot = cfg.get_value("profile", "current_slot", 1)  # FR-403
+	control_scheme = cfg.get_value("input", "control_scheme", "direct")
+	left_handed_mode = cfg.get_value("input", "left_handed", false)
+	touch_sensitivity = cfg.get_value("input", "touch_sensitivity", 1.0)
+	touch_dead_zone = cfg.get_value("input", "touch_dead_zone", 20.0)
+	camera_shake_intensity = cfg.get_value("camera", "shake_intensity", 1.0)
+	camera_smoothing = cfg.get_value("camera", "smoothing", 8.0)
+	hud_minimal_mode = cfg.get_value("hud", "minimal_mode", false)
+	hud_scale = cfg.get_value("hud", "scale", 1.0)
+	shader_quality = cfg.get_value("render", "shader_quality", "high")
+	render_scale = cfg.get_value("render", "render_scale", 1.0)
+	pixel_perfect_mode = cfg.get_value("render", "pixel_perfect", false)
+	crt_filter_enabled = cfg.get_value("render", "crt_filter", false)
+	haptics_enabled = cfg.get_value("audio", "haptics_enabled", true)
+	sound_muted = cfg.get_value("audio", "sound_muted", false)
+
+
+## FR-401: Schreibt eine ConfigFile verschlüsselt (FR-409) und atomar —
+## zuerst in eine Temp-Datei, dann per Umbenennen an die Zielposition
+## verschoben, damit ein Absturz mitten im Schreiben nie die vorherige,
+## intakte Datei zerstört.
+func _write_config_atomic(cfg: ConfigFile, path: String) -> void:
+	var tmp_path := path + ".tmp"
+	var err := cfg.save_encrypted_pass(tmp_path, SAVE_PASSPHRASE)
+	if err != OK:
+		push_warning("Speichern fehlgeschlagen (%s): Fehlercode %d" % [path, err])
+		return
+	var dir := DirAccess.open("user://")
+	if dir == null:
+		return
+	var rel_path := path.trim_prefix("user://")
+	var rel_tmp := tmp_path.trim_prefix("user://")
+	if dir.file_exists(rel_path):
+		dir.remove(rel_path)
+	dir.rename(rel_tmp, rel_path)
+
+
+## FR-413: Einfache Prüfsumme über alle gespeicherten Werte (außer der
+## Prüfsumme selbst), um grobe Speicher-Korruption beim Laden zu
+## erkennen — kein Kryptografie-Anspruch, nur ein Korruptions-Indikator.
+func _compute_checksum(cfg: ConfigFile) -> int:
+	var parts := PackedStringArray()
+	for section in cfg.get_sections():
+		for key in cfg.get_section_keys(section):
+			if section == "meta" and key == "checksum":
+				continue
+			parts.append("%s.%s=%s" % [section, key, cfg.get_value(section, key)])
+	parts.sort()
+	return "|".join(parts).hash()
+
+
+func _verify_checksum(cfg: ConfigFile) -> bool:
+	if not cfg.has_section_key("meta", "checksum"):
+		return true  # ältere Speicherstände ohne Prüfsumme werden akzeptiert
+	return _compute_checksum(cfg) == int(cfg.get_value("meta", "checksum"))
+
+
+## FR-406/411/417: Legt eine Zeitstempel-Kopie der Speicherdatei im
+## Backup-Verzeichnis an und behält nur die letzten MAX_BACKUPS_PER_SLOT.
+func _create_backup(source_path: String) -> void:
+	DirAccess.make_dir_recursive_absolute(BACKUP_DIR)
+	var dir := DirAccess.open("user://")
+	if dir == null or not dir.file_exists(source_path.trim_prefix("user://")):
+		return
+	var stamp := Time.get_datetime_string_from_system().replace(":", "-").replace(" ", "_")
+	var backup_name := "slot%d_%s.cfg" % [current_save_slot, stamp]
+	dir.copy(source_path, BACKUP_DIR + backup_name)
+	_prune_backups()
+
+
+func _list_slot_backup_files() -> Array:
+	var dir := DirAccess.open(BACKUP_DIR)
+	if dir == null:
+		return []
+	var files := []
+	dir.list_dir_begin()
+	var f := dir.get_next()
+	while f != "":
+		if not dir.current_is_dir() and f.begins_with("slot%d_" % current_save_slot):
+			files.append(f)
+		f = dir.get_next()
+	dir.list_dir_end()
+	files.sort()
+	return files
+
+
+func _prune_backups() -> void:
+	var dir := DirAccess.open(BACKUP_DIR)
+	if dir == null:
+		return
+	var files := _list_slot_backup_files()
+	while files.size() > MAX_BACKUPS_PER_SLOT:
+		dir.remove(BACKUP_DIR + files[0])
+		files.remove_at(0)
+
+
+## FR-407/418: Liste vorhandener Backups für den aktuellen Speicherplatz,
+## neueste zuerst — für die Speicher-Slot-Verwaltungs-UI.
+func list_backups() -> Array:
+	var files := _list_slot_backup_files()
+	files.reverse()
+	return files
+
+
+## FR-407/411: Stellt den Fortschritt aus einer Backup-Datei wieder her.
+func restore_backup(backup_filename: String) -> bool:
+	var dir := DirAccess.open("user://")
+	if dir == null:
+		return false
+	if dir.copy(BACKUP_DIR + backup_filename, _save_path()) != OK:
+		return false
+	_load_progress()
+	return true
+
+
+## FR-406: Exportiert den aktuellen Spielstand als benannte Backup-Datei
+## (z.B. für einen manuellen "Jetzt sichern"-Button).
+func export_save() -> String:
+	_save_progress()
+	var backups := list_backups()
+	return backups[0] if not backups.is_empty() else ""
+
+
+## FR-403: Wechselt zum angegebenen Speicherprofil (1..SAVE_SLOT_COUNT)
+## und lädt dessen Stand (oder setzt auf Standardwerte zurück, falls das
+## Profil noch leer ist).
+func switch_save_slot(slot: int) -> void:
+	current_save_slot = clampi(slot, 1, SAVE_SLOT_COUNT)
+	_save_settings()
+	# FR-403: Erst auf Standardwerte zurücksetzen, damit ein noch leeres
+	# Zielprofil nicht versehentlich den Stand des vorherigen Profils
+	# übernimmt (_load_progress() kehrt bei fehlender Datei früh zurück).
+	_reset_progress_vars_to_default()
+	_load_progress()
+
+
+## FR-403/418: Ob für einen Speicherplatz bereits ein Spielstand existiert.
+func save_slot_exists(slot: int) -> bool:
+	return FileAccess.file_exists(_save_path(slot))
+
+
+## FR-403/418: Löscht den Spielstand eines Profils (auch das aktuell
+## aktive, das dann beim nächsten Laden leer erscheint).
+func delete_save_slot(slot: int) -> void:
+	var dir := DirAccess.open("user://")
+	if dir == null:
+		return
+	var p := _save_path(slot).trim_prefix("user://")
+	if dir.file_exists(p):
+		dir.remove(p)
 
 
 ## FR-228: Setzt den gesamten Spielstand auf den Ausgangszustand zurück
-## (Sterne, Statistiken, Sammlungen, Guthaben, Einstellungen) und löscht
-## die Speicherdatei. Wird nach Bestätigung im Reset-Dialog aufgerufen.
+## (Sterne, Statistiken, Sammlungen, Guthaben) und löscht die
+## Speicherdatei des aktuellen Profils. Einstellungen (FR-414) sind
+## davon unberührt. Wird nach Bestätigung im Reset-Dialog aufgerufen.
 func reset_all_progress() -> void:
+	_reset_progress_vars_to_default()
+	var dir := DirAccess.open("user://")
+	var p := _save_path().trim_prefix("user://")
+	if dir != null and dir.file_exists(p):
+		dir.remove(p)
+	_save_progress()
+
+
+## FR-401/403/411/417: Setzt alle Fortschritts-Variablen (nicht die
+## Einstellungen) auf ihre Ausgangswerte — gemeinsam genutzt von
+## reset_all_progress(), einem leeren Speicherplatz-Wechsel und als
+## Fallback, wenn weder Primärdatei noch Backup lesbar sind.
+func _reset_progress_vars_to_default() -> void:
 	level_stars = {1: 0, 2: 0, 3: 0}
 	total_xp = 0
 	player_level = 1
@@ -1545,17 +1765,63 @@ func reset_all_progress() -> void:
 	daily_seed_date = ""                  # FR-350
 	daily_seed_modifier_id = "none"       # FR-350
 
+
+## FR-420: DSGVO-konformes vollständiges Löschen aller lokal
+## gespeicherten Daten dieser App — alle Speicherplätze, Einstellungen,
+## Erfolge/Herausforderungen und Backups. Deutlich weitreichender als
+## reset_all_progress() (die nur das aktive Profil zurücksetzt).
+func delete_all_user_data() -> void:
 	var dir := DirAccess.open("user://")
-	if dir != null and dir.file_exists(SAVE_PATH.trim_prefix("user://")):
-		dir.remove(SAVE_PATH.trim_prefix("user://"))
-	_save_progress()
+	if dir != null:
+		for slot in range(1, SAVE_SLOT_COUNT + 1):
+			var p := _save_path(slot).trim_prefix("user://")
+			if dir.file_exists(p):
+				dir.remove(p)
+		var settings_rel := SETTINGS_PATH.trim_prefix("user://")
+		if dir.file_exists(settings_rel):
+			dir.remove(settings_rel)
+	var backup_dir := DirAccess.open(BACKUP_DIR)
+	if backup_dir != null:
+		backup_dir.list_dir_begin()
+		var f := backup_dir.get_next()
+		while f != "":
+			if not backup_dir.current_is_dir():
+				backup_dir.remove(f)
+			f = backup_dir.get_next()
+		backup_dir.list_dir_end()
+	if FileAccess.file_exists(AchievementManager.SAVE_PATH):
+		DirAccess.remove_absolute(AchievementManager.SAVE_PATH)
+	AchievementManager.reset_all()
+	_reset_progress_vars_to_default()
+	current_save_slot = 1
+	_save_settings()
 
 
+## FR-401/411/413/417: Lädt den Fortschritt des aktuellen Speicherplatzes.
+## Bei fehlender/beschädigter Primärdatei wird automatisch versucht, das
+## neueste Backup wiederherzustellen, bevor auf Standardwerte
+## zurückgefallen wird.
 func _load_progress() -> void:
 	var cfg := ConfigFile.new()
-	var err := cfg.load(SAVE_PATH)
-	if err != OK:
-		return  # Noch kein Speicherstand vorhanden – das ist in Ordnung
+	var err := cfg.load_encrypted_pass(_save_path(), SAVE_PASSPHRASE)
+	if err != OK or not _verify_checksum(cfg):
+		if err != OK and err != ERR_FILE_NOT_FOUND:
+			push_warning("Speicherstand beschädigt oder unlesbar — versuche Backup-Wiederherstellung.")
+		elif err == OK:
+			push_warning("Speicherstand-Prüfsumme ungültig — versuche Backup-Wiederherstellung.")
+		var backups := list_backups()
+		var restored := false
+		for backup_name in backups:
+			var candidate := ConfigFile.new()
+			if candidate.load_encrypted_pass(BACKUP_DIR + backup_name, SAVE_PASSPHRASE) == OK \
+					and _verify_checksum(candidate):
+				cfg = candidate
+				restored = true
+				break
+		if not restored:
+			if err != ERR_FILE_NOT_FOUND:
+				_reset_progress_vars_to_default()  # FR-417: kein brauchbarer Stand vorhanden
+			return  # Erstinstallation (kein Fehler) oder unrettbar beschädigt
 	for lvl in level_stars.keys():
 		level_stars[lvl] = int(cfg.get_value("stars", str(lvl), 0))
 	var saved: Array = cfg.get_value("bestiary", "discovered", [])
@@ -1563,18 +1829,6 @@ func _load_progress() -> void:
 	last_daily_coin_date = cfg.get_value("daily", "last_coin_date", "")  # FR-093
 	var saved_stickers: Array = cfg.get_value("stickers", "collected", [])  # FR-089
 	collected_stickers.assign(saved_stickers)
-	control_scheme = cfg.get_value("input", "control_scheme", "direct")  # FR-042/043/044
-	left_handed_mode = cfg.get_value("input", "left_handed", false)
-	touch_sensitivity = cfg.get_value("input", "touch_sensitivity", 1.0)
-	touch_dead_zone = cfg.get_value("input", "touch_dead_zone", 20.0)
-	camera_shake_intensity = cfg.get_value("camera", "shake_intensity", 1.0)  # FR-189
-	camera_smoothing = cfg.get_value("camera", "smoothing", 8.0)  # FR-200
-	hud_minimal_mode = cfg.get_value("hud", "minimal_mode", false)  # FR-215
-	hud_scale = cfg.get_value("hud", "scale", 1.0)  # FR-216
-	shader_quality = cfg.get_value("render", "shader_quality", "high")  # FR-300
-	render_scale = cfg.get_value("render", "render_scale", 1.0)  # FR-291
-	pixel_perfect_mode = cfg.get_value("render", "pixel_perfect", false)  # FR-299
-	crt_filter_enabled = cfg.get_value("render", "crt_filter", false)  # FR-282
 	level_attempt_times = cfg.get_value("hud", "attempt_times", {})  # FR-219
 	tutorial_hint_seen = cfg.get_value("hud", "tutorial_hint_seen", false)  # FR-210
 	stat_total_farts = cfg.get_value("stats", "total_farts", 0)  # FR-226
