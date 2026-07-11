@@ -21,6 +21,8 @@ signal fart_type_selected(index)             # Spieler hat einen Furz-Typ gewäh
 
 var _max_charges: int = 0
 var _charge_icons: Array[ColorRect] = []
+var _charge_fill_overlays: Array[ColorRect] = []  # FR-208
+var _last_charges_remaining: int = 0              # FR-208
 var _fart_type_buttons: Array[Button] = []
 
 var _elapsed: float = 0.0
@@ -50,6 +52,19 @@ var _photo_mode_btn: Button
 # FR-051: Wisch-Geste zum Pausieren (Zwei-Finger-Swipe nach unten)
 var _swipe_start: Dictionary = {}   # {finger_index: {"pos": Vector2, "time": float}}
 var _swipe_last: Dictionary = {}    # {finger_index: Vector2}
+# FR-207: Geist-Anzeige der Bestzeit
+var _ghost_label: Label
+# FR-210: Tutorial-Hinweis-Overlay
+var _tutorial_hint_label: Label
+# FR-211: Fortschrittsbalken zum Münz-Ziel
+var _coin_progress_bar: ProgressBar
+# FR-213: Sammel-Pop-ups (Screen-Space, nahe der Münzanzeige)
+# (keine dauerhafte Referenz nötig, wird fire-and-forget erzeugt)
+# FR-215/220: Elemente, die im Minimal-Modus ausgeblendet werden
+var _secondary_elements: Array[CanvasItem] = []
+# FR-219: Live-Ranglistenposition
+var _rank_label: Label
+var _last_coin_progress_collected: int = 0  # FR-213
 
 
 func _ready() -> void:
@@ -70,14 +85,26 @@ func _ready() -> void:
 	_build_coin_progress_label()
 	_build_inventory_button()
 	_build_photo_mode_button()
+	_build_ghost_label()          # FR-207
+	_build_tutorial_hint()        # FR-210
+	_build_coin_progress_bar()    # FR-211
+	_build_rank_label()           # FR-219
+	# FR-215/220: Sekundäre Elemente, die im Minimal-Modus ausgeblendet werden
+	_secondary_elements = [
+		_height_label, _powerup_box, _stars_label, _total_stars_label,
+		_coin_progress_label, _coin_progress_bar, _ghost_label, _rank_label,
+	]
 	_apply_safe_area()  # FR-054
 	_apply_left_handed_layout()  # FR-043
+	_apply_hud_settings()  # FR-215/216
 	# FR-206: Auf Schild- und Doppelmünzen-Signale lauschen
 	GameManager.double_coins_changed.connect(_on_double_coins_changed)
 	# FR-099: Sammel-Fortschritt
 	GameManager.coin_progress_changed.connect(_on_coin_progress_changed)
 	# FR-100: Power-up-Inventar
 	GameManager.inventory_changed.connect(_on_inventory_changed)
+	# FR-215/216: HUD-Einstellungen (Minimal-Modus/Skalierung)
+	GameManager.hud_settings_changed.connect(_apply_hud_settings)
 
 
 ## FR-099: Sammel-Fortschritt (x/y Münzen), unter der Münzanzeige.
@@ -95,6 +122,144 @@ func _build_coin_progress_label() -> void:
 
 func _on_coin_progress_changed(collected: int, total: int) -> void:
 	_coin_progress_label.text = "%d / %d Münzen" % [collected, total]
+	# FR-211: Fortschrittsbalken synchron mit dem Text aktualisieren
+	if _coin_progress_bar != null:
+		_coin_progress_bar.max_value = maxf(1.0, float(total))
+		_coin_progress_bar.value = float(collected)
+	# FR-213: Screen-Space-Pop-up nahe der Münzanzeige, wenn Münzen dazukamen
+	if collected > _last_coin_progress_collected:
+		_spawn_coin_popup(collected - _last_coin_progress_collected)
+	_last_coin_progress_collected = collected
+
+
+## FR-213: Kleines "+N"-Pop-up nahe dem Münz-Icon (Screen-Space, zusätzlich
+## zur weltraum-gebundenen FloatingText direkt an der Münze).
+func _spawn_coin_popup(amount: int) -> void:
+	var popup := Label.new()
+	popup.text = "+%d" % amount
+	popup.add_theme_font_size_override("font_size", 30)
+	popup.add_theme_color_override("font_color", Color(1.0, 0.9, 0.3))
+	popup.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	popup.offset_left = -280.0
+	popup.offset_top = 100.0
+	popup.offset_right = -40.0
+	popup.offset_bottom = 150.0
+	popup.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	add_child(popup)
+	var tween := create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(popup, "position:y", popup.position.y - 40.0, 0.6)
+	tween.tween_property(popup, "modulate:a", 0.0, 0.6)
+	tween.chain().tween_callback(popup.queue_free)
+
+
+## FR-207: Geist-Anzeige — zeigt die Differenz zur persönlichen Bestzeit live an.
+func _build_ghost_label() -> void:
+	_ghost_label = Label.new()
+	_ghost_label.add_theme_font_size_override("font_size", 24)
+	_ghost_label.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	_ghost_label.offset_left = 20.0
+	_ghost_label.offset_top = 120.0
+	_ghost_label.offset_right = 260.0
+	_ghost_label.offset_bottom = 150.0
+	add_child(_ghost_label)
+
+
+## FR-207: Aktualisiert die Geist-Anzeige (aufgerufen aus _process via set_elapsed_time).
+func update_ghost_display(elapsed: float) -> void:
+	if _ghost_label == null:
+		return
+	var best := GameManager.get_best_time(GameManager.current_level)
+	if best == INF:
+		_ghost_label.visible = false
+		return
+	_ghost_label.visible = true
+	var delta_t := elapsed - best
+	if delta_t <= 0.0:
+		_ghost_label.text = "Geist: -%.1fs 👻" % absf(delta_t)
+		_ghost_label.add_theme_color_override("font_color", Color(0.4, 1.0, 0.5))
+	else:
+		_ghost_label.text = "Geist: +%.1fs" % delta_t
+		_ghost_label.add_theme_color_override("font_color", Color(1.0, 0.5, 0.4))
+
+
+## FR-210: Kurzer Tutorial-Hinweis, der beim ersten Zielen ausgeblendet wird.
+func _build_tutorial_hint() -> void:
+	_tutorial_hint_label = Label.new()
+	_tutorial_hint_label.text = "Ziehen zum Zielen, loslassen zum Furzen!"
+	_tutorial_hint_label.add_theme_font_size_override("font_size", 32)
+	_tutorial_hint_label.add_theme_color_override("font_color", Color(1.0, 1.0, 1.0, 0.9))
+	_tutorial_hint_label.set_anchors_preset(Control.PRESET_CENTER_TOP)
+	_tutorial_hint_label.offset_left = -300.0
+	_tutorial_hint_label.offset_right = 300.0
+	_tutorial_hint_label.offset_top = 220.0
+	_tutorial_hint_label.offset_bottom = 270.0
+	_tutorial_hint_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_tutorial_hint_label.visible = not GameManager.tutorial_hint_seen
+	add_child(_tutorial_hint_label)
+
+
+## FR-210: Blendet den Tutorial-Hinweis dauerhaft aus (z.B. bei erstem Zielen).
+func dismiss_tutorial_hint() -> void:
+	if _tutorial_hint_label == null or not _tutorial_hint_label.visible:
+		return
+	var tween := create_tween()
+	tween.tween_property(_tutorial_hint_label, "modulate:a", 0.0, 0.4)
+	tween.tween_callback(func(): _tutorial_hint_label.visible = false)
+	GameManager.mark_tutorial_hint_seen()
+
+
+## FR-211: Fortschrittsbalken zum Münz-Sammelziel, unter dem x/y-Text.
+func _build_coin_progress_bar() -> void:
+	_coin_progress_bar = ProgressBar.new()
+	_coin_progress_bar.show_percentage = false
+	_coin_progress_bar.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	_coin_progress_bar.offset_left = 20.0
+	_coin_progress_bar.offset_top = 122.0
+	_coin_progress_bar.offset_right = 200.0
+	_coin_progress_bar.offset_bottom = 132.0
+	add_child(_coin_progress_bar)
+
+
+## FR-219: Live-Ranglistenposition (lokale Versuchs-Historie) oben mittig.
+func _build_rank_label() -> void:
+	_rank_label = Label.new()
+	_rank_label.add_theme_font_size_override("font_size", 22)
+	_rank_label.add_theme_color_override("font_color", Color(0.7, 0.9, 1.0, 0.85))
+	_rank_label.set_anchors_preset(Control.PRESET_CENTER_TOP)
+	_rank_label.offset_left = -100.0
+	_rank_label.offset_right = 100.0
+	_rank_label.offset_top = 118.0
+	_rank_label.offset_bottom = 148.0
+	_rank_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	add_child(_rank_label)
+
+
+## FR-219: Aktualisiert den Live-Rang anhand der bisherigen Versuchs-Historie.
+func update_rank_display(elapsed: float) -> void:
+	if _rank_label == null:
+		return
+	var attempts: Array = GameManager.level_attempt_times.get(GameManager.current_level, [])
+	if attempts.is_empty():
+		_rank_label.visible = false
+		return
+	_rank_label.visible = true
+	var rank := GameManager.get_live_rank(GameManager.current_level, elapsed)
+	_rank_label.text = "Rang #%d von %d" % [rank, attempts.size() + 1]
+
+
+## FR-215/216: Wendet Minimal-Modus (Sichtbarkeit) und HUD-Skalierung an.
+func _apply_hud_settings() -> void:
+	for el in _secondary_elements:
+		if is_instance_valid(el):
+			el.visible = not GameManager.hud_minimal_mode
+	var vp_size := get_viewport().get_visible_rect().size
+	var pivot := vp_size * 0.5
+	var s := GameManager.hud_scale
+	# FR-216: Skaliert die gesamte HUD-Ebene um die Bildschirmmitte, damit
+	# rand-verankerte Elemente bei größerer Skalierung nicht zu weit
+	# aus dem sichtbaren Bereich wandern.
+	transform = Transform2D(0.0, Vector2.ONE * s, 0.0, pivot * (1.0 - s))
 
 
 ## FR-100: Inventar-Button (Mitte unten), zeigt gespeichertes Power-up.
@@ -148,7 +313,7 @@ func _apply_safe_area() -> void:
 	_root.offset_bottom -= bottom_inset
 
 
-## FR-043: Spiegelt die seitlich angedockten HUD-Elemente für Linkshänder.
+## FR-043/217: Spiegelt die seitlich angedockten HUD-Elemente für Linkshänder.
 func _apply_left_handed_layout() -> void:
 	if not GameManager.left_handed_mode:
 		return
@@ -156,6 +321,10 @@ func _apply_left_handed_layout() -> void:
 		var node := _root.get_node_or_null(path)
 		if node is Control:
 			_mirror_control_horizontally(node)
+	# FR-217: Auch die dynamisch erzeugten, seitlich angedockten Elemente spiegeln
+	for ctrl in [_coin_progress_label, _coin_progress_bar, _photo_mode_btn, _inventory_btn]:
+		if ctrl != null:
+			_mirror_control_horizontally(ctrl)
 
 
 ## FR-043: Spiegelt Anker/Offsets eines Controls horizontal innerhalb des Root.
@@ -293,6 +462,8 @@ func _process(delta: float) -> void:
 	if _timer_running:
 		_elapsed += delta
 		_timer_label.text = _format_time(_elapsed)
+		update_ghost_display(_elapsed)  # FR-207
+		update_rank_display(_elapsed)   # FR-219
 
 
 ## Vom Level/Main aufgerufen: Anzahl der Furz-Icons festlegen.
@@ -302,6 +473,8 @@ func set_max_charges(value: int) -> void:
 	for icon in _charge_icons:
 		icon.queue_free()
 	_charge_icons.clear()
+	_charge_fill_overlays.clear()
+	_last_charges_remaining = value
 	# Neue Icons erzeugen (grüne Wölkchen)
 	for i in range(_max_charges):
 		var icon := ColorRect.new()
@@ -309,6 +482,13 @@ func set_max_charges(value: int) -> void:
 		icon.color = Color(0.45, 0.85, 0.35)
 		_charges_box.add_child(icon)
 		_charge_icons.append(icon)
+		# FR-208: Fortschritts-Overlay für die Nachfüll-Animation (wächst von unten)
+		var fill := ColorRect.new()
+		fill.color = Color(1.0, 1.0, 0.6, 0.55)
+		fill.size = Vector2(44, 0)
+		fill.position = Vector2(0, 44)
+		icon.add_child(fill)
+		_charge_fill_overlays.append(fill)
 
 
 ## Startet den Level-Timer.
@@ -547,15 +727,31 @@ func _on_charges_changed(remaining: int) -> void:
 			_charge_icons[i].color = Color(0.45, 0.85, 0.35)      # aktiv (grün)
 		else:
 			_charge_icons[i].color = Color(0.3, 0.3, 0.3, 0.5)    # verbraucht
+		if i < _charge_fill_overlays.size():
+			_charge_fill_overlays[i].size.y = 0.0
+
+	# FR-208: Kleiner "Pop", wenn eine Ladung frisch aufgefüllt wurde
+	if remaining > _last_charges_remaining and remaining - 1 < _charge_icons.size():
+		var refreshed := _charge_icons[remaining - 1]
+		var tween := create_tween()
+		tween.tween_property(refreshed, "scale", Vector2(1.35, 1.35), 0.1)
+		tween.tween_property(refreshed, "scale", Vector2.ONE, 0.15)
+	_last_charges_remaining = remaining
 
 
-## FR-001: Füllt das nächste (nachladende) Icon entsprechend dem Fortschritt.
+## FR-001/208: Füllt das nächste (nachladende) Icon entsprechend dem
+## Fortschritt — sowohl per Farb-Überblendung als auch per wachsendem
+## Balken-Overlay von unten nach oben (Nachfüll-Animation).
 func _on_regen_progress(fraction: float) -> void:
 	var idx := GameManager.charges_remaining
 	if idx < 0 or idx >= _charge_icons.size():
 		return
 	# Von "verbraucht" (blass) zu "aktiv" (grün) überblenden
 	_charge_icons[idx].color = Color(0.45, 0.85, 0.35, lerpf(0.25, 1.0, fraction))
+	if idx < _charge_fill_overlays.size():
+		var fill := _charge_fill_overlays[idx]
+		fill.size.y = 44.0 * fraction
+		fill.position.y = 44.0 - fill.size.y
 
 
 # --- Hilfsfunktionen --------------------------------------------

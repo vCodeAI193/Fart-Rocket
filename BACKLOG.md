@@ -273,20 +273,20 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 - [x] **FR-204** Geschwindigkeitsanzeige
 - [x] **FR-205** Hoehen-/Distanzanzeige
 - [x] **FR-206** Power-up-Status-Icons mit Timer
-- [ ] **FR-207** Geist-Anzeige der Bestzeit
-- [ ] **FR-208** Nachfuell-Animation der Furz-Ladungen
+- [x] **FR-207** Geist-Anzeige der Bestzeit
+- [x] **FR-208** Nachfuell-Animation der Furz-Ladungen
 - [x] **FR-209** Schaden-/Treffer-Vignette
-- [ ] **FR-210** Tutorial-Hinweis-Overlays
-- [ ] **FR-211** Fortschrittsbalken zum Muenz-Ziel
+- [x] **FR-210** Tutorial-Hinweis-Overlays
+- [x] **FR-211** Fortschrittsbalken zum Muenz-Ziel
 - [x] **FR-212** Checkpoint-Benachrichtigung
-- [ ] **FR-213** Sammel-Pop-ups (+10)
+- [x] **FR-213** Sammel-Pop-ups (+10)
 - [x] **FR-214** Aktuelle Sterne-Vorschau im HUD
-- [ ] **FR-215** Minimalistischer HUD-Modus
-- [ ] **FR-216** Einstellbare HUD-Skalierung
-- [ ] **FR-217** Linkshaender-HUD-Layout
-- [ ] **FR-218** Schnellzugriff fuer Power-up-Einsatz
-- [ ] **FR-219** Live-Ranglistenposition im HUD
-- [ ] **FR-220** Ein-/ausblendbare HUD-Elemente
+- [x] **FR-215** Minimalistischer HUD-Modus
+- [x] **FR-216** Einstellbare HUD-Skalierung
+- [x] **FR-217** Linkshaender-HUD-Layout
+- [x] **FR-218** Schnellzugriff fuer Power-up-Einsatz
+- [x] **FR-219** Live-Ranglistenposition im HUD
+- [x] **FR-220** Ein-/ausblendbare HUD-Elemente
 
 ## Menues & Navigation
 

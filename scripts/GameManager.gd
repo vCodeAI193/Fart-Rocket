@@ -88,6 +88,17 @@ signal camera_reset_requested
 var camera_shake_intensity: float = 1.0   # FR-189 (0.0..2.0)
 var camera_smoothing: float = 8.0         # FR-200 (2.0..16.0, höher = straffer)
 
+# --- FR-215/216/220: HUD-Einstellungen -----------------------------
+signal hud_settings_changed
+var hud_minimal_mode: bool = false   # FR-215
+var hud_scale: float = 1.0           # FR-216 (0.75..1.5)
+
+# --- FR-219: Live-Ranglistenposition (lokale Versuchs-Historie) ----
+var level_attempt_times: Dictionary = {}  # {level_index: Array[float]}
+
+# --- FR-210: Tutorial-Hinweis-Overlays (dauerhaft, nicht pro Level) --
+var tutorial_hint_seen: bool = false
+
 # --- FR-099: Sammel-Fortschritt pro Level (x/y Münzen) ------------
 var level_coin_total: int = 0
 var level_coin_collected: int = 0
@@ -242,6 +253,49 @@ func set_camera_shake_intensity(value: float) -> void:
 func set_camera_smoothing(value: float) -> void:
 	camera_smoothing = clampf(value, 2.0, 16.0)
 	_save_progress()
+
+
+## FR-210: Markiert den Tutorial-Hinweis dauerhaft als gesehen.
+func mark_tutorial_hint_seen() -> void:
+	tutorial_hint_seen = true
+	_save_progress()
+
+
+## FR-215: Schaltet den minimalistischen HUD-Modus um.
+func set_hud_minimal_mode(enabled: bool) -> void:
+	hud_minimal_mode = enabled
+	hud_settings_changed.emit()
+	_save_progress()
+
+
+## FR-216: Setzt die HUD-Skalierung (0.75..1.5).
+func set_hud_scale(value: float) -> void:
+	hud_scale = clampf(value, 0.75, 1.5)
+	hud_settings_changed.emit()
+	_save_progress()
+
+
+## FR-219: Registriert eine abgeschlossene Levelzeit für die lokale
+## Rang-Historie und gibt zurück, auf welchem Rang sie sich einordnet.
+func record_attempt_time(level_index: int, time_sec: float) -> int:
+	if not level_attempt_times.has(level_index):
+		level_attempt_times[level_index] = []
+	var times: Array = level_attempt_times[level_index]
+	times.append(time_sec)
+	_save_progress()
+	return get_live_rank(level_index, time_sec)
+
+
+## FR-219: Liefert den (1-basierten) Rang einer Zeit unter den bisherigen
+## Versuchen — je schneller, desto besser der Rang. Wird auch live während
+## des laufenden Versuchs für die HUD-Anzeige genutzt.
+func get_live_rank(level_index: int, current_time_sec: float) -> int:
+	var times: Array = level_attempt_times.get(level_index, [])
+	var better_count := 0
+	for t in times:
+		if t < current_time_sec:
+			better_count += 1
+	return better_count + 1
 
 
 ## FR-089: Sammelt eine zufällige, noch nicht besessene Sticker-Karte.
@@ -486,6 +540,10 @@ func _save_progress() -> void:
 	cfg.set_value("input", "touch_dead_zone", touch_dead_zone)
 	cfg.set_value("camera", "shake_intensity", camera_shake_intensity)  # FR-189
 	cfg.set_value("camera", "smoothing", camera_smoothing)  # FR-200
+	cfg.set_value("hud", "minimal_mode", hud_minimal_mode)  # FR-215
+	cfg.set_value("hud", "scale", hud_scale)  # FR-216
+	cfg.set_value("hud", "attempt_times", level_attempt_times)  # FR-219
+	cfg.set_value("hud", "tutorial_hint_seen", tutorial_hint_seen)  # FR-210
 	cfg.save(SAVE_PATH)
 
 
@@ -507,6 +565,10 @@ func _load_progress() -> void:
 	touch_dead_zone = cfg.get_value("input", "touch_dead_zone", 20.0)
 	camera_shake_intensity = cfg.get_value("camera", "shake_intensity", 1.0)  # FR-189
 	camera_smoothing = cfg.get_value("camera", "smoothing", 8.0)  # FR-200
+	hud_minimal_mode = cfg.get_value("hud", "minimal_mode", false)  # FR-215
+	hud_scale = cfg.get_value("hud", "scale", 1.0)  # FR-216
+	level_attempt_times = cfg.get_value("hud", "attempt_times", {})  # FR-219
+	tutorial_hint_seen = cfg.get_value("hud", "tutorial_hint_seen", false)  # FR-210
 
 
 ## FR-118: Registriert einen Gegner-Typ als entdeckt (persistiert).

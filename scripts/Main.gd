@@ -446,6 +446,7 @@ func _on_fart_fired(impulse: float, direction: Vector2) -> void:
 func _on_player_aim_changed(direction: Vector2, _strength: float) -> void:
 	_is_player_aiming = true
 	_aim_focus_dir = direction
+	_hud.dismiss_tutorial_hint()  # FR-210: Hinweis beim ersten Zielen ausblenden
 
 
 ## FR-186: Zielfokus wieder aufheben, sobald der Spieler loslässt.
@@ -527,6 +528,9 @@ func _on_level_reached() -> void:
 		var is_new_best := GameManager.record_time_attack(GameManager.current_level, time_sec)
 		if is_new_best:
 			GameManager.vibrate(80)
+
+	# FR-219: Versuch in die lokale Rang-Historie eintragen
+	GameManager.record_attempt_time(GameManager.current_level, time_sec)
 
 	# FR-187: Kurzer Kino-Modus (Zoom + Letterbox) vor dem Abschlussbildschirm
 	await _play_cinematic_ending()

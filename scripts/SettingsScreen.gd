@@ -18,6 +18,9 @@ var _deadzone_btn: Button
 # FR-189/200: Kamera-Einstellungen
 var _shake_btn: Button
 var _smoothing_btn: Button
+# FR-215/216: HUD-Einstellungen
+var _minimal_hud_btn: Button
+var _hud_scale_btn: Button
 
 
 func _ready() -> void:
@@ -133,6 +136,25 @@ func _build_ui() -> void:
 	_smoothing_btn.pressed.connect(_on_smoothing_pressed)
 	vbox.add_child(_smoothing_btn)
 
+	# --- FR-215/216: HUD-Einstellungen -----------------------------
+	var hud_title := Label.new()
+	hud_title.text = "HUD"
+	hud_title.add_theme_font_size_override("font_size", 30)
+	hud_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vbox.add_child(hud_title)
+
+	_minimal_hud_btn = Button.new()
+	_minimal_hud_btn.custom_minimum_size = Vector2(400, 76)
+	_minimal_hud_btn.add_theme_font_size_override("font_size", 30)
+	_minimal_hud_btn.pressed.connect(_on_minimal_hud_pressed)
+	vbox.add_child(_minimal_hud_btn)
+
+	_hud_scale_btn = Button.new()
+	_hud_scale_btn.custom_minimum_size = Vector2(400, 76)
+	_hud_scale_btn.add_theme_font_size_override("font_size", 30)
+	_hud_scale_btn.pressed.connect(_on_hud_scale_pressed)
+	vbox.add_child(_hud_scale_btn)
+
 	# Schliessen-Button
 	var close_btn := Button.new()
 	close_btn.text = "Schliessen"
@@ -157,6 +179,8 @@ func _update_buttons() -> void:
 	_deadzone_btn.text = "Dead-Zone: %d px" % int(GameManager.touch_dead_zone)
 	_shake_btn.text = "Kamera-Ruckeln: %d%%" % int(GameManager.camera_shake_intensity * 100)
 	_smoothing_btn.text = "Kamera-Glättung: %.0f" % GameManager.camera_smoothing
+	_minimal_hud_btn.text = "Minimal-HUD: EIN" if GameManager.hud_minimal_mode else "Minimal-HUD: AUS"
+	_hud_scale_btn.text = "HUD-Größe: %.2fx" % GameManager.hud_scale
 
 
 func _on_haptics_pressed() -> void:
@@ -220,6 +244,23 @@ func _on_smoothing_pressed() -> void:
 	if next > 16.0:
 		next = 2.0
 	GameManager.set_camera_smoothing(next)
+	GameManager.vibrate(15)
+	_update_buttons()
+
+
+## FR-215: Minimalistischen HUD-Modus umschalten.
+func _on_minimal_hud_pressed() -> void:
+	GameManager.set_hud_minimal_mode(not GameManager.hud_minimal_mode)
+	GameManager.vibrate(15)
+	_update_buttons()
+
+
+## FR-216: HUD-Skalierung in Schritten von 0.25 durchschalten (0.75..1.5).
+func _on_hud_scale_pressed() -> void:
+	var next := GameManager.hud_scale + 0.25
+	if next > 1.5:
+		next = 0.75
+	GameManager.set_hud_scale(next)
 	GameManager.vibrate(15)
 	_update_buttons()
 
