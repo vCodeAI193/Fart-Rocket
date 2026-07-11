@@ -89,6 +89,8 @@ const ENEMY_BESTIARY := {
 	"LungingEnemy": "Sprung-Angreifer",
 	"StealthEnemy": "Tarn-Kriecher",
 	"BlowableEnemy": "Flatterling",
+	"MiniBoss": "Mini-Boss",
+	"EndBoss": "End-Boss",
 }
 var discovered_enemies: Array[String] = []
 

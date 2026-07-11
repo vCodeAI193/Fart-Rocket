@@ -163,14 +163,14 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 - [x] **FR-109** Schild-Gegner (nur von hinten verwundbar)
 - [x] **FR-110** Teleportierende Gegner
 - [x] **FR-111** Gegner mit telegrafierten Angriffen
-- [ ] **FR-112** Mini-Boss pro Welt
-- [ ] **FR-113** End-Boss mit mehreren Phasen
+- [x] **FR-112** Mini-Boss pro Welt
+- [x] **FR-113** End-Boss mit mehreren Phasen
 - [x] **FR-114** Gegner-Spawner und Nester
 - [x] **FR-115** Gegner, die per Furz weggeblasen werden
 - [x] **FR-116** Tarn-Gegner, die bei Naehe sichtbar werden
 - [x] **FR-117** KI-Schwierigkeitsskalierung
 - [x] **FR-118** Gegner-Bestiarium/Sammlung
-- [ ] **FR-119** Boss-Schwachstellen-System
+- [x] **FR-119** Boss-Schwachstellen-System
 - [x] **FR-120** Gegner-Drop-Belohnungen
 
 ## Level-Design & Inhalte
