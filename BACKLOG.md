@@ -110,20 +110,20 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 - [x] **FR-062** Bewegliche Stachel-Walzen
 - [x] **FR-063** Pendelnde Stachelkugeln (Morgenstern)
 - [x] **FR-064** Ein-/ausfahrende Stacheln als Timing-Raetsel
-- [ ] **FR-065** Laserstrahlen mit Intervall-Schaltung
-- [ ] **FR-066** Feuerspeier-/Flammenwerfer-Duesen
+- [x] **FR-065** Laserstrahlen mit Intervall-Schaltung
+- [x] **FR-066** Feuerspeier-/Flammenwerfer-Duesen
 - [x] **FR-067** Fallende Felsbrocken und Truemmer
 - [x] **FR-068** Zerbroeckelnde Plattformen
 - [x] **FR-069** Elektro-Zaeune und Stromfelder
-- [ ] **FR-070** Rotierende Hindernis-Raeder mit Luecken
-- [ ] **FR-071** Wandernde Laserwaende (Quetsch-Gefahr)
+- [x] **FR-070** Rotierende Hindernis-Raeder mit Luecken
+- [x] **FR-071** Wandernde Laserwaende (Quetsch-Gefahr)
 - [ ] **FR-072** Giftgaswolken als zeitbegrenzte Zonen
 - [x] **FR-073** Schliessende Tueren/Tore mit Timing
 - [ ] **FR-074** Kreissaegen auf Schienen
 - [ ] **FR-075** Komplexe Hindernis-Maschinen (Verbuende)
 - [ ] **FR-076** Wasserfaelle, die nach unten druecken
 - [ ] **FR-077** Klebrige Spinnweben (Verzoegerung oder Tod)
-- [ ] **FR-078** Tickende Minen, die bei Naehe explodieren
+- [x] **FR-078** Tickende Minen, die bei Naehe explodieren
 - [ ] **FR-079** Zufaellig generierte Hindernis-Layouts per Seed
 - [ ] **FR-080** Telegrafierte Angriffe mit Vorwarn-Animationen
 

@@ -19,7 +19,7 @@ var _cshape: CollisionShape2D
 
 
 func _ready() -> void:
-	add_to_group("hazards")
+	add_to_group("obstacles")
 	body_entered.connect(_on_body_entered)
 	_is_active = start_active
 	_timer = active_time if start_active else inactive_time

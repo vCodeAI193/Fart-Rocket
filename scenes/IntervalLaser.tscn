@@ -1,0 +1,8 @@
+[gd_scene load_steps=2 format=3 uid="uid://intervallaser"]
+
+[ext_resource type="Script" path="res://scripts/IntervalLaser.gd" id="1_laser"]
+
+[node name="IntervalLaser" type="Area2D"]
+script = ExtResource("1_laser")
+collision_layer = 8
+collision_mask = 1
