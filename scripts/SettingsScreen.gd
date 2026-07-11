@@ -10,6 +10,11 @@ signal closed
 var _panel: PanelContainer
 var _haptics_btn: Button
 var _mute_btn: Button
+# FR-059: Steuerungs-Kalibrierung
+var _scheme_btn: Button
+var _handed_btn: Button
+var _sensitivity_btn: Button
+var _deadzone_btn: Button
 
 
 func _ready() -> void:
@@ -33,18 +38,22 @@ func _build_ui() -> void:
 
 	_panel = PanelContainer.new()
 	_panel.set_anchors_preset(Control.PRESET_CENTER)
-	_panel.custom_minimum_size = Vector2(520, 420)
-	_panel.offset_left = -260.0
-	_panel.offset_top = -210.0
-	_panel.offset_right = 260.0
-	_panel.offset_bottom = 210.0
+	_panel.custom_minimum_size = Vector2(560, 780)
+	_panel.offset_left = -280.0
+	_panel.offset_top = -390.0
+	_panel.offset_right = 280.0
+	_panel.offset_bottom = 390.0
 	add_child(_panel)
+
+	var scroll := ScrollContainer.new()
+	scroll.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_panel.add_child(scroll)
 
 	var vbox := VBoxContainer.new()
 	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
-	vbox.add_theme_constant_override("separation", 24)
-	vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_panel.add_child(vbox)
+	vbox.add_theme_constant_override("separation", 18)
+	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(vbox)
 
 	# Titel
 	var title := Label.new()
@@ -55,17 +64,52 @@ func _build_ui() -> void:
 
 	# Haptik-Toggle
 	_haptics_btn = Button.new()
-	_haptics_btn.custom_minimum_size = Vector2(400, 80)
-	_haptics_btn.add_theme_font_size_override("font_size", 38)
+	_haptics_btn.custom_minimum_size = Vector2(400, 76)
+	_haptics_btn.add_theme_font_size_override("font_size", 34)
 	_haptics_btn.pressed.connect(_on_haptics_pressed)
 	vbox.add_child(_haptics_btn)
 
 	# Ton-Toggle
 	_mute_btn = Button.new()
-	_mute_btn.custom_minimum_size = Vector2(400, 80)
-	_mute_btn.add_theme_font_size_override("font_size", 38)
+	_mute_btn.custom_minimum_size = Vector2(400, 76)
+	_mute_btn.add_theme_font_size_override("font_size", 34)
 	_mute_btn.pressed.connect(_on_mute_pressed)
 	vbox.add_child(_mute_btn)
+
+	# --- FR-059: Steuerungs-Kalibrierung ---------------------------
+	var control_title := Label.new()
+	control_title.text = "Steuerung"
+	control_title.add_theme_font_size_override("font_size", 30)
+	control_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vbox.add_child(control_title)
+
+	# FR-042: Steuerschema
+	_scheme_btn = Button.new()
+	_scheme_btn.custom_minimum_size = Vector2(400, 76)
+	_scheme_btn.add_theme_font_size_override("font_size", 30)
+	_scheme_btn.pressed.connect(_on_scheme_pressed)
+	vbox.add_child(_scheme_btn)
+
+	# FR-043: Linkshänder-Modus
+	_handed_btn = Button.new()
+	_handed_btn.custom_minimum_size = Vector2(400, 76)
+	_handed_btn.add_theme_font_size_override("font_size", 30)
+	_handed_btn.pressed.connect(_on_handed_pressed)
+	vbox.add_child(_handed_btn)
+
+	# FR-044: Touch-Empfindlichkeit
+	_sensitivity_btn = Button.new()
+	_sensitivity_btn.custom_minimum_size = Vector2(400, 76)
+	_sensitivity_btn.add_theme_font_size_override("font_size", 30)
+	_sensitivity_btn.pressed.connect(_on_sensitivity_pressed)
+	vbox.add_child(_sensitivity_btn)
+
+	# FR-044: Dead-Zone
+	_deadzone_btn = Button.new()
+	_deadzone_btn.custom_minimum_size = Vector2(400, 76)
+	_deadzone_btn.add_theme_font_size_override("font_size", 30)
+	_deadzone_btn.pressed.connect(_on_deadzone_pressed)
+	vbox.add_child(_deadzone_btn)
 
 	# Schliessen-Button
 	var close_btn := Button.new()
@@ -83,6 +127,12 @@ func _update_buttons() -> void:
 		return
 	_haptics_btn.text = "Haptik: EIN" if GameManager.haptics_enabled else "Haptik: AUS"
 	_mute_btn.text = "Ton: AN" if not GameManager.sound_muted else "Ton: AUS"
+	# FR-059
+	var scheme_label := "Direkt" if GameManager.control_scheme == "direct" else "Steinschleuder"
+	_scheme_btn.text = "Steuerschema: %s" % scheme_label
+	_handed_btn.text = "Linkshänder: EIN" if GameManager.left_handed_mode else "Linkshänder: AUS"
+	_sensitivity_btn.text = "Empfindlichkeit: %.1fx" % GameManager.touch_sensitivity
+	_deadzone_btn.text = "Dead-Zone: %d px" % int(GameManager.touch_dead_zone)
 
 
 func _on_haptics_pressed() -> void:
@@ -92,6 +142,41 @@ func _on_haptics_pressed() -> void:
 
 func _on_mute_pressed() -> void:
 	GameManager.toggle_muted()
+	_update_buttons()
+
+
+## FR-042: Steuerschema zwischen "direct" und "slingshot" umschalten.
+func _on_scheme_pressed() -> void:
+	var next := "slingshot" if GameManager.control_scheme == "direct" else "direct"
+	GameManager.set_control_scheme(next)
+	GameManager.vibrate(15)
+	_update_buttons()
+
+
+## FR-043: Linkshänder-Modus umschalten (erfordert HUD-Neuaufbau im Level).
+func _on_handed_pressed() -> void:
+	GameManager.set_left_handed(not GameManager.left_handed_mode)
+	GameManager.vibrate(15)
+	_update_buttons()
+
+
+## FR-044: Touch-Empfindlichkeit in Schritten von 0.25 durchschalten (0.5..2.0).
+func _on_sensitivity_pressed() -> void:
+	var next := GameManager.touch_sensitivity + 0.25
+	if next > 2.0:
+		next = 0.5
+	GameManager.set_touch_sensitivity(next)
+	GameManager.vibrate(15)
+	_update_buttons()
+
+
+## FR-044: Dead-Zone in Schritten von 10px durchschalten (0..60).
+func _on_deadzone_pressed() -> void:
+	var next := GameManager.touch_dead_zone + 10.0
+	if next > 60.0:
+		next = 0.0
+	GameManager.set_touch_dead_zone(next)
+	GameManager.vibrate(15)
 	_update_buttons()
 
 

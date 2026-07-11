@@ -74,6 +74,16 @@ var time_attack_best_times := {1: INF, 2: INF, 3: INF}  # Level -> beste Zeit (S
 # --- FR-117: KI-Schwierigkeitsskalierung --------------------------
 var _level_start_ticks: int = 0
 
+# --- Steuerungs-Einstellungen (FR-042/043/044/059) ----------------
+signal control_settings_changed
+var control_scheme: String = "direct"    # "direct" | "slingshot" (FR-042)
+var left_handed_mode: bool = false       # FR-043
+var touch_sensitivity: float = 1.0       # FR-044 (0.5..2.0)
+var touch_dead_zone: float = 20.0        # FR-044, Pixel
+
+# --- FR-060: Geste zum Zurücksetzen der Kamera --------------------
+signal camera_reset_requested
+
 # --- FR-099: Sammel-Fortschritt pro Level (x/y Münzen) ------------
 var level_coin_total: int = 0
 var level_coin_collected: int = 0
@@ -187,6 +197,35 @@ func get_difficulty_multiplier() -> float:
 	var elapsed_sec := (Time.get_ticks_msec() - _level_start_ticks) / 1000.0
 	var time_factor := 1.0 + clampf(elapsed_sec / 120.0, 0.0, 0.3)
 	return clampf(level_factor * time_factor, 1.0, 1.8)
+
+
+## FR-042: Wechselt zwischen "direct" (Stoß in Zugrichtung) und
+## "slingshot" (Stoß entgegen der Zugrichtung, wie eine Steinschleuder).
+func set_control_scheme(scheme: String) -> void:
+	control_scheme = scheme
+	control_settings_changed.emit()
+	_save_progress()
+
+
+## FR-043: Schaltet den Linkshänder-Modus (gespiegeltes HUD) um.
+func set_left_handed(enabled: bool) -> void:
+	left_handed_mode = enabled
+	control_settings_changed.emit()
+	_save_progress()
+
+
+## FR-044: Setzt die Touch-Empfindlichkeit (0.5 = träge, 2.0 = sehr empfindlich).
+func set_touch_sensitivity(value: float) -> void:
+	touch_sensitivity = clampf(value, 0.5, 2.0)
+	control_settings_changed.emit()
+	_save_progress()
+
+
+## FR-044: Setzt die Dead-Zone in Pixeln (minimale Zugweite fürs Zielen).
+func set_touch_dead_zone(value: float) -> void:
+	touch_dead_zone = clampf(value, 0.0, 60.0)
+	control_settings_changed.emit()
+	_save_progress()
 
 
 ## FR-089: Sammelt eine zufällige, noch nicht besessene Sticker-Karte.
@@ -425,6 +464,10 @@ func _save_progress() -> void:
 	cfg.set_value("bestiary", "discovered", discovered_enemies)
 	cfg.set_value("daily", "last_coin_date", last_daily_coin_date)  # FR-093
 	cfg.set_value("stickers", "collected", collected_stickers)  # FR-089
+	cfg.set_value("input", "control_scheme", control_scheme)  # FR-042/043/044
+	cfg.set_value("input", "left_handed", left_handed_mode)
+	cfg.set_value("input", "touch_sensitivity", touch_sensitivity)
+	cfg.set_value("input", "touch_dead_zone", touch_dead_zone)
 	cfg.save(SAVE_PATH)
 
 
@@ -440,6 +483,10 @@ func _load_progress() -> void:
 	last_daily_coin_date = cfg.get_value("daily", "last_coin_date", "")  # FR-093
 	var saved_stickers: Array = cfg.get_value("stickers", "collected", [])  # FR-089
 	collected_stickers.assign(saved_stickers)
+	control_scheme = cfg.get_value("input", "control_scheme", "direct")  # FR-042/043/044
+	left_handed_mode = cfg.get_value("input", "left_handed", false)
+	touch_sensitivity = cfg.get_value("input", "touch_sensitivity", 1.0)
+	touch_dead_zone = cfg.get_value("input", "touch_dead_zone", 20.0)
 
 
 ## FR-118: Registriert einen Gegner-Typ als entdeckt (persistiert).

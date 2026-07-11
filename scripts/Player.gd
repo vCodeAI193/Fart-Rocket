@@ -51,6 +51,20 @@ var _initialized_curve: bool = false
 @export var auto_aim_enabled: bool = false
 @export var auto_aim_radius: float = 300.0  # Suchradius für Ziele
 
+# --- FR-049: Anpassbare Pfeil-Visualisierung -----------------
+@export var arrow_min_length: float = 60.0
+@export var arrow_max_length_bonus: float = 140.0
+
+# --- FR-052: Zielen mit Zeitlupe zur Feinjustierung ----------
+@export var aim_slowmo_enabled: bool = false
+@export var aim_slowmo_scale: float = 0.5
+
+# --- FR-056: Eingabe-Pufferung für reaktionsschnelle Stöße ---
+@export var input_buffer_window: float = 0.15
+
+# --- FR-058: Bildschirm-Sperre während kritischer Aktionen ---
+var input_locked: bool = false
+
 # --- FR-001: Optionale Furz-Regeneration (pro Level einstellbar) -
 @export var charge_regen_enabled: bool = false  # Ladungen mit der Zeit nachfüllen?
 @export var charge_regen_time: float = 5.0      # Sekunden bis eine Ladung nachlädt
@@ -110,6 +124,12 @@ var _trail: Line2D = null              # FR-168: Flug-Spur
 var _speed_lines: Array[Line2D] = []   # FR-264: Geschwindigkeitslinien
 var _traj_dots: Array[Node2D] = []     # FR-048: Flugbahn-Vorschau
 var _last_tap_time: float = -1.0       # FR-050: Doppel-Tipp-Erkennung
+var _last_tap_pos: Vector2 = Vector2.ZERO  # FR-057: räumlicher Doppel-Tipp-Schwellwert
+var _buffered_fart: bool = false       # FR-056: Eingabe-Pufferung
+var _buffered_dir: Vector2 = Vector2.ZERO
+var _buffered_charge_mult: float = 1.0
+var _buffer_timer: float = 0.0
+var _aim_slowmo_active: bool = false   # FR-052
 
 
 func _ready() -> void:
@@ -142,6 +162,15 @@ func _process(delta: float) -> void:
 	# FR-008: Abklingzeit herunterzählen
 	if _cooldown_remaining > 0.0:
 		_cooldown_remaining = maxf(0.0, _cooldown_remaining - delta)
+
+	# FR-056: Gepufferte Eingabe auslösen, sobald die Abklingzeit vorbei ist
+	if _buffered_fart:
+		_buffer_timer -= delta
+		if _cooldown_remaining <= 0.0:
+			_buffered_fart = false
+			_execute_fart(_buffered_dir)
+		elif _buffer_timer <= 0.0:
+			_buffered_fart = false  # Puffer-Fenster abgelaufen, Eingabe verworfen
 
 	# FR-010: Schild-Timer
 	if _shield_remaining > 0.0:
@@ -203,29 +232,45 @@ func _hold_factor() -> float:
 # Touch-Eingabe: Zielen & Furzen
 # ----------------------------------------------------------------
 func _unhandled_input(event: InputEvent) -> void:
-	if _is_dead:
+	# FR-058: Bildschirm-Sperre während kritischer Aktionen (z.B. Respawn-Übergang)
+	if _is_dead or input_locked:
 		return
 
+	# FR-055: Multitouch-robust — nur der über _touch_index verfolgte Finger
+	# steuert das Zielen; weitere Finger (z.B. für Kamera-Zoom) werden hier
+	# ignoriert, da sie weder die _touch_index==-1-Bedingung noch den
+	# event.index==_touch_index-Vergleich unten erfüllen.
 	# Finger berührt den Bildschirm -> Zielen beginnen
 	if event is InputEventScreenTouch:
 		if event.pressed and _touch_index == -1:
-			# FR-050: Doppel-Tipp erkennen (innerhalb 0.3 Sekunden)
+			# FR-050/057: Doppel-Tipp erkennen (Zeit- UND Ortsschwellwert,
+			# damit ein schnelles erneutes Zielen nicht als Neustart zählt)
 			var now := Time.get_ticks_msec() / 1000.0
-			if now - _last_tap_time < 0.3:
+			var close_enough := _last_tap_pos.distance_to(event.position) < 40.0
+			if now - _last_tap_time < 0.3 and close_enough:
 				died.emit()  # Schnell-Neustart: Tod-Signal senden, Main lädt Level neu
 				return
 			_last_tap_time = now
+			_last_tap_pos = event.position
 			_touch_index = event.index
 			_is_aiming = true
 			_aim_start = event.position
 			_aim_current = event.position
 			_aim_hold = 0.0  # FR-005: Aufladung neu beginnen
 			_update_aim_visual()
+			# FR-052: Beim Zielen leichte Zeitlupe für Feinjustierung
+			if aim_slowmo_enabled and not _aim_slowmo_active:
+				_aim_slowmo_active = true
+				Engine.time_scale = aim_slowmo_scale
 		elif not event.pressed and event.index == _touch_index:
 			# Finger losgelassen -> Furz-Stoß auslösen
 			_release_fart()
 			_touch_index = -1
 			_clear_traj_dots()
+			# FR-052: Zeitlupe beim Loslassen wieder aufheben
+			if _aim_slowmo_active:
+				_aim_slowmo_active = false
+				Engine.time_scale = 1.0
 
 	# Finger zieht über den Bildschirm -> Zielrichtung aktualisieren
 	elif event is InputEventScreenDrag and event.index == _touch_index:
@@ -233,13 +278,27 @@ func _unhandled_input(event: InputEvent) -> void:
 		_update_aim_visual()
 
 
+## FR-044: Effektive maximale Ziehweite unter Berücksichtigung der Sensitivität.
+func _effective_max_drag() -> float:
+	return max_drag_distance / maxf(0.1, GameManager.touch_sensitivity)
+
+
+## FR-042: Liefert die Zielrichtung passend zum gewählten Steuerschema.
+## "direct" (Standard) = Stoß in Zugrichtung, "slingshot" = entgegengesetzt.
+func _scheme_direction(drag: Vector2) -> Vector2:
+	var dir := drag.normalized()
+	if GameManager.control_scheme == "slingshot":
+		return -dir
+	return dir
+
+
 ## Aktualisiert den Zielpfeil und sendet das aim_changed-Signal.
 func _update_aim_visual() -> void:
 	var drag := _aim_current - _aim_start
-	var strength := clampf(drag.length() / max_drag_distance, 0.0, 1.0)
-	var dir := drag.normalized()
+	var strength := clampf(drag.length() / _effective_max_drag(), 0.0, 1.0)
+	var dir := _scheme_direction(drag)
 	# FR-053: Auto-Aim-Modus — suche nächstes Ziel bei kurzen Zügen
-	if auto_aim_enabled and drag.length() < max_drag_distance * 0.3:
+	if auto_aim_enabled and drag.length() < _effective_max_drag() * 0.3:
 		var target_dir := _find_nearest_target()
 		if target_dir != Vector2.ZERO:
 			dir = target_dir
@@ -261,18 +320,28 @@ func _release_fart() -> void:
 	aim_released.emit()
 
 	var drag := _aim_current - _aim_start
-	# Zu kurzes Ziehen ignorieren (versehentliche Tipper)
-	if drag.length() < 20.0:
+	# Zu kurzes Ziehen ignorieren (versehentliche Tipper) — FR-044 Dead-Zone
+	if drag.length() < GameManager.touch_dead_zone:
 		return
 
-	# FR-008: Noch in der Abklingzeit? Dann kein Stoß.
-	if _cooldown_remaining > 0.0:
-		return
-
-	# FR-012: Überhitzt? Dann kein Stoß möglich bis abgekühlt
+	# FR-012: Überhitzt? Dann kein Stoß möglich bis abgekühlt (kein Puffern)
 	if _heat_level >= 1.0 and _overheat_cooldown > 0.0:
 		return
 
+	# FR-008/056: Noch in der Abklingzeit? Eingabe kurz puffern statt verwerfen,
+	# damit ein knapp zu früher Stoß trotzdem reaktionsschnell ausgelöst wird.
+	if _cooldown_remaining > 0.0:
+		_buffered_fart = true
+		_buffered_dir = drag
+		_buffer_timer = input_buffer_window
+		return
+
+	_execute_fart(drag)
+
+
+## FR-056: Führt den eigentlichen Furz-Stoß aus (aus _release_fart ausgelagert,
+## damit gepufferte Eingaben in _process denselben Code nutzen können).
+func _execute_fart(drag: Vector2) -> void:
 	var fart: Dictionary = FART_TYPES[_fart_type_index]
 
 	# FR-004: Im Treibstoff-Modus Energie verbrauchen statt Ladungen
@@ -288,8 +357,8 @@ func _release_fart() -> void:
 
 	# FR-005: Haltedauer erhöht den Schub zusätzlich
 	var charge_mult := 1.0 + _hold_factor() * charge_hold_bonus
-	var strength := clampf(drag.length() / max_drag_distance, 0.0, 1.0)
-	var dir := drag.normalized()
+	var strength := clampf(drag.length() / _effective_max_drag(), 0.0, 1.0)
+	var dir := _scheme_direction(drag)
 	# FR-009: Winkel-Präzisions-Bonus — perfekte Winkel bekommen Schub-Bonus
 	var precision_mult := _calculate_precision_bonus(dir)
 	# FR-020: Anpassbare Furz-Schubkurve anwenden (Kurven-Mapping)
@@ -358,9 +427,9 @@ func _find_nearest_target() -> Vector2:
 ## FR-007: Kontinuierlicher Schub beim Zielen (Dauerstrahl-Furz).
 func _apply_continuous_thrust() -> void:
 	var drag := _aim_current - _aim_start
-	if drag.length() < 20.0:
+	if drag.length() < GameManager.touch_dead_zone:
 		return
-	var dir := drag.normalized()
+	var dir := _scheme_direction(drag)
 	if fuel_mode:
 		var fuel_cost := continuous_thrust_cost * get_physics_process_delta_time()
 		if _current_fuel < fuel_cost:
@@ -693,6 +762,10 @@ func revive(at_pos: Vector2) -> void:
 	shield_changed.emit(false)
 	if _trail != null:
 		_trail.clear_points()
+	# FR-058: Kurze Eingabesperre nach dem Respawn, damit kein versehentlicher
+	# Furz-Stoß aus der Berührung ausgelöst wird, die den Neustart antippte.
+	input_locked = true
+	get_tree().create_timer(0.3).timeout.connect(func(): input_locked = false)
 
 
 # ----------------------------------------------------------------
@@ -737,7 +810,8 @@ func _draw_aim_arrow(dir: Vector2, strength: float) -> void:
 	_aim_arrow.visible = true
 	# In den lokalen Raum umrechnen (Rotation des Körpers ausgleichen)
 	var local_dir := dir.rotated(-rotation)
-	var length := 60.0 + strength * 140.0
+	# FR-049: Pfeil-Länge über arrow_min_length/arrow_max_length_bonus anpassbar
+	var length := arrow_min_length + strength * arrow_max_length_bonus
 	var tip := local_dir * length
 	_aim_arrow.clear_points()
 	_aim_arrow.add_point(Vector2.ZERO)

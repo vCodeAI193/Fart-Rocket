@@ -84,25 +84,25 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 ## Steuerung & Eingabe
 
 - [x] **FR-041** Zwei-Finger-Zoom der Kamera
-- [ ] **FR-042** Umschaltbare Steuerschemata (Slingshot vs. Direktstoss)
-- [ ] **FR-043** Links-/Rechtshaender-Modus mit gespiegeltem HUD
-- [ ] **FR-044** Einstellbare Touch-Empfindlichkeit und Dead-Zone
+- [x] **FR-042** Umschaltbare Steuerschemata (Slingshot vs. Direktstoss)
+- [x] **FR-043** Links-/Rechtshaender-Modus mit gespiegeltem HUD
+- [x] **FR-044** Einstellbare Touch-Empfindlichkeit und Dead-Zone
 - [x] **FR-045** Haptisches Feedback (Vibration) bei Furz und Treffer
 - [ ] **FR-046** Optionale Gamepad-Unterstuetzung
 - [ ] **FR-047** Tastatur-/Maus-Unterstuetzung fuer Desktop-Tests
 - [x] **FR-048** Flugbahn-Vorschau (Trajektorie) beim Zielen
-- [ ] **FR-049** Anpassbare Visualisierung von Pfeil-Laenge und -Staerke
+- [x] **FR-049** Anpassbare Visualisierung von Pfeil-Laenge und -Staerke
 - [x] **FR-050** Doppel-Tipp fuer Schnell-Neustart
-- [ ] **FR-051** Wisch-Geste zum Pausieren
-- [ ] **FR-052** Zielen mit Zeitlupe zur Feinjustierung
+- [x] **FR-051** Wisch-Geste zum Pausieren
+- [x] **FR-052** Zielen mit Zeitlupe zur Feinjustierung
 - [x] **FR-053** Auto-Aim-Unterstuetzung als Assist-Modus
-- [ ] **FR-054** Konfigurierbare Safe-Area fuer Notch/Raender
-- [ ] **FR-055** Multitouch-robuste Eingabe (zweiter Finger ignoriert)
-- [ ] **FR-056** Eingabe-Pufferung fuer reaktionsschnelle Stoesse
-- [ ] **FR-057** Verbesserte Tipp-vs-Zieh-Erkennung mit UI-Schwellwert
-- [ ] **FR-058** Bildschirm-Sperre waehrend kritischer Aktionen
-- [ ] **FR-059** Steuerungs-Kalibrierung im Optionsmenue
-- [ ] **FR-060** Geste zum Zuruecksetzen der Kamera
+- [x] **FR-054** Konfigurierbare Safe-Area fuer Notch/Raender
+- [x] **FR-055** Multitouch-robuste Eingabe (zweiter Finger ignoriert)
+- [x] **FR-056** Eingabe-Pufferung fuer reaktionsschnelle Stoesse
+- [x] **FR-057** Verbesserte Tipp-vs-Zieh-Erkennung mit UI-Schwellwert
+- [x] **FR-058** Bildschirm-Sperre waehrend kritischer Aktionen
+- [x] **FR-059** Steuerungs-Kalibrierung im Optionsmenue
+- [x] **FR-060** Geste zum Zuruecksetzen der Kamera
 
 ## Hindernisse & Gefahren
 

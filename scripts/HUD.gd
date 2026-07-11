@@ -10,6 +10,7 @@ class_name HUD
 
 signal fart_type_selected(index)             # Spieler hat einen Furz-Typ gewählt (FR-002)
 
+@onready var _root: Control = $Root
 @onready var _charges_box: HBoxContainer = $Root/ChargesBox
 @onready var _coin_label: Label = $Root/CoinBox/CoinLabel
 @onready var _timer_label: Label = $Root/TimerLabel
@@ -44,6 +45,9 @@ var _checkpoint_label: Label
 var _coin_progress_label: Label
 # FR-100: Power-up-Inventar-Button
 var _inventory_btn: Button
+# FR-051: Wisch-Geste zum Pausieren (Zwei-Finger-Swipe nach unten)
+var _swipe_start: Dictionary = {}   # {finger_index: {"pos": Vector2, "time": float}}
+var _swipe_last: Dictionary = {}    # {finger_index: Vector2}
 
 
 func _ready() -> void:
@@ -63,6 +67,8 @@ func _ready() -> void:
 	_build_checkpoint_label()
 	_build_coin_progress_label()
 	_build_inventory_button()
+	_apply_safe_area()  # FR-054
+	_apply_left_handed_layout()  # FR-043
 	# FR-206: Auf Schild- und Doppelmünzen-Signale lauschen
 	GameManager.double_coins_changed.connect(_on_double_coins_changed)
 	# FR-099: Sammel-Fortschritt
@@ -119,6 +125,46 @@ func _on_inventory_changed(stored_type: String) -> void:
 
 func _on_inventory_button_pressed() -> void:
 	GameManager.use_stored_powerup()
+
+
+## FR-054: Schiebt den HUD-Root um die Geräte-Safe-Area ein (Notch/Ecken).
+func _apply_safe_area() -> void:
+	var screen_size := DisplayServer.screen_get_size()
+	var safe_rect := DisplayServer.get_display_safe_area()
+	if screen_size.x <= 0 or screen_size.y <= 0:
+		return
+	var left_inset := safe_rect.position.x
+	var top_inset := safe_rect.position.y
+	var right_inset := screen_size.x - (safe_rect.position.x + safe_rect.size.x)
+	var bottom_inset := screen_size.y - (safe_rect.position.y + safe_rect.size.y)
+	if left_inset <= 0 and top_inset <= 0 and right_inset <= 0 and bottom_inset <= 0:
+		return  # kein Notch/Rand vorhanden
+	_root.offset_left += left_inset
+	_root.offset_top += top_inset
+	_root.offset_right -= right_inset
+	_root.offset_bottom -= bottom_inset
+
+
+## FR-043: Spiegelt die seitlich angedockten HUD-Elemente für Linkshänder.
+func _apply_left_handed_layout() -> void:
+	if not GameManager.left_handed_mode:
+		return
+	for path in ["ChargesBox", "ChargesLabel", "CoinBox", "PauseButton"]:
+		var node := _root.get_node_or_null(path)
+		if node is Control:
+			_mirror_control_horizontally(node)
+
+
+## FR-043: Spiegelt Anker/Offsets eines Controls horizontal innerhalb des Root.
+func _mirror_control_horizontally(ctrl: Control) -> void:
+	var new_anchor_left := 1.0 - ctrl.anchor_right
+	var new_anchor_right := 1.0 - ctrl.anchor_left
+	var new_offset_left := -ctrl.offset_right
+	var new_offset_right := -ctrl.offset_left
+	ctrl.anchor_left = new_anchor_left
+	ctrl.anchor_right = new_anchor_right
+	ctrl.offset_left = new_offset_left
+	ctrl.offset_right = new_offset_right
 
 
 ## FR-205: Höhenanzeige aufbauen (links oben, unterhalb der Ladungen).
@@ -349,10 +395,50 @@ func show_checkpoint_msg() -> void:
 
 
 ## FR-233: Android Zurück-Taste pausiert das Spiel im Level.
+## FR-051: Zwei-Finger-Swipe nach unten pausiert ebenfalls (stört das
+## Zielen nicht, da der Spieler nur auf den ERSTEN Finger reagiert).
 func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
 		_on_pause_pressed()
 		get_viewport().set_input_as_handled()
+		return
+
+	if event is InputEventScreenTouch:
+		if event.pressed:
+			_swipe_start[event.index] = {"pos": event.position, "time": Time.get_ticks_msec() / 1000.0}
+			_swipe_last[event.index] = event.position
+		else:
+			if _swipe_start.size() == 2 and _swipe_start.has(event.index):
+				if _check_swipe_pause_gesture():
+					# Verhindert, dass dieselbe Loslass-Bewegung beim Spieler
+					# noch einen ungewollten Furz-Stoß auslöst.
+					get_viewport().set_input_as_handled()
+			_swipe_start.erase(event.index)
+			_swipe_last.erase(event.index)
+	elif event is InputEventScreenDrag and _swipe_last.has(event.index):
+		_swipe_last[event.index] = event.position
+
+
+## FR-051: Prüft, ob beide Finger schnell und deutlich nach unten gewischt
+## wurden. Gibt true zurück, wenn die Geste erkannt wurde (und pausiert dabei).
+func _check_swipe_pause_gesture() -> bool:
+	var total_down_movement := 0.0
+	var max_elapsed := 0.0
+	for idx in _swipe_start.keys():
+		var start_data: Dictionary = _swipe_start[idx]
+		var last_pos: Vector2 = _swipe_last.get(idx, start_data["pos"])
+		var delta_y := last_pos.y - start_data["pos"].y
+		var delta_x := absf(last_pos.x - start_data["pos"].x)
+		# Nur werten, wenn die Bewegung überwiegend vertikal nach unten ging
+		if delta_y > 0 and delta_y > delta_x:
+			total_down_movement += delta_y
+		var elapsed := Time.get_ticks_msec() / 1000.0 - start_data["time"]
+		max_elapsed = maxf(max_elapsed, elapsed)
+
+	if total_down_movement / 2.0 > 120.0 and max_elapsed < 0.5:
+		_on_pause_pressed()
+		return true
+	return false
 
 
 ## FR-201: Pausiert oder setzt das Spiel fort.
