@@ -168,6 +168,12 @@ func _on_level_reached() -> void:
 	var stars := GameManager.calculate_stars(_max_charges)
 	GameManager.record_stars(GameManager.current_level, stars)
 
+	# FR-341: Im Zeitrennen-Modus Bestzeit aktualisieren
+	if GameManager.time_attack_mode:
+		var is_new_best := GameManager.record_time_attack(GameManager.current_level, time_sec)
+		if is_new_best:
+			GameManager.vibrate(80)
+
 	# Abschlussbildschirm anzeigen
 	_level_complete.show_result(
 		stars,

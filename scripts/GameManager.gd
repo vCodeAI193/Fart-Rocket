@@ -16,6 +16,7 @@ signal charge_regen_progress(fraction)   # Fortschritt der nachladenden Ladung (
 signal combo_changed(count, multiplier)  # Combo-Zähler/Multiplikator geändert (FR-003)
 signal xp_changed(total_xp, player_level)  # FR-301: XP/Level geändert
 signal double_coins_changed(active)        # FR-086: Doppel-Münzen-Status
+signal fart_letters_changed(collected)     # FR-092: F-A-R-T Buchstaben gesammelt
 
 # --- Konstanten -------------------------------------------------
 const TOTAL_LEVELS := 3
@@ -57,9 +58,17 @@ const XP_PER_COIN := 5
 const XP_PER_STAR := 20
 const XP_PER_LEVEL := 100
 
+# --- FR-092: F-A-R-T Buchstaben-Sammlung -------------------------
+const FART_LETTERS := ["F", "A", "R", "T"]
+var fart_letters_collected: Array[String] = []
+
 # --- Einstellungen (FR-045 Haptik, FR-249 Stummschaltung) -------
 var haptics_enabled: bool = true
 var sound_muted: bool = false
+
+# --- FR-341: Zeitrennen-Modus (Time Attack) ----------------------
+var time_attack_mode: bool = false
+var time_attack_best_times := {1: INF, 2: INF, 3: INF}  # Level -> beste Zeit (Sek.)
 
 
 func _ready() -> void:
@@ -93,12 +102,24 @@ func start_level(level_index: int, max_charges: int) -> void:
 	charges_remaining = max_charges
 	combo_count = 0
 	_combo_elapsed = 0.0
+	fart_letters_collected.clear()  # FR-092: Buchstaben pro Level zurücksetzen
 	# UI informieren
 	coins_changed.emit(total_coins)
 	score_changed.emit(total_score)
 	charges_changed.emit(charges_remaining)
 	charge_regen_progress.emit(0.0)
 	combo_changed.emit(0, 1)
+	fart_letters_changed.emit(fart_letters_collected)
+
+
+## FR-092: Sammelt einen F-A-R-T-Buchstaben. Bei vollständigem Satz Bonus.
+func collect_fart_letter(letter: String) -> void:
+	if letter in fart_letters_collected:
+		return
+	fart_letters_collected.append(letter)
+	fart_letters_changed.emit(fart_letters_collected)
+	if fart_letters_collected.size() >= FART_LETTERS.size():
+		add_coin(200)  # Bonus für kompletten F-A-R-T Satz
 
 
 ## Eine Münze wurde eingesammelt (mit Combo-Multiplikator, FR-003).
@@ -224,6 +245,23 @@ func record_stars(level_index: int, stars: int) -> void:
 ## Gibt true zurück, wenn ein nächstes Level existiert.
 func has_next_level() -> bool:
 	return current_level < TOTAL_LEVELS
+
+
+## FR-341: Prüft und speichert eine neue Bestzeit für den Zeitrennen-Modus.
+## Gibt true zurück, wenn eine neue Bestzeit erreicht wurde.
+func record_time_attack(level_index: int, time_sec: float) -> bool:
+	if not time_attack_best_times.has(level_index):
+		time_attack_best_times[level_index] = INF
+	if time_sec < time_attack_best_times[level_index]:
+		time_attack_best_times[level_index] = time_sec
+		_save_progress()
+		return true
+	return false
+
+
+## FR-341: Liefert die Bestzeit für ein Level (INF, falls noch keine).
+func get_best_time(level_index: int) -> float:
+	return time_attack_best_times.get(level_index, INF)
 
 
 ## Liefert den Szenenpfad für ein 1-basiertes Level.

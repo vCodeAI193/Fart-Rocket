@@ -118,7 +118,7 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 - [ ] **FR-070** Rotierende Hindernis-Raeder mit Luecken
 - [ ] **FR-071** Wandernde Laserwaende (Quetsch-Gefahr)
 - [ ] **FR-072** Giftgaswolken als zeitbegrenzte Zonen
-- [ ] **FR-073** Schliessende Tueren/Tore mit Timing
+- [x] **FR-073** Schliessende Tueren/Tore mit Timing
 - [ ] **FR-074** Kreissaegen auf Schienen
 - [ ] **FR-075** Komplexe Hindernis-Maschinen (Verbuende)
 - [ ] **FR-076** Wasserfaelle, die nach unten druecken
@@ -140,7 +140,7 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 - [ ] **FR-089** Sammelkarten-/Sticker-System
 - [ ] **FR-090** Truhen mit Zufallsbelohnung
 - [ ] **FR-091** Schluessel und Schloesser (Tuer-Mechanik)
-- [ ] **FR-092** Buchstaben sammeln (F-A-R-T Bonus)
+- [x] **FR-092** Buchstaben sammeln (F-A-R-T Bonus)
 - [ ] **FR-093** Tagesmuenze als Login-Bonus-Objekt
 - [ ] **FR-094** Mystery-Box mit Power-up-Roulette
 - [ ] **FR-095** Combo-Muenzketten (alle in Folge = Bonus)
@@ -154,7 +154,7 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 
 - [ ] **FR-101** Patrouillierende Flug-Gegner
 - [ ] **FR-102** Verfolger-Gegner, die dem Maennchen folgen
-- [ ] **FR-103** Schiessende Gegner mit Projektilen
+- [x] **FR-103** Schiessende Gegner mit Projektilen
 - [ ] **FR-104** Stationaere Geschuetztuerme
 - [ ] **FR-105** Gegner, die Muenzen klauen
 - [ ] **FR-106** Ausweichende Gegner
@@ -428,7 +428,7 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 
 ## Spielmodi
 
-- [ ] **FR-341** Zeitrennen-Modus (Time Attack)
+- [x] **FR-341** Zeitrennen-Modus (Time Attack)
 - [ ] **FR-342** Prozeduraler Endlos-Modus
 - [ ] **FR-343** Ueberlebens-Modus
 - [ ] **FR-344** Hardcore-Modus (eine Furz-Ladung)
