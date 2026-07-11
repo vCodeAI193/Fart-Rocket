@@ -1,0 +1,8 @@
+[gd_scene load_steps=2 format=3 uid="uid://lockeddoor"]
+
+[ext_resource type="Script" path="res://scripts/LockedDoor.gd" id="1_door"]
+
+[node name="LockedDoor" type="StaticBody2D"]
+script = ExtResource("1_door")
+collision_layer = 1
+collision_mask = 0

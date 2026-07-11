@@ -17,6 +17,7 @@ signal combo_changed(count, multiplier)  # Combo-Zähler/Multiplikator geändert
 signal xp_changed(total_xp, player_level)  # FR-301: XP/Level geändert
 signal double_coins_changed(active)        # FR-086: Doppel-Münzen-Status
 signal fart_letters_changed(collected)     # FR-092: F-A-R-T Buchstaben gesammelt
+signal coin_progress_changed(collected, total)  # FR-099: Sammel-Fortschritt x/y
 
 # --- Konstanten -------------------------------------------------
 const TOTAL_LEVELS := 3
@@ -73,6 +74,30 @@ var time_attack_best_times := {1: INF, 2: INF, 3: INF}  # Level -> beste Zeit (S
 # --- FR-117: KI-Schwierigkeitsskalierung --------------------------
 var _level_start_ticks: int = 0
 
+# --- FR-099: Sammel-Fortschritt pro Level (x/y Münzen) ------------
+var level_coin_total: int = 0
+var level_coin_collected: int = 0
+
+# --- FR-091: Schlüssel und Schlösser (pro Level zurückgesetzt) ----
+var collected_keys: Array[String] = []
+
+# --- FR-093: Tagesmünze als Login-Bonus ---------------------------
+var last_daily_coin_date: String = ""
+const DAILY_COIN_REWARD := 100
+
+# --- FR-089: Sammelkarten-/Sticker-System -------------------------
+const STICKER_SET := [
+	"Rakete", "Furz-Wolke", "Goldmünze", "Sternenhimmel", "Astronaut",
+	"Regenbogen", "Diamant", "Blitz", "Mond", "Komet",
+]
+var collected_stickers: Array[String] = []
+signal sticker_collected(name)
+
+# --- FR-100: Power-up-Inventar zum manuellen Einsetzen ------------
+signal inventory_changed(stored_type)
+signal inventory_use_requested(stored_type)
+var stored_powerup: String = ""  # "" = leer, sonst z.B. "shield", "slowmo", "double_coins"
+
 # --- FR-118: Gegner-Bestiarium/Sammlung ---------------------------
 # Bekannte Gegner-Typen (Anzeigename je Klasse), erweiterbar bei neuen Gegnern.
 const ENEMY_BESTIARY := {
@@ -128,6 +153,9 @@ func start_level(level_index: int, max_charges: int) -> void:
 	_combo_elapsed = 0.0
 	fart_letters_collected.clear()  # FR-092: Buchstaben pro Level zurücksetzen
 	_level_start_ticks = Time.get_ticks_msec()  # FR-117: Basis für Schwierigkeitsskalierung
+	level_coin_total = 0             # FR-099: Fortschritt pro Level zurücksetzen
+	level_coin_collected = 0
+	collected_keys.clear()           # FR-091: Schlüssel pro Level zurücksetzen
 	# UI informieren
 	coins_changed.emit(total_coins)
 	score_changed.emit(total_score)
@@ -159,6 +187,74 @@ func get_difficulty_multiplier() -> float:
 	var elapsed_sec := (Time.get_ticks_msec() - _level_start_ticks) / 1000.0
 	var time_factor := 1.0 + clampf(elapsed_sec / 120.0, 0.0, 0.3)
 	return clampf(level_factor * time_factor, 1.0, 1.8)
+
+
+## FR-089: Sammelt eine zufällige, noch nicht besessene Sticker-Karte.
+## Gibt den Namen der gesammelten Karte zurück (oder "" wenn alle voll sind).
+func collect_random_sticker() -> String:
+	var missing := STICKER_SET.filter(func(s): return not s in collected_stickers)
+	if missing.is_empty():
+		return ""
+	var picked: String = missing[randi() % missing.size()]
+	collected_stickers.append(picked)
+	sticker_collected.emit(picked)
+	_save_progress()
+	return picked
+
+
+## FR-100: Speichert ein Power-up im Inventar statt es sofort zu aktivieren.
+## Ist bereits eines gespeichert, wird das alte überschrieben.
+func store_powerup(powerup_type: String) -> void:
+	stored_powerup = powerup_type
+	inventory_changed.emit(stored_powerup)
+
+
+## FR-100: Löst das gespeicherte Power-up manuell aus (z.B. per HUD-Button).
+func use_stored_powerup() -> void:
+	if stored_powerup == "":
+		return
+	inventory_use_requested.emit(stored_powerup)
+	stored_powerup = ""
+	inventory_changed.emit(stored_powerup)
+
+
+## FR-093: Prüft, ob die Tagesmünze heute noch nicht eingesammelt wurde.
+func is_daily_coin_available() -> bool:
+	var today := Time.get_date_string_from_system()
+	return last_daily_coin_date != today
+
+
+## FR-093: Sammelt die Tagesmünze ein (nur einmal pro Kalendertag).
+func claim_daily_coin() -> bool:
+	if not is_daily_coin_available():
+		return false
+	last_daily_coin_date = Time.get_date_string_from_system()
+	add_coin(DAILY_COIN_REWARD)
+	_save_progress()
+	return true
+
+
+## FR-091: Sammelt einen Schlüssel für das laufende Level.
+func collect_key(key_id: String) -> void:
+	if not key_id in collected_keys:
+		collected_keys.append(key_id)
+
+
+## FR-091: Prüft, ob der Spieler einen bestimmten Schlüssel besitzt.
+func has_key(key_id: String) -> bool:
+	return key_id in collected_keys
+
+
+## FR-099: Setzt die Gesamtzahl der Münzen im aktuellen Level (für x/y-Anzeige).
+func set_level_coin_total(total: int) -> void:
+	level_coin_total = total
+	coin_progress_changed.emit(level_coin_collected, level_coin_total)
+
+
+## FR-099: Zählt eine eingesammelte Münze für die Fortschrittsanzeige.
+func record_coin_pickup() -> void:
+	level_coin_collected += 1
+	coin_progress_changed.emit(level_coin_collected, level_coin_total)
 
 
 ## FR-092: Sammelt einen F-A-R-T-Buchstaben. Bei vollständigem Satz Bonus.
@@ -327,6 +423,8 @@ func _save_progress() -> void:
 	for lvl in level_stars.keys():
 		cfg.set_value("stars", str(lvl), level_stars[lvl])
 	cfg.set_value("bestiary", "discovered", discovered_enemies)
+	cfg.set_value("daily", "last_coin_date", last_daily_coin_date)  # FR-093
+	cfg.set_value("stickers", "collected", collected_stickers)  # FR-089
 	cfg.save(SAVE_PATH)
 
 
@@ -339,6 +437,9 @@ func _load_progress() -> void:
 		level_stars[lvl] = int(cfg.get_value("stars", str(lvl), 0))
 	var saved: Array = cfg.get_value("bestiary", "discovered", [])
 	discovered_enemies.assign(saved)
+	last_daily_coin_date = cfg.get_value("daily", "last_coin_date", "")  # FR-093
+	var saved_stickers: Array = cfg.get_value("stickers", "collected", [])  # FR-089
+	collected_stickers.assign(saved_stickers)
 
 
 ## FR-118: Registriert einen Gegner-Typ als entdeckt (persistiert).

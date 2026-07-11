@@ -99,6 +99,8 @@ func _load_current_level() -> void:
 	# Furz-Ladungen aus dem Player übernehmen
 	_max_charges = _player.max_fart_charges
 	GameManager.start_level(GameManager.current_level, _max_charges)
+	# FR-099: Gesamtzahl der Münzen im Level für die Fortschrittsanzeige zählen
+	GameManager.set_level_coin_total(get_tree().get_nodes_in_group("coins").size())
 
 	# HUD einrichten
 	_hud.set_max_charges(_max_charges)

@@ -1,0 +1,8 @@
+[gd_scene load_steps=2 format=3 uid="uid://keyitem"]
+
+[ext_resource type="Script" path="res://scripts/Key.gd" id="1_key"]
+
+[node name="Key" type="Area2D"]
+script = ExtResource("1_key")
+collision_layer = 4
+collision_mask = 1

@@ -131,24 +131,24 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 
 - [x] **FR-081** Verschiedene Muenz-Werte (Bronze/Silber/Gold)
 - [x] **FR-082** Edelsteine als Premium-Sammelobjekt
-- [ ] **FR-083** Magnet-Power-up zieht Muenzen an
+- [x] **FR-083** Magnet-Power-up zieht Muenzen an
 - [x] **FR-084** Schild-Power-up ueberlebt einen Treffer
 - [x] **FR-085** Verlangsamungs-Power-up (Zeitlupe)
 - [x] **FR-086** Zeitlich begrenztes Doppel-Muenzen-Power-up
 - [x] **FR-087** Extra-Furz-Ladung als Pickup
 - [x] **FR-088** Versteckte Sterne als Sammelobjekt pro Level
-- [ ] **FR-089** Sammelkarten-/Sticker-System
+- [x] **FR-089** Sammelkarten-/Sticker-System
 - [x] **FR-090** Truhen mit Zufallsbelohnung
-- [ ] **FR-091** Schluessel und Schloesser (Tuer-Mechanik)
+- [x] **FR-091** Schluessel und Schloesser (Tuer-Mechanik)
 - [x] **FR-092** Buchstaben sammeln (F-A-R-T Bonus)
-- [ ] **FR-093** Tagesmuenze als Login-Bonus-Objekt
-- [ ] **FR-094** Mystery-Box mit Power-up-Roulette
-- [ ] **FR-095** Combo-Muenzketten (alle in Folge = Bonus)
-- [ ] **FR-096** Schwebende Muenz-Pfade als Wegweiser
-- [ ] **FR-097** Zerstoerbare Muenzbloecke
-- [ ] **FR-098** Negative Objekte (Stinkbomben ziehen Punkte ab)
-- [ ] **FR-099** Sammel-Fortschritt pro Level anzeigen (x/y)
-- [ ] **FR-100** Power-up-Inventar zum manuellen Einsetzen
+- [x] **FR-093** Tagesmuenze als Login-Bonus-Objekt
+- [x] **FR-094** Mystery-Box mit Power-up-Roulette
+- [x] **FR-095** Combo-Muenzketten (alle in Folge = Bonus)
+- [x] **FR-096** Schwebende Muenz-Pfade als Wegweiser
+- [x] **FR-097** Zerstoerbare Muenzbloecke
+- [x] **FR-098** Negative Objekte (Stinkbomben ziehen Punkte ab)
+- [x] **FR-099** Sammel-Fortschritt pro Level anzeigen (x/y)
+- [x] **FR-100** Power-up-Inventar zum manuellen Einsetzen
 
 ## Gegner & KI
 

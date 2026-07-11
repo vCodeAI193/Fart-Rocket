@@ -1,0 +1,8 @@
+[gd_scene load_steps=2 format=3 uid="uid://mysterybox"]
+
+[ext_resource type="Script" path="res://scripts/MysteryBox.gd" id="1_mystery"]
+
+[node name="MysteryBox" type="Area2D"]
+script = ExtResource("1_mystery")
+collision_layer = 4
+collision_mask = 1

@@ -127,6 +127,8 @@ func _ready() -> void:
 		_initialized_curve = true
 	# Trail und Speed-Lines nach dem nächsten Frame aufbauen
 	call_deferred("_build_trail")
+	# FR-100: Manuell ausgelöste Inventar-Power-ups anwenden
+	GameManager.inventory_use_requested.connect(_on_inventory_powerup_used)
 
 
 # ----------------------------------------------------------------
@@ -480,6 +482,20 @@ func activate_shield(duration: float) -> void:
 	_shield_remaining = duration
 	shield_changed.emit(true)
 	GameManager.vibrate(30)
+
+
+## FR-100: Wendet ein aus dem Inventar manuell ausgelöstes Power-up an.
+func _on_inventory_powerup_used(powerup_type: String) -> void:
+	if _is_dead:
+		return
+	match powerup_type:
+		"shield":
+			activate_shield(6.0)
+		"slowmo":
+			Engine.time_scale = 0.4
+			get_tree().create_timer(3.0, false, false, true).timeout.connect(func(): Engine.time_scale = 1.0)
+		"double_coins":
+			GameManager.activate_double_coins(8.0)
 
 
 ## Lustige Tod-Animation: das Männchen wirbelt herum, dann Signal "died".

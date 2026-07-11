@@ -1,0 +1,8 @@
+[gd_scene load_steps=3 format=3 uid="uid://coinpath"]
+
+[ext_resource type="Script" path="res://scripts/CoinPath.gd" id="1_path"]
+[ext_resource type="PackedScene" path="res://scenes/Coin.tscn" id="2_coinres"]
+
+[node name="CoinPath" type="Node2D"]
+script = ExtResource("1_path")
+coin_scene = ExtResource("2_coinres")

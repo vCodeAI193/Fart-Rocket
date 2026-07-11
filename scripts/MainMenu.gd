@@ -33,6 +33,7 @@ func _ready() -> void:
 	_build_level_buttons()
 	_build_settings_button()
 	_build_bestiary_button()
+	_build_daily_coin_button()
 
 
 ## FR-231: Prozeduraler Sternenhintergrund mit Drift-Animation.
@@ -132,6 +133,17 @@ func _build_bestiary_button() -> void:
 func _on_bestiary_pressed() -> void:
 	GameManager.vibrate(15)
 	_bestiary_screen.show_bestiary()
+
+
+## FR-093: Tagesmünzen-Button links oben hinzufügen.
+func _build_daily_coin_button() -> void:
+	var btn := DailyCoinButton.new()
+	btn.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	btn.offset_left = 20.0
+	btn.offset_top = 20.0
+	btn.offset_right = 300.0
+	btn.offset_bottom = 92.0
+	add_child(btn)
 
 
 ## Startet das gewählte Level: Auswahl merken und zur Main-Szene wechseln.

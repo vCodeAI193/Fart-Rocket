@@ -40,6 +40,10 @@ var _total_stars_label: Label
 var _vignette: ColorRect
 # FR-212: Checkpoint-Benachrichtigung
 var _checkpoint_label: Label
+# FR-099: Sammel-Fortschritt (x/y Münzen)
+var _coin_progress_label: Label
+# FR-100: Power-up-Inventar-Button
+var _inventory_btn: Button
 
 
 func _ready() -> void:
@@ -57,8 +61,64 @@ func _ready() -> void:
 	_build_star_preview()
 	_build_vignette()
 	_build_checkpoint_label()
+	_build_coin_progress_label()
+	_build_inventory_button()
 	# FR-206: Auf Schild- und Doppelmünzen-Signale lauschen
 	GameManager.double_coins_changed.connect(_on_double_coins_changed)
+	# FR-099: Sammel-Fortschritt
+	GameManager.coin_progress_changed.connect(_on_coin_progress_changed)
+	# FR-100: Power-up-Inventar
+	GameManager.inventory_changed.connect(_on_inventory_changed)
+
+
+## FR-099: Sammel-Fortschritt (x/y Münzen), unter der Münzanzeige.
+func _build_coin_progress_label() -> void:
+	_coin_progress_label = Label.new()
+	_coin_progress_label.add_theme_font_size_override("font_size", 22)
+	_coin_progress_label.add_theme_color_override("font_color", Color(0.9, 0.85, 0.6, 0.85))
+	_coin_progress_label.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	_coin_progress_label.offset_left = 20.0
+	_coin_progress_label.offset_top = 90.0
+	_coin_progress_label.offset_right = 200.0
+	_coin_progress_label.offset_bottom = 120.0
+	add_child(_coin_progress_label)
+
+
+func _on_coin_progress_changed(collected: int, total: int) -> void:
+	_coin_progress_label.text = "%d / %d Münzen" % [collected, total]
+
+
+## FR-100: Inventar-Button (Mitte unten), zeigt gespeichertes Power-up.
+func _build_inventory_button() -> void:
+	_inventory_btn = Button.new()
+	_inventory_btn.text = ""
+	_inventory_btn.custom_minimum_size = Vector2(100, 100)
+	_inventory_btn.add_theme_font_size_override("font_size", 26)
+	_inventory_btn.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
+	_inventory_btn.offset_left = -50.0
+	_inventory_btn.offset_right = 50.0
+	_inventory_btn.offset_top = -130.0
+	_inventory_btn.offset_bottom = -30.0
+	_inventory_btn.disabled = true
+	_inventory_btn.modulate.a = 0.35
+	_inventory_btn.pressed.connect(_on_inventory_button_pressed)
+	add_child(_inventory_btn)
+
+
+func _on_inventory_changed(stored_type: String) -> void:
+	if stored_type == "":
+		_inventory_btn.text = ""
+		_inventory_btn.disabled = true
+		_inventory_btn.modulate.a = 0.35
+	else:
+		var label := {"shield": "Schild", "slowmo": "Zeitlupe", "double_coins": "x2"}.get(stored_type, stored_type)
+		_inventory_btn.text = label
+		_inventory_btn.disabled = false
+		_inventory_btn.modulate.a = 1.0
+
+
+func _on_inventory_button_pressed() -> void:
+	GameManager.use_stored_powerup()
 
 
 ## FR-205: Höhenanzeige aufbauen (links oben, unterhalb der Ladungen).

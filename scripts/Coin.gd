@@ -43,6 +43,7 @@ func _on_body_entered(body: Node) -> void:
 func _collect() -> void:
 	_collected = true
 	GameManager.add_coin(coin_value)
+	GameManager.record_coin_pickup()  # FR-099: Sammel-Fortschritt
 	collected.emit(coin_value)
 	GameManager.vibrate(20)
 	if _audio.stream != null:
