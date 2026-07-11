@@ -109,11 +109,11 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 - [ ] **FR-061** Weitere Saegeblatt-Groessen und -Muster
 - [ ] **FR-062** Bewegliche Stachel-Walzen
 - [ ] **FR-063** Pendelnde Stachelkugeln (Morgenstern)
-- [ ] **FR-064** Ein-/ausfahrende Stacheln als Timing-Raetsel
+- [x] **FR-064** Ein-/ausfahrende Stacheln als Timing-Raetsel
 - [ ] **FR-065** Laserstrahlen mit Intervall-Schaltung
 - [ ] **FR-066** Feuerspeier-/Flammenwerfer-Duesen
-- [ ] **FR-067** Fallende Felsbrocken und Truemmer
-- [ ] **FR-068** Zerbroeckelnde Plattformen
+- [x] **FR-067** Fallende Felsbrocken und Truemmer
+- [x] **FR-068** Zerbroeckelnde Plattformen
 - [ ] **FR-069** Elektro-Zaeune und Stromfelder
 - [ ] **FR-070** Rotierende Hindernis-Raeder mit Luecken
 - [ ] **FR-071** Wandernde Laserwaende (Quetsch-Gefahr)
@@ -152,13 +152,13 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 
 ## Gegner & KI
 
-- [ ] **FR-101** Patrouillierende Flug-Gegner
+- [x] **FR-101** Patrouillierende Flug-Gegner
 - [ ] **FR-102** Verfolger-Gegner, die dem Maennchen folgen
 - [x] **FR-103** Schiessende Gegner mit Projektilen
 - [ ] **FR-104** Stationaere Geschuetztuerme
 - [ ] **FR-105** Gegner, die Muenzen klauen
 - [ ] **FR-106** Ausweichende Gegner
-- [ ] **FR-107** Springende Boden-Gegner
+- [x] **FR-107** Springende Boden-Gegner
 - [ ] **FR-108** Schwarm-Gegner (Insekten)
 - [ ] **FR-109** Schild-Gegner (nur von hinten verwundbar)
 - [ ] **FR-110** Teleportierende Gegner
