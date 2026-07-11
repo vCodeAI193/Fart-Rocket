@@ -1,0 +1,6 @@
+Fart Rocket is a physics-based 2D arcade game: pilot a stick figure that
+launches itself through obstacle levels with fart-powered bursts. Drag to
+aim, release to thrust — master saws, lasers, spinning wheels, and bosses,
+collect coins and stars, unlock cosmetics, and try game modes like Time
+Attack, Hardcore, Zen, or Ghost Race. Fully procedurally rendered, no
+external art assets.

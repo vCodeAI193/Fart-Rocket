@@ -543,11 +543,11 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 
 ## Lokalisierung & i18n
 
-- [ ] **FR-441** Lokalisierungs-System (CSV/PO)
-- [ ] **FR-442** Englische Uebersetzung
-- [ ] **FR-443** Deutsche Uebersetzung (Standard) pflegen
-- [ ] **FR-444** Spanische Uebersetzung
-- [ ] **FR-445** Franzoesische Uebersetzung
+- [x] **FR-441** Lokalisierungs-System (CSV/PO)
+- [x] **FR-442** Englische Uebersetzung
+- [x] **FR-443** Deutsche Uebersetzung (Standard) pflegen
+- [x] **FR-444** Spanische Uebersetzung
+- [x] **FR-445** Franzoesische Uebersetzung
 - [ ] **FR-446** Portugiesische (BR) Uebersetzung
 - [ ] **FR-447** Italienische Uebersetzung
 - [ ] **FR-448** Tuerkische Uebersetzung
@@ -555,14 +555,14 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 - [ ] **FR-450** Japanische Uebersetzung
 - [ ] **FR-451** Koreanische Uebersetzung
 - [ ] **FR-452** Chinesische (vereinfacht) Uebersetzung
-- [ ] **FR-453** RTL-Unterstuetzung (Arabisch)
-- [ ] **FR-454** Lokalisierte Zahlen-/Zeitformate
-- [ ] **FR-455** Dynamischer Sprachwechsel ohne Neustart
-- [ ] **FR-456** Schriftarten mit voller Glyphen-Abdeckung
-- [ ] **FR-457** Lokalisierte Store-Texte
-- [ ] **FR-458** Pluralisierungs-Regeln
-- [ ] **FR-459** Uebersetzungs-Fallback-Logik
-- [ ] **FR-460** QA-Werkzeug fuer fehlende Uebersetzungs-Keys
+- [x] **FR-453** RTL-Unterstuetzung (Arabisch)
+- [x] **FR-454** Lokalisierte Zahlen-/Zeitformate
+- [x] **FR-455** Dynamischer Sprachwechsel ohne Neustart
+- [x] **FR-456** Schriftarten mit voller Glyphen-Abdeckung
+- [x] **FR-457** Lokalisierte Store-Texte
+- [x] **FR-458** Pluralisierungs-Regeln
+- [x] **FR-459** Uebersetzungs-Fallback-Logik
+- [x] **FR-460** QA-Werkzeug fuer fehlende Uebersetzungs-Keys
 
 ## Performance & Technik
 

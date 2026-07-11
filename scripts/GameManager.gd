@@ -840,7 +840,7 @@ func record_fart() -> void:
 ## FR-226: Erhöht den Tod-Zähler (von Main bei jedem Tod aufgerufen).
 func record_death() -> void:
 	stat_total_deaths += 1
-	show_sound_caption("Crash!")  # FR-425
+	show_sound_caption(tr("caption_crash"))  # FR-425
 	_check_milestones()  # FR-308
 	_check_badges()      # FR-318
 	_save_progress()
@@ -1012,7 +1012,7 @@ func collect_fart_letter(letter: String) -> void:
 
 ## Eine Münze wurde eingesammelt (mit Combo-Multiplikator, FR-003).
 func add_coin(value: int) -> void:
-	show_sound_caption("Münze!")  # FR-425
+	show_sound_caption(tr("caption_coin"))  # FR-425
 	# Combo erhöhen, wenn die letzte Münze im Zeitfenster lag
 	if _combo_elapsed <= COMBO_WINDOW:
 		combo_count += 1

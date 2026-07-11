@@ -74,6 +74,7 @@ func _build_ui() -> void:
 	var bg := ColorRect.new()
 	bg.color = Color(0.0, 0.0, 0.0, 0.65)
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
+	LocalizationManager.apply_layout_direction(bg)  # FR-453
 	add_child(bg)
 
 	_panel = PanelContainer.new()
@@ -191,7 +192,7 @@ func _build_ui() -> void:
 
 	# --- FR-282/291/299/300: Grafik-Einstellungen -------------------
 	var graphics_title := Label.new()
-	graphics_title.text = "Grafik"
+	graphics_title.text = tr("settings_graphics")
 	graphics_title.add_theme_font_size_override("font_size", 30)
 	graphics_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vbox.add_child(graphics_title)
@@ -229,7 +230,7 @@ func _build_ui() -> void:
 
 	# --- FR-421-440: Barrierefreiheit -------------------------------
 	var a11y_title := Label.new()
-	a11y_title.text = "Barrierefreiheit"
+	a11y_title.text = tr("settings_accessibility")
 	a11y_title.add_theme_font_size_override("font_size", 30)
 	a11y_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vbox.add_child(a11y_title)
@@ -251,7 +252,7 @@ func _build_ui() -> void:
 	_language_btn = _make_settings_button(vbox, _on_language_pressed)
 
 	var reset_settings_btn := Button.new()
-	reset_settings_btn.text = "Einstellungen zurücksetzen"
+	reset_settings_btn.text = tr("action_reset_settings")
 	reset_settings_btn.custom_minimum_size = Vector2(400, 76)
 	reset_settings_btn.add_theme_font_size_override("font_size", 26)
 	reset_settings_btn.pressed.connect(_on_reset_settings_pressed)
@@ -259,7 +260,7 @@ func _build_ui() -> void:
 
 	# --- FR-403/418: Speicherplatz-Verwaltung -----------------------
 	var slots_title := Label.new()
-	slots_title.text = "Speicherplätze"
+	slots_title.text = tr("settings_save_slots")
 	slots_title.add_theme_font_size_override("font_size", 30)
 	slots_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vbox.add_child(slots_title)
@@ -297,7 +298,7 @@ func _build_ui() -> void:
 
 	# --- FR-228: Fortschritt zurücksetzen ---------------------------
 	var reset_btn := Button.new()
-	reset_btn.text = "Fortschritt zurücksetzen"
+	reset_btn.text = tr("action_reset_progress")
 	reset_btn.custom_minimum_size = Vector2(400, 76)
 	reset_btn.add_theme_font_size_override("font_size", 28)
 	reset_btn.add_theme_color_override("font_color", Color(1.0, 0.4, 0.3))
@@ -315,7 +316,7 @@ func _build_ui() -> void:
 
 	# Schliessen-Button
 	var close_btn := Button.new()
-	close_btn.text = "Schliessen"
+	close_btn.text = tr("action_close")
 	close_btn.custom_minimum_size = Vector2(400, 80)
 	close_btn.add_theme_font_size_override("font_size", 38)
 	close_btn.pressed.connect(_on_close_pressed)
@@ -371,7 +372,7 @@ func _update_buttons() -> void:
 	_focus_pause_btn.text = "Pause bei Fokusverlust: EIN" if GameManager.pause_on_focus_loss else "Pause bei Fokusverlust: AUS"
 	_difficulty_assist_btn.text = "Schwierigkeits-Assist: EIN" if GameManager.difficulty_assist_enabled else "Schwierigkeits-Assist: AUS"
 	_volume_btn.text = "Lautstärke: %d%%" % int(GameManager.master_volume * 100)
-	_language_btn.text = "Sprache: %s" % GameManager.language.to_upper()
+	_language_btn.text = "%s: %s" % [tr("settings_language"), GameManager.language.to_upper()]
 	# FR-403/418: Speicherplatz-Buttons
 	for i in range(_slot_buttons.size()):
 		var slot := i + 1
@@ -641,12 +642,14 @@ func _on_volume_pressed() -> void:
 
 
 ## FR-439: Sprache durchschalten (Übersetzungs-Anwendung folgt in Batch 17).
+## FR-455: Sprachwechsel ohne App-Neustart — ein leichtgewichtiger
+## Szenen-Reload reicht aus, damit alle tr()-basierten Texte mit der
+## neuen Sprache neu aufgebaut werden (kein Neustart der App nötig).
 func _on_language_pressed() -> void:
 	var next_idx := (GameManager.LANGUAGES.find(GameManager.language) + 1) % GameManager.LANGUAGES.size()
 	GameManager.set_language(GameManager.LANGUAGES[next_idx])
-	GameManager.play_ui_click()
 	GameManager.vibrate(15)
-	_update_buttons()
+	get_tree().reload_current_scene()
 
 
 ## FR-440: Setzt nur die Einstellungen (nicht den Fortschritt) zurück.

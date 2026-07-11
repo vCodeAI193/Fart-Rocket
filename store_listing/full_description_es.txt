@@ -1,0 +1,7 @@
+Fart Rocket es un juego arcade 2D basado en física: pilotas un muñeco de
+palitos que se impulsa con pedos a través de niveles llenos de
+obstáculos. Arrastra para apuntar, suelta para propulsarte — supera
+sierras, láseres, ruedas giratorias y jefes, recoge monedas y estrellas,
+desbloquea cosméticos y prueba modos de juego como Contrarreloj,
+Hardcore, Zen o Carrera Fantasma. Totalmente renderizado de forma
+procedural, sin recursos gráficos externos.

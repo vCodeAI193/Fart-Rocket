@@ -1,0 +1,7 @@
+Fart Rocket est un jeu d'arcade 2D basé sur la physique : pilotez un
+bonhomme allumette qui se propulse à coups de pets à travers des niveaux
+remplis d'obstacles. Glissez pour viser, relâchez pour propulser —
+maîtrisez scies, lasers, roues tournantes et boss, collectez pièces et
+étoiles, débloquez des cosmétiques et essayez des modes de jeu comme le
+Contre-la-montre, Hardcore, Zen ou la Course fantôme. Entièrement rendu
+de façon procédurale, sans ressources graphiques externes.

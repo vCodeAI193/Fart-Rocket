@@ -357,7 +357,7 @@ func _on_bestiary_pressed() -> void:
 ## FR-224: Shop-Button hinzufügen.
 func _build_shop_button() -> void:
 	var btn := Button.new()
-	btn.text = "Shop"
+	btn.text = tr("menu_shop")
 	btn.custom_minimum_size = Vector2(260, 72)
 	btn.add_theme_font_size_override("font_size", 34)
 	btn.set_anchors_preset(Control.PRESET_TOP_RIGHT)
@@ -378,7 +378,7 @@ func _on_shop_pressed() -> void:
 ## FR-225/226/227: Sammlung-Button (Sticker/Statistik/Credits).
 func _build_collection_button() -> void:
 	var btn := Button.new()
-	btn.text = "Sammlung"
+	btn.text = tr("menu_collection")
 	btn.custom_minimum_size = Vector2(260, 72)
 	btn.add_theme_font_size_override("font_size", 34)
 	btn.set_anchors_preset(Control.PRESET_TOP_RIGHT)
@@ -400,7 +400,7 @@ func _on_collection_pressed() -> void:
 ## Wochenziele, Sparschwein, Prestige).
 func _build_progression_button() -> void:
 	var btn := Button.new()
-	btn.text = "Fortschritt"
+	btn.text = tr("menu_progression")
 	btn.custom_minimum_size = Vector2(260, 72)
 	btn.add_theme_font_size_override("font_size", 34)
 	btn.set_anchors_preset(Control.PRESET_TOP_RIGHT)
@@ -421,7 +421,7 @@ func _on_progression_pressed() -> void:
 ## FR-342-360: Spielmodus-Button (Endlos, Überleben, Hardcore, Zen, ...).
 func _build_game_mode_button() -> void:
 	var btn := Button.new()
-	btn.text = "Spielmodus"
+	btn.text = tr("menu_game_mode")
 	btn.custom_minimum_size = Vector2(260, 72)
 	btn.add_theme_font_size_override("font_size", 34)
 	btn.set_anchors_preset(Control.PRESET_TOP_RIGHT)
@@ -448,7 +448,7 @@ func _show_daily_login_reward() -> void:
 	if reward <= 0:
 		return
 	var popup := Label.new()
-	popup.text = "Tag %d Login-Bonus: +%d Münzen!" % [GameManager.login_streak_day, reward]
+	popup.text = tr("daily_login_bonus") % [GameManager.login_streak_day, reward]
 	popup.add_theme_font_size_override("font_size", 32)
 	popup.add_theme_color_override("font_color", Color(1.0, 0.85, 0.3))
 	popup.set_anchors_preset(Control.PRESET_CENTER_TOP)
@@ -515,7 +515,7 @@ func _on_continue_pressed() -> void:
 ## FR-228: Beenden-Button mit Bestätigungsdialog unten links.
 func _build_quit_button() -> void:
 	var btn := Button.new()
-	btn.text = "Beenden"
+	btn.text = tr("menu_quit")
 	btn.custom_minimum_size = Vector2(220, 64)
 	btn.add_theme_font_size_override("font_size", 26)
 	btn.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)

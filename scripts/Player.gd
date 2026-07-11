@@ -401,7 +401,7 @@ func _execute_fart(drag: Vector2) -> void:
 	GameManager.vibrate(40)
 	GameManager.record_fart()  # FR-226: Statistik
 	GameManager.play_fart_sound(strength)  # FR-165
-	GameManager.show_sound_caption("Furz!")  # FR-425
+	GameManager.show_sound_caption(tr("caption_fart"))  # FR-425
 
 	# FR-012: Überhitzungs-Level erhöhen (Mega-Furz = mehr Hitze)
 	_heat_level += (fart["power"] * 0.25)

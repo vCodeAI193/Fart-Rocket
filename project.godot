@@ -23,6 +23,9 @@ GameManager="*res://scripts/GameManager.gd"
 ; FR-321: Lokales Achievement-/Herausforderungs-Framework (nach GameManager
 ; geladen, da es dessen Statistik-Signale abonniert).
 AchievementManager="*res://scripts/AchievementManager.gd"
+; FR-441: Lokalisierungs-System (nach GameManager geladen, da es
+; GameManager.language beim Start liest).
+LocalizationManager="*res://scripts/LocalizationManager.gd"
 
 [display]
 

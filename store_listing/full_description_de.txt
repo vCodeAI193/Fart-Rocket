@@ -1,0 +1,7 @@
+Fart Rocket ist ein physikbasiertes 2D-Arcade-Spiel: Du steuerst ein
+Strichmännchen, das sich per Furz-Stoß durch Hindernis-Level katapultiert.
+Ziehe zum Zielen, lass los für den Schub — meistere Sägen, Laser,
+rotierende Räder und Bosse, sammle Münzen und Sterne, schalte Kosmetik
+frei und probiere Spielmodi wie Zeitrennen, Hardcore, Zen oder
+Geister-Rennen aus. Vollständig prozedural gestaltet, ohne externe
+Grafik-Assets.
