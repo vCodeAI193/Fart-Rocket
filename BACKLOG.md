@@ -342,19 +342,19 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 - [x] **FR-264** Geschwindigkeits-Linien bei hohem Tempo
 - [x] **FR-265** Bildschirm-Blitz bei Tod
 - [x] **FR-266** Hit-Stop fuer mehr Wucht
-- [ ] **FR-267** Verbesserte Furz-Wolke mit mehreren Layern
+- [x] **FR-267** Verbesserte Furz-Wolke mit mehreren Layern
 - [x] **FR-268** Sieges-Konfetti am Levelende
 - [x] **FR-269** Muenz-Magnet-Spur-Effekt
-- [ ] **FR-270** Slow-Mo-Visualfilter
+- [x] **FR-270** Slow-Mo-Visualfilter
 - [x] **FR-271** Schweif hinter dem Maennchen
-- [ ] **FR-272** Wasser-Spritzer-Effekte
-- [ ] **FR-273** Lava-Gluehen/Hitzeflimmern
-- [ ] **FR-274** Sternen-Funkeln im Hintergrund
+- [x] **FR-272** Wasser-Spritzer-Effekte
+- [x] **FR-273** Lava-Gluehen/Hitzeflimmern
+- [x] **FR-274** Sternen-Funkeln im Hintergrund
 - [x] **FR-275** Floating-Text/Schadenszahlen
-- [ ] **FR-276** Wischeffekte beim Szenenwechsel
-- [ ] **FR-277** Power-up-Aura um das Maennchen
-- [ ] **FR-278** Umgebungspartikel (Staub, Funken)
-- [ ] **FR-279** Verzerrung bei schwarzen Loechern
+- [x] **FR-276** Wischeffekte beim Szenenwechsel
+- [x] **FR-277** Power-up-Aura um das Maennchen
+- [x] **FR-278** Umgebungspartikel (Staub, Funken)
+- [x] **FR-279** Verzerrung bei schwarzen Loechern
 - [x] **FR-280** Combo-Feuerwerk bei hohen Ketten
 
 ## Shader & Rendering

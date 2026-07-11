@@ -11,6 +11,8 @@ class_name FartBurst
 @export var fart_sound: AudioStream
 
 @onready var _particles: CPUParticles2D = $Particles
+@onready var _sparks: CPUParticles2D = $SparkParticles  # FR-267: Funken-Layer
+@onready var _smoke: CPUParticles2D = $SmokeParticles    # FR-267: Rauch-Layer
 @onready var _audio: AudioStreamPlayer = $FartSound
 
 
@@ -26,12 +28,17 @@ func _ready() -> void:
 
 ## Startet die Partikel und den Sound. Räumt sich danach selbst auf.
 ## tint färbt die Wolke je nach Furz-Typ ein (FR-002).
+## FR-267: Drei überlagerte Partikel-Layer (Kernwolke, Funken, Rauch-
+## Nachzieher) statt einer einzelnen Partikelgruppe, für einen dichteren,
+## dynamischeren Furz-Wolken-Look.
 func erupt(tint: Color = Color.WHITE) -> void:
 	modulate = tint
 	_particles.emitting = true
+	_sparks.emitting = true
+	_smoke.emitting = true
 	if _audio.stream != null:
 		_audio.play()
-	# Nach Ablauf der Lebensdauer die Wolke entfernen
-	var life := _particles.lifetime + 0.3
+	# Nach Ablauf der längsten Lebensdauer (Rauch-Layer) die Wolke entfernen
+	var life := maxf(_particles.lifetime, maxf(_sparks.lifetime, _smoke.lifetime)) + 0.3
 	await get_tree().create_timer(life).timeout
 	queue_free()

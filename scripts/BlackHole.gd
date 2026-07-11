@@ -92,6 +92,17 @@ func _build_visual() -> void:
 		spiral.default_color = Color(0.7, 0.2, 0.8, 0.5)
 		add_child(spiral)
 
+	# FR-279: Gravitationslinsen-Verzerrung — als letzte Ebene über allem
+	# anderen platziert, damit sie Kern/Ring/Spiralen + Hintergrund verwirbelt.
+	var distortion_rect := ColorRect.new()
+	distortion_rect.size = zone_size * 2.5
+	distortion_rect.position = -zone_size * 1.25
+	var dist_mat := ShaderMaterial.new()
+	dist_mat.shader = load("res://shaders/blackhole_distortion.gdshader")
+	dist_mat.set_shader_parameter("swirl_strength", 7.0)
+	distortion_rect.material = dist_mat
+	add_child(distortion_rect)
+
 	# Collision Shape
 	var cshape := CollisionShape2D.new()
 	var circle := CircleShape2D.new()

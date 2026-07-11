@@ -38,20 +38,20 @@ func _on_body_entered(body: Node) -> void:
 
 
 func _activate_magnet(player: Player) -> void:
+	# FR-277: Orangene Power-up-Aura während der Magnet-Wirkung
+	if player.has_method("show_powerup_aura"):
+		player.show_powerup_aura(Color(1.0, 0.55, 0.15, 0.6), duration)
 	var start_time := Time.get_ticks_msec() / 1000.0
-	var pull_timer := func() -> void:
-		var elapsed := Time.get_ticks_msec() / 1000.0 - start_time
-		if elapsed > duration:
-			return
-		for coin in get_tree().get_nodes_in_group("coins"):
-			if not coin._collected:
-				var dist := coin.global_position.distance_to(player.global_position)
-				if dist < magnet_radius and dist > 1.0:
-					var dir := (player.global_position - coin.global_position).normalized()
-					coin.apply_central_force(dir * pull_force)
-	var interval_timer := get_tree().create_timer(duration, false, false, true)
+	var elapsed := 0.0
 	while elapsed < duration:
-		pull_timer.call()
+		elapsed = Time.get_ticks_msec() / 1000.0 - start_time
+		if is_instance_valid(player):
+			for coin in get_tree().get_nodes_in_group("coins"):
+				if not coin._collected:
+					var dist := coin.global_position.distance_to(player.global_position)
+					if dist < magnet_radius and dist > 1.0:
+						var dir := (player.global_position - coin.global_position).normalized()
+						coin.apply_central_force(dir * pull_force)
 		await get_tree().create_timer(0.05).timeout
 
 

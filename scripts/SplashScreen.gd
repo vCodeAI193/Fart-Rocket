@@ -54,4 +54,4 @@ func _build_ui() -> void:
 
 func _play_intro() -> void:
 	await get_tree().create_timer(display_duration).timeout
-	get_tree().change_scene_to_file("res://scenes/MainMenu.tscn")
+	GameManager.change_scene_with_wipe("res://scenes/MainMenu.tscn")  # FR-276

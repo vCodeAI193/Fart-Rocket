@@ -121,6 +121,8 @@ var _aim_arrow: Line2D
 var _arms: Line2D  # FR-177: für Sieges-Pose-Animation
 var _face_node: Node2D  # FR-167: für Gesichtsausdrücke
 var _shield_aura: Polygon2D  # FR-297: Schild-Energie-Shader-Aura
+var _powerup_aura: Line2D    # FR-277: generische Power-up-Aura
+var _powerup_aura_count: int = 0  # zeitgleich aktive Power-up-Auren
 
 
 var _trail: Line2D = null              # FR-168: Flug-Spur
@@ -153,6 +155,8 @@ func _ready() -> void:
 	call_deferred("_build_trail")
 	# FR-100: Manuell ausgelöste Inventar-Power-ups anwenden
 	GameManager.inventory_use_requested.connect(_on_inventory_powerup_used)
+	# FR-277: Goldene Aura während Doppel-Münzen aktiv sind
+	GameManager.double_coins_changed.connect(_on_double_coins_changed)
 
 
 # ----------------------------------------------------------------
@@ -595,6 +599,48 @@ func _update_shield_aura(active: bool) -> void:
 		_shield_aura.material = mat
 		add_child(_shield_aura)
 	_shield_aura.visible = active
+
+
+## FR-277: Reagiert auf GameManager.double_coins_changed — goldene Aura
+## während der Doppel-Münzen-Phase.
+func _on_double_coins_changed(active: bool) -> void:
+	_toggle_powerup_aura(active, Color(1.0, 0.85, 0.2, 0.6))
+
+
+## FR-277: Öffentliche Schnittstelle für zeitlich befristete Power-up-Auren
+## (z.B. Münz-Magnet). Mehrere Auren können sich überlappen; die Aura
+## bleibt sichtbar, solange mindestens eine noch aktiv ist (vereinfachtes
+## Referenzzählungs-Modell statt einer pro Power-up-Typ eigenen Aura).
+func show_powerup_aura(color: Color, duration: float) -> void:
+	_toggle_powerup_aura(true, color)
+	await get_tree().create_timer(duration).timeout
+	if is_instance_valid(self):
+		_toggle_powerup_aura(false, color)
+
+
+func _toggle_powerup_aura(active: bool, color: Color) -> void:
+	if not is_instance_valid(_powerup_aura):
+		_build_powerup_aura()
+	_powerup_aura_count = maxi(0, _powerup_aura_count + (1 if active else -1))
+	_powerup_aura.default_color = color
+	_powerup_aura.visible = _powerup_aura_count > 0
+
+
+func _build_powerup_aura() -> void:
+	_powerup_aura = Line2D.new()
+	_powerup_aura.name = "PowerupAura"
+	var pts := PackedVector2Array()
+	for i in range(25):
+		var a := TAU * float(i) / 24.0
+		pts.append(Vector2(cos(a), sin(a)) * 38.0)
+	_powerup_aura.points = pts
+	_powerup_aura.width = 4.0
+	_powerup_aura.visible = false
+	add_child(_powerup_aura)
+	var tween := create_tween()
+	tween.set_loops()
+	tween.tween_property(_powerup_aura, "scale", Vector2(1.15, 1.15), 0.6).set_trans(Tween.TRANS_SINE)
+	tween.tween_property(_powerup_aura, "scale", Vector2(0.92, 0.92), 0.6).set_trans(Tween.TRANS_SINE)
 
 
 ## FR-100: Wendet ein aus dem Inventar manuell ausgelöstes Power-up an.

@@ -883,6 +883,50 @@ func activate_double_coins(duration: float) -> void:
 	double_coins_changed.emit(true)
 
 
+## FR-276: Wechselt die Szene mit einem diagonalen Wischeffekt statt eines
+## harten Schnitts.
+func change_scene_with_wipe(scene_path: String) -> void:
+	await _run_scene_wipe(func(tree: SceneTree): tree.change_scene_to_file(scene_path))
+
+
+## FR-276: Wie change_scene_with_wipe(), lädt aber die aktuelle Szene neu
+## (für Retry/Nächstes-Level statt eines Szenenpfad-Wechsels).
+func reload_scene_with_wipe() -> void:
+	await _run_scene_wipe(func(tree: SceneTree): tree.reload_current_scene())
+
+
+## FR-276: Gemeinsame Wisch-Animation (abdecken, `action` ausführen,
+## wieder aufdecken) für Szenenwechsel/-neuladen.
+func _run_scene_wipe(action: Callable) -> void:
+	var tree := get_tree()
+	if tree == null:
+		return
+	var layer := CanvasLayer.new()
+	layer.layer = 100
+	tree.root.add_child(layer)
+	var rect := ColorRect.new()
+	rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+	rect.mouse_filter = Control.MOUSE_FILTER_STOP
+	var mat := ShaderMaterial.new()
+	mat.shader = load("res://shaders/scene_wipe.gdshader")
+	mat.set_shader_parameter("wipe_progress", 0.0)
+	rect.material = mat
+	layer.add_child(rect)
+
+	var cover_tween := tree.create_tween()
+	cover_tween.tween_method(func(v): mat.set_shader_parameter("wipe_progress", v), 0.0, 1.1, 0.3)
+	await cover_tween.finished
+
+	action.call(tree)
+	await tree.process_frame
+	await tree.process_frame
+
+	var reveal_tween := tree.create_tween()
+	reveal_tween.tween_method(func(v): mat.set_shader_parameter("wipe_progress", v), 1.1, -0.1, 0.3)
+	await reveal_tween.finished
+	layer.queue_free()
+
+
 ## FR-301: XP hinzufügen und ggf. Level hochzählen.
 func add_xp(amount: int) -> void:
 	total_xp += amount

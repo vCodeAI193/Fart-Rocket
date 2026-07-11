@@ -56,6 +56,7 @@ func _on_area_entered(area: Area2D) -> void:
 			player.gravity_scale = 0.1  # Schwerkraft reduzieren (Auftrieb)
 			player.linear_damp = _original_drag * drag_multiplier
 		_players_in_water += 1
+		_spawn_splash(player.global_position)  # FR-272: Eintauch-Spritzer
 
 
 func _on_area_exited(area: Area2D) -> void:
@@ -66,6 +67,28 @@ func _on_area_exited(area: Area2D) -> void:
 			_players_in_water = 0
 			player.gravity_scale = _original_gravity
 			player.linear_damp = _original_drag
+			_spawn_splash(player.global_position)  # FR-272: Auftauch-Spritzer
+
+
+## FR-272: Kurzer Partikel-Spritzer beim Ein-/Austauchen an der Wasseroberfläche.
+func _spawn_splash(at_position: Vector2) -> void:
+	var splash := CPUParticles2D.new()
+	get_parent().add_child(splash)
+	splash.global_position = Vector2(at_position.x, _water_surface_y)
+	splash.emitting = true
+	splash.one_shot = true
+	splash.amount = 16
+	splash.lifetime = 0.5
+	splash.explosiveness = 0.95
+	splash.direction = Vector2.UP
+	splash.spread = 50.0
+	splash.gravity = Vector2(0, 900)
+	splash.initial_velocity_min = 120.0
+	splash.initial_velocity_max = 320.0
+	splash.scale_amount_min = 2.0
+	splash.scale_amount_max = 5.0
+	splash.color = Color(0.75, 0.9, 1.0, 0.85)
+	get_tree().create_timer(0.6).timeout.connect(func(): if is_instance_valid(splash): splash.queue_free())
 
 
 func _build_visual() -> void:

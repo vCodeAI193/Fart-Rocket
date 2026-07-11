@@ -64,6 +64,7 @@ var _fx_bloom: ColorRect
 var _fx_color_grading: ColorRect
 var _fx_crt: ColorRect
 var _fx_vision_cone: ColorRect
+var _fx_slowmo: ColorRect  # FR-270: Slow-Mo-Visualfilter
 var _bg_texture_rect: TextureRect  # FR-281/290/292: Weltraum/Tag-Nacht/Grading-Ziel
 var _daynight_material: ShaderMaterial  # FR-290: Tag-/Nacht-Verlauf-Overlay
 var _daynight_elapsed: float = 0.0
@@ -100,8 +101,31 @@ func _ready() -> void:
 	_build_postfx_stack()
 	GameManager.render_settings_changed.connect(_update_postfx_visibility)
 	set_crt_filter_active(GameManager.crt_filter_enabled)
+	# FR-278: Umgebungspartikel (treibender Staub) für Atmosphäre
+	_build_ambient_particles()
 
 	_load_current_level()
+
+
+## FR-278: Treibende Umgebungspartikel (Staub/Funken) für Atmosphäre —
+## als Kind der Kamera, damit sie stets im sichtbaren Bereich entstehen.
+func _build_ambient_particles() -> void:
+	var dust := CPUParticles2D.new()
+	dust.amount = 36
+	dust.lifetime = 7.0
+	dust.preprocess = 7.0
+	dust.emitting = true
+	dust.local_coords = false
+	dust.gravity = Vector2(0, 4)
+	dust.initial_velocity_min = 3.0
+	dust.initial_velocity_max = 16.0
+	dust.spread = 180.0
+	dust.scale_amount_min = 1.0
+	dust.scale_amount_max = 2.5
+	dust.color = Color(1.0, 1.0, 1.0, 0.12)
+	dust.emission_shape = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
+	dust.emission_rect_extents = Vector2(760, 480)
+	_camera.add_child(dust)
 
 
 ## FR-286: Dunkle Vignette an Bildschirmrändern.
@@ -249,6 +273,7 @@ func _build_postfx_stack() -> void:
 	_fx_motion_blur = _make_fx_rect("res://shaders/motion_blur.gdshader")
 	_fx_crt = _make_fx_rect("res://shaders/crt_filter.gdshader")
 	_fx_vision_cone = _make_fx_rect("res://shaders/vision_cone.gdshader")
+	_fx_slowmo = _make_fx_rect("res://shaders/slowmo_filter.gdshader")
 	_fx_crt.visible = false      # FR-282: standardmäßig aus, per Einstellung aktivierbar
 	_fx_vision_cone.visible = false  # FR-289: nur in Dunkelheits-Leveln aktiv
 
@@ -354,6 +379,14 @@ func _process(delta: float) -> void:
 		_daynight_elapsed += delta
 		var cycle_progress := (sin(_daynight_elapsed * 0.05) + 1.0) * 0.5
 		_daynight_material.set_shader_parameter("cycle_progress", cycle_progress)
+
+	# FR-270: Slow-Mo-Visualfilter — Stärke folgt der aktuellen Zeitskala
+	if _fx_slowmo != null:
+		var slowmo_strength := clampf(1.0 - Engine.time_scale, 0.0, 1.0)
+		_fx_slowmo.visible = slowmo_strength > 0.01
+		if _fx_slowmo.visible:
+			var slowmo_mat: ShaderMaterial = _fx_slowmo.material
+			slowmo_mat.set_shader_parameter("strength", slowmo_strength)
 
 	if not is_instance_valid(_player):
 		return
@@ -702,15 +735,15 @@ func _on_level_reached() -> void:
 func _on_next_level() -> void:
 	if GameManager.has_next_level():
 		GameManager.current_level += 1
-	get_tree().reload_current_scene()
+	GameManager.reload_scene_with_wipe()  # FR-276
 
 
 func _on_retry() -> void:
-	get_tree().reload_current_scene()
+	GameManager.reload_scene_with_wipe()  # FR-276
 
 
 func _on_menu() -> void:
-	get_tree().change_scene_to_file("res://scenes/MainMenu.tscn")
+	GameManager.change_scene_with_wipe("res://scenes/MainMenu.tscn")  # FR-276
 
 
 # --- Hilfsfunktion: ersten Knoten einer Gruppe im Baum finden ---
