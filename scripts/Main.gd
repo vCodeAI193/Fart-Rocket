@@ -689,6 +689,9 @@ func is_photo_mode() -> bool:
 func _on_player_died() -> void:
 	_camera_shake(0.3, 0.35)
 	_hud.flash_damage()  # FR-209: rote Vignette
+	# FR-333: Verstecktes Erfolgs-Achievement für den allerersten Tod
+	if GameManager.stat_total_deaths == 0:
+		AchievementManager.report_first_death()
 	GameManager.record_death()  # FR-226: Statistik
 	# FR-135: Am Checkpoint wiederbeleben, falls einer aktiviert wurde
 	if _checkpoint_pos.x < INF:
@@ -724,6 +727,12 @@ func _on_level_reached() -> void:
 
 	# FR-224: Erspielten Punktestand als dauerhaftes Guthaben einzahlen
 	GameManager.bank_level_coins(GameManager.total_score)
+
+	# FR-321/324-330: Erfolge/Herausforderungen anhand des Versuchs prüfen
+	AchievementManager.report_level_complete(
+		stars, GameManager.total_coins, GameManager.level_farts_used,
+		time_sec, _player.took_hit_this_run
+	)
 
 	# FR-187: Kurzer Kino-Modus (Zoom + Letterbox) vor dem Abschlussbildschirm
 	await _play_cinematic_ending()

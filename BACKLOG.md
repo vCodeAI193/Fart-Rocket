@@ -405,25 +405,25 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 
 ## Erfolge & Herausforderungen
 
-- [ ] **FR-321** Achievement-System (Google Play Games)
-- [ ] **FR-322** Erfolge fuer Anzahl der Fuerze
-- [ ] **FR-323** Muenz-Sammel-Erfolge
-- [ ] **FR-324** Pazifist-Lauf (keine Muenzen sammeln)
-- [ ] **FR-325** Perfekt-Lauf (kein Schaden, alle Sterne)
-- [ ] **FR-326** Speed-Erfolge (unter Zeit X)
-- [ ] **FR-327** Sparsam-Furz-Erfolge (wenige Stoesse)
-- [ ] **FR-328** Erfolg: alle Sterne sammeln
-- [ ] **FR-329** Taegliche Herausforderungen
-- [ ] **FR-330** Woechentliche Herausforderungen
-- [ ] **FR-331** Herausforderungs-Modifikatoren (Mutatoren)
-- [ ] **FR-332** Erfolgs-Fortschrittsanzeige
-- [ ] **FR-333** Versteckte Erfolge
-- [ ] **FR-334** Erfolgs-Belohnungen (Skins/Muenzen)
-- [ ] **FR-335** Streak-Erfolge (Tage in Folge)
-- [ ] **FR-336** Combo-Erfolge
-- [ ] **FR-337** Welt-spezifische Erfolge
-- [ ] **FR-338** Erfolgs-Benachrichtigungs-Pop-ups
-- [ ] **FR-339** Sortierung/Filter fuer Erfolge
+- [x] **FR-321** Achievement-System (Google Play Games)
+- [x] **FR-322** Erfolge fuer Anzahl der Fuerze
+- [x] **FR-323** Muenz-Sammel-Erfolge
+- [x] **FR-324** Pazifist-Lauf (keine Muenzen sammeln)
+- [x] **FR-325** Perfekt-Lauf (kein Schaden, alle Sterne)
+- [x] **FR-326** Speed-Erfolge (unter Zeit X)
+- [x] **FR-327** Sparsam-Furz-Erfolge (wenige Stoesse)
+- [x] **FR-328** Erfolg: alle Sterne sammeln
+- [x] **FR-329** Taegliche Herausforderungen
+- [x] **FR-330** Woechentliche Herausforderungen
+- [x] **FR-331** Herausforderungs-Modifikatoren (Mutatoren)
+- [x] **FR-332** Erfolgs-Fortschrittsanzeige
+- [x] **FR-333** Versteckte Erfolge
+- [x] **FR-334** Erfolgs-Belohnungen (Skins/Muenzen)
+- [x] **FR-335** Streak-Erfolge (Tage in Folge)
+- [x] **FR-336** Combo-Erfolge
+- [x] **FR-337** Welt-spezifische Erfolge
+- [x] **FR-338** Erfolgs-Benachrichtigungs-Pop-ups
+- [x] **FR-339** Sortierung/Filter fuer Erfolge
 - [ ] **FR-340** Plattformuebergreifende Erfolge
 
 ## Spielmodi

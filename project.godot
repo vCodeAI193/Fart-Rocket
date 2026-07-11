@@ -20,6 +20,9 @@ boot_splash/show_image=false
 
 ; Globaler Spielzustand: Punkte, aktuelles Level, Sterne usw.
 GameManager="*res://scripts/GameManager.gd"
+; FR-321: Lokales Achievement-/Herausforderungs-Framework (nach GameManager
+; geladen, da es dessen Statistik-Signale abonniert).
+AchievementManager="*res://scripts/AchievementManager.gd"
 
 [display]
 

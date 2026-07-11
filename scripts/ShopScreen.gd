@@ -180,6 +180,9 @@ func _refresh_slot_tab(slot: String) -> void:
 		var info: Dictionary = GameManager.COSMETIC_CATALOG[id]
 		if info["slot"] != slot:
 			continue
+		# FR-334: Erfolgs-exklusive Items werden nicht im Shop gelistet
+		if info.get("achievement_only", false) and not (id in GameManager.unlocked_cosmetics):
+			continue
 
 		var row := HBoxContainer.new()
 		row.add_theme_constant_override("separation", 16)

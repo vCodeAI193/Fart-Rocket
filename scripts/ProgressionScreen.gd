@@ -12,22 +12,39 @@ var _tab_container: TabContainer
 var _skills_list: VBoxContainer
 var _goals_list: VBoxContainer
 var _prestige_list: VBoxContainer
+var _achievements_list: VBoxContainer
 var _balance_label: Label
+
+# FR-339: Filter/Sortierung für die Erfolge-Liste
+var _achievement_filter: String = "all"  # all | unlocked | locked
+var _category_names: Dictionary = {}
 
 
 func _ready() -> void:
 	layer = 93
 	visible = false
+	# FR-339: Kategorie-Namen zur Laufzeit aufbauen (Enum-Zugriff auf ein
+	# anderes Autoload ist nur zur Laufzeit sicher, nicht in einer const-
+	# Initialisierung).
+	_category_names = {
+		AchievementManager.Category.FARTS: "Fürze", AchievementManager.Category.COINS: "Münzen",
+		AchievementManager.Category.CHALLENGE: "Herausforderung", AchievementManager.Category.SPEED: "Tempo",
+		AchievementManager.Category.STARS: "Sterne", AchievementManager.Category.STREAK: "Serie",
+		AchievementManager.Category.COMBO: "Combo", AchievementManager.Category.WORLD: "Welt",
+		AchievementManager.Category.HIDDEN: "Geheim",
+	}
 	_build_ui()
 	GameManager.persistent_coins_changed.connect(func(_v): _refresh_skills())
 	GameManager.skill_unlocked.connect(func(_id): _refresh_skills())
 	GameManager.prestige_changed.connect(func(_lvl): _refresh_prestige())
+	AchievementManager.achievement_unlocked.connect(func(_id): _refresh_achievements())
 
 
 func show_screen() -> void:
 	_refresh_skills()
 	_refresh_goals()
 	_refresh_prestige()
+	_refresh_achievements()
 	visible = true
 
 
@@ -76,6 +93,34 @@ func _build_ui() -> void:
 	_prestige_list = VBoxContainer.new()
 	_prestige_list.add_theme_constant_override("separation", 14)
 	prestige_scroll.add_child(_prestige_list)
+
+	# --- Tab 4: Erfolge (FR-321-340) -------------------------------------
+	var achievements_root := VBoxContainer.new()
+	achievements_root.name = "Erfolge"
+	_tab_container.add_child(achievements_root)
+
+	# FR-339: Filter-Leiste (Alle / Freigeschaltet / Gesperrt)
+	var filter_row := HBoxContainer.new()
+	filter_row.add_theme_constant_override("separation", 10)
+	achievements_root.add_child(filter_row)
+	for filter_id in ["all", "unlocked", "locked"]:
+		var fbtn := Button.new()
+		fbtn.text = {"all": "Alle", "unlocked": "Freigeschaltet", "locked": "Gesperrt"}[filter_id]
+		fbtn.custom_minimum_size = Vector2(180, 56)
+		fbtn.add_theme_font_size_override("font_size", 22)
+		fbtn.pressed.connect(func():
+			_achievement_filter = filter_id
+			GameManager.play_ui_click()
+			_refresh_achievements()
+		)
+		filter_row.add_child(fbtn)
+
+	var achievements_scroll := ScrollContainer.new()
+	achievements_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	achievements_root.add_child(achievements_scroll)
+	_achievements_list = VBoxContainer.new()
+	_achievements_list.add_theme_constant_override("separation", 10)
+	achievements_scroll.add_child(_achievements_list)
 
 	_tab_container.tab_changed.connect(func(_i): GameManager.play_ui_click())
 
@@ -233,8 +278,113 @@ func _refresh_prestige() -> void:
 	prestige_btn.disabled = not GameManager.can_prestige()
 	prestige_btn.pressed.connect(func():
 		if GameManager.do_prestige():
+			AchievementManager.report_prestige()  # FR-333
 			GameManager.play_ui_click()
 			GameManager.vibrate(60)
 			_refresh_prestige()
 	)
 	_prestige_list.add_child(prestige_btn)
+
+
+## FR-321-340: Erfolge-Liste (gefiltert/sortiert, FR-339) + tägliche/
+## wöchentliche Herausforderungen (FR-329/330/331).
+func _refresh_achievements() -> void:
+	for child in _achievements_list.get_children():
+		child.queue_free()
+
+	# FR-329: Tägliche Herausforderung (inkl. Mutator, FR-331)
+	var daily := AchievementManager.get_daily_challenge()
+	_achievements_list.add_child(_build_challenge_row(
+		"Heute: %s (Modifikator: %s)" % [daily["name"], daily["modifier_name"]],
+		int(daily["progress"]), int(daily["target"]), bool(daily["claimed"]),
+		func():
+			var reward := AchievementManager.claim_daily_challenge()
+			if reward > 0:
+				GameManager.play_ui_click()
+				GameManager.vibrate(30)
+				_refresh_achievements()
+	))
+
+	# FR-330: Wöchentliche Herausforderung
+	var weekly := AchievementManager.get_weekly_challenge()
+	_achievements_list.add_child(_build_challenge_row(
+		"Diese Woche: %s" % weekly["name"],
+		int(weekly["progress"]), int(weekly["target"]), bool(weekly["claimed"]),
+		func():
+			var reward := AchievementManager.claim_weekly_challenge()
+			if reward > 0:
+				GameManager.play_ui_click()
+				GameManager.vibrate(30)
+				_refresh_achievements()
+	))
+
+	var sep := HSeparator.new()
+	_achievements_list.add_child(sep)
+
+	# FR-339: Erfolge nach Kategorie sortiert, gefiltert nach Status
+	var ids: Array = AchievementManager.ACHIEVEMENTS.keys()
+	ids.sort_custom(func(a, b):
+		return int(AchievementManager.ACHIEVEMENTS[a]["category"]) < int(AchievementManager.ACHIEVEMENTS[b]["category"])
+	)
+	for id in ids:
+		var owned: bool = AchievementManager.is_unlocked(id)
+		if _achievement_filter == "unlocked" and not owned:
+			continue
+		if _achievement_filter == "locked" and owned:
+			continue
+		var data: Dictionary = AchievementManager.ACHIEVEMENTS[id]
+		var is_hidden: bool = bool(data["hidden"]) and not owned
+		var row := PanelContainer.new()
+		var hbox := HBoxContainer.new()
+		row.add_child(hbox)
+
+		var name_label := Label.new()
+		name_label.text = "???" if is_hidden else String(data["name"])
+		name_label.custom_minimum_size = Vector2(280, 0)
+		name_label.add_theme_font_size_override("font_size", 24)
+		name_label.add_theme_color_override("font_color", Color(0.4, 1.0, 0.5) if owned else Color(0.7, 0.7, 0.7))
+		hbox.add_child(name_label)
+
+		var desc_label := Label.new()
+		desc_label.text = "???" if is_hidden else String(data["desc"])
+		desc_label.custom_minimum_size = Vector2(360, 0)
+		desc_label.add_theme_font_size_override("font_size", 20)
+		hbox.add_child(desc_label)
+
+		var status_label := Label.new()
+		var cat_name: String = _category_names.get(int(data["category"]), "")
+		if owned:
+			status_label.text = "✓ %s" % cat_name
+		elif data.has("stat"):
+			var progress := AchievementManager.get_progress(id)
+			status_label.text = "%d / %d" % [progress.x, progress.y]
+		else:
+			status_label.text = cat_name
+		status_label.custom_minimum_size = Vector2(140, 0)
+		status_label.add_theme_font_size_override("font_size", 20)
+		hbox.add_child(status_label)
+
+		_achievements_list.add_child(row)
+
+
+func _build_challenge_row(text: String, progress: int, target: int, claimed: bool, on_claim: Callable) -> Control:
+	var row := PanelContainer.new()
+	var hbox := HBoxContainer.new()
+	row.add_child(hbox)
+	var label := Label.new()
+	label.text = "%s (%d / %d)" % [text, mini(progress, target), target]
+	label.custom_minimum_size = Vector2(600, 0)
+	label.add_theme_font_size_override("font_size", 22)
+	hbox.add_child(label)
+	var btn := Button.new()
+	btn.custom_minimum_size = Vector2(160, 56)
+	btn.add_theme_font_size_override("font_size", 22)
+	if claimed:
+		btn.text = "Eingelöst"
+		btn.disabled = true
+	else:
+		btn.text = "Abholen"
+		btn.disabled = progress < target
+		btn.pressed.connect(on_claim)
+	hbox.add_child(btn)
+	return row

@@ -123,6 +123,7 @@ var _face_node: Node2D  # FR-167: für Gesichtsausdrücke
 var _shield_aura: Polygon2D  # FR-297: Schild-Energie-Shader-Aura
 var _powerup_aura: Line2D    # FR-277: generische Power-up-Aura
 var _powerup_aura_count: int = 0  # zeitgleich aktive Power-up-Auren
+var took_hit_this_run: bool = false  # FR-325: für "Perfekt-Lauf"-Erfolg
 
 
 var _trail: Line2D = null              # FR-168: Flug-Spur
@@ -570,6 +571,7 @@ func _on_body_entered(body: Node) -> void:
 			shield_changed.emit(false)
 			_update_shield_aura(false)  # FR-297
 			GameManager.vibrate(60)
+			took_hit_this_run = true  # FR-325: kein "Perfekt-Lauf" mehr möglich
 			return
 		_die()
 
@@ -1002,6 +1004,31 @@ func _build_hat(head_center: Vector2, head_radius: float) -> void:
 			shades.position = head_center + Vector2(-head_radius * 0.8, -3)
 			shades.color = Color(0.05, 0.05, 0.05, 0.9)
 			add_child(shades)
+		"hat_crown":
+			# FR-334: Erfolgs-Belohnung für "Sternensammler" (alle Level 3 Sterne)
+			var crown := Polygon2D.new()
+			crown.color = Color(1.0, 0.85, 0.15)
+			var base_offset := -head_radius * 1.15
+			var cw := head_radius * 1.1
+			crown.polygon = PackedVector2Array([
+				head_center + Vector2(-cw, base_offset),
+				head_center + Vector2(-cw, base_offset - head_radius * 0.5),
+				head_center + Vector2(-cw * 0.5, base_offset - head_radius * 0.15),
+				head_center + Vector2(0, base_offset - head_radius * 0.65),
+				head_center + Vector2(cw * 0.5, base_offset - head_radius * 0.15),
+				head_center + Vector2(cw, base_offset - head_radius * 0.5),
+				head_center + Vector2(cw, base_offset),
+			])
+			add_child(crown)
+			var jewel := Polygon2D.new()
+			jewel.color = Color(0.9, 0.15, 0.2)
+			var jewel_center := head_center + Vector2(0, base_offset - head_radius * 0.35)
+			var jpts := PackedVector2Array()
+			for i in range(8):
+				var a := TAU * float(i) / 8.0
+				jpts.append(jewel_center + Vector2(cos(a), sin(a)) * head_radius * 0.12)
+			jewel.polygon = jpts
+			add_child(jewel)
 
 
 ## FR-167: Zeichnet einen Gesichtsausdruck (aktualisierbar via set_face_expression).

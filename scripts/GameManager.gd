@@ -45,6 +45,7 @@ var total_coins: int = 0                # gesammelte Münzen im aktuellen Level
 var total_score: int = 0                # Punkte im aktuellen Level
 var charges_remaining: int = 0          # übrige Furz-Ladungen im Level
 var max_charges: int = 0                 # maximale Furz-Ladungen im aktuellen Level
+var level_farts_used: int = 0            # FR-327: Furz-Stöße im aktuellen Level
 
 # Bestwertung (Sterne 0..3) je Level, persistent während der Sitzung
 var level_stars := {1: 0, 2: 0, 3: 0}
@@ -286,6 +287,9 @@ const COSMETIC_CATALOG := {
 	"hat_top": {"name": "Zylinder", "slot": "hat", "cost": 200, "rarity": Rarity.COMMON},
 	"hat_cap": {"name": "Käppi", "slot": "hat", "cost": 150, "rarity": Rarity.COMMON},
 	"hat_shades": {"name": "Sonnenbrille", "slot": "hat", "cost": 250, "rarity": Rarity.RARE},
+	# FR-334: Nicht im Shop kaufbar — nur als Erfolgs-Belohnung für
+	# "Sternensammler" per grant_cosmetic_free() (siehe "achievement_only").
+	"hat_crown": {"name": "Krone", "slot": "hat", "cost": 0, "rarity": Rarity.LEGENDARY, "achievement_only": true},
 
 	"arrow_classic": {"name": "Klassisch", "slot": "arrow", "cost": 0, "rarity": Rarity.COMMON},
 	"arrow_neon": {"name": "Neon", "slot": "arrow", "cost": 200, "rarity": Rarity.COMMON},
@@ -339,6 +343,15 @@ func unlock_cosmetic(id: String) -> bool:
 	unlocked_cosmetics.append(id)
 	_save_progress()
 	return true
+
+
+## FR-334: Schaltet ein Kosmetik-Item kostenlos frei (z.B. als
+## Erfolgs-Belohnung) — im Gegensatz zu unlock_cosmetic() ohne Kaufpreis.
+func grant_cosmetic_free(id: String) -> void:
+	if id in unlocked_cosmetics:
+		return
+	unlocked_cosmetics.append(id)
+	_save_progress()
 
 
 ## FR-179: Rüstet ein Kosmetik-Item in seinem Slot aus (Mix&Match).
@@ -495,6 +508,7 @@ func start_level(level_index: int, max_charges: int) -> void:
 	_level_start_ticks = Time.get_ticks_msec()  # FR-117: Basis für Schwierigkeitsskalierung
 	level_coin_total = 0             # FR-099: Fortschritt pro Level zurücksetzen
 	level_coin_collected = 0
+	level_farts_used = 0             # FR-327: Furz-Stöße im aktuellen Level zählen
 	collected_keys.clear()           # FR-091: Schlüssel pro Level zurücksetzen
 	# UI informieren
 	coins_changed.emit(total_coins)
@@ -573,7 +587,9 @@ func set_camera_smoothing(value: float) -> void:
 ## FR-226: Erhöht den Furz-Zähler (von Player bei jedem Stoß aufgerufen).
 func record_fart() -> void:
 	stat_total_farts += 1
+	level_farts_used += 1  # FR-327
 	add_weekly_progress("weekly_farts", 1)  # FR-310
+	AchievementManager.advance_challenge_task("fart_count", 1)  # FR-329/330
 	_check_milestones()  # FR-308
 	_check_badges()      # FR-318
 
