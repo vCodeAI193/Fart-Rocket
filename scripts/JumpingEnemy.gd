@@ -19,6 +19,7 @@ var _on_ground: bool = true
 
 func _ready() -> void:
 	add_to_group("obstacles")
+	GameManager.discover_enemy("JumpingEnemy")  # FR-118: Bestiarium
 	_start_y = global_position.y
 	_jump_timer = jump_interval * 0.3
 	_build_visual()

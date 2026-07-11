@@ -70,6 +70,28 @@ var sound_muted: bool = false
 var time_attack_mode: bool = false
 var time_attack_best_times := {1: INF, 2: INF, 3: INF}  # Level -> beste Zeit (Sek.)
 
+# --- FR-117: KI-Schwierigkeitsskalierung --------------------------
+var _level_start_ticks: int = 0
+
+# --- FR-118: Gegner-Bestiarium/Sammlung ---------------------------
+# Bekannte Gegner-Typen (Anzeigename je Klasse), erweiterbar bei neuen Gegnern.
+const ENEMY_BESTIARY := {
+	"ShooterEnemy": "Geschützturm",
+	"PatrolEnemy": "Flug-Patrouille",
+	"JumpingEnemy": "Hüpfer",
+	"CoinThiefEnemy": "Münzdieb",
+	"ChaserEnemy": "Verfolger",
+	"StaticTurret": "Laser-Turm",
+	"DodgingEnemy": "Ausweicher",
+	"SwarmEnemy": "Schwarm",
+	"ShieldedEnemy": "Schild-Wächter",
+	"TeleportingEnemy": "Teleporter",
+	"LungingEnemy": "Sprung-Angreifer",
+	"StealthEnemy": "Tarn-Kriecher",
+	"BlowableEnemy": "Flatterling",
+}
+var discovered_enemies: Array[String] = []
+
 
 func _ready() -> void:
 	# Beim Start einmal den gespeicherten Fortschritt laden (falls vorhanden)
@@ -103,6 +125,7 @@ func start_level(level_index: int, max_charges: int) -> void:
 	combo_count = 0
 	_combo_elapsed = 0.0
 	fart_letters_collected.clear()  # FR-092: Buchstaben pro Level zurücksetzen
+	_level_start_ticks = Time.get_ticks_msec()  # FR-117: Basis für Schwierigkeitsskalierung
 	# UI informieren
 	coins_changed.emit(total_coins)
 	score_changed.emit(total_score)
@@ -110,6 +133,30 @@ func start_level(level_index: int, max_charges: int) -> void:
 	charge_regen_progress.emit(0.0)
 	combo_changed.emit(0, 1)
 	fart_letters_changed.emit(fart_letters_collected)
+
+
+## FR-120: Zufällige Belohnung für besiegte Gegner (Münzen oder XP).
+## Wird von Gegner-Skripten (z.B. ShieldedEnemy) beim Besiegen aufgerufen.
+func grant_enemy_defeat_reward(base_coin_value: int = 20) -> Dictionary:
+	if randf() < 0.75:
+		var amount := randi_range(int(base_coin_value * 0.7), int(base_coin_value * 1.3))
+		add_coin(amount)
+		return {"type": "coins", "amount": amount}
+	else:
+		var xp := base_coin_value
+		add_xp(xp)
+		return {"type": "xp", "amount": xp}
+
+
+## FR-117: Liefert einen Schwierigkeits-Multiplikator (1.0..~1.8) für
+## KI-Verhalten (Geschwindigkeit, Reaktionszeit etc.). Steigt mit dem
+## Level-Index und je länger der aktuelle Versuch bereits dauert
+## (bestraft "Trödeln" leicht, ohne unfair zu werden).
+func get_difficulty_multiplier() -> float:
+	var level_factor := 1.0 + (float(current_level - 1) * 0.15)
+	var elapsed_sec := (Time.get_ticks_msec() - _level_start_ticks) / 1000.0
+	var time_factor := 1.0 + clampf(elapsed_sec / 120.0, 0.0, 0.3)
+	return clampf(level_factor * time_factor, 1.0, 1.8)
 
 
 ## FR-092: Sammelt einen F-A-R-T-Buchstaben. Bei vollständigem Satz Bonus.
@@ -277,6 +324,7 @@ func _save_progress() -> void:
 	var cfg := ConfigFile.new()
 	for lvl in level_stars.keys():
 		cfg.set_value("stars", str(lvl), level_stars[lvl])
+	cfg.set_value("bestiary", "discovered", discovered_enemies)
 	cfg.save(SAVE_PATH)
 
 
@@ -287,3 +335,13 @@ func _load_progress() -> void:
 		return  # Noch kein Speicherstand vorhanden – das ist in Ordnung
 	for lvl in level_stars.keys():
 		level_stars[lvl] = int(cfg.get_value("stars", str(lvl), 0))
+	var saved: Array = cfg.get_value("bestiary", "discovered", [])
+	discovered_enemies.assign(saved)
+
+
+## FR-118: Registriert einen Gegner-Typ als entdeckt (persistiert).
+func discover_enemy(class_id: String) -> void:
+	if class_id in discovered_enemies:
+		return
+	discovered_enemies.append(class_id)
+	_save_progress()

@@ -20,6 +20,7 @@ var _flee_direction: Vector2 = Vector2.ZERO
 
 func _ready() -> void:
 	add_to_group("thieves")
+	GameManager.discover_enemy("CoinThiefEnemy")  # FR-118: Bestiarium
 	_start_pos = global_position
 	_build_visual()
 

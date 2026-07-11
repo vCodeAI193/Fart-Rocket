@@ -15,6 +15,7 @@ var _player_ref: Player = null
 
 func _ready() -> void:
 	add_to_group("obstacles")
+	GameManager.discover_enemy("ChaserEnemy")  # FR-118: Bestiarium
 	_build_visual()
 
 
@@ -26,7 +27,9 @@ func _physics_process(delta: float) -> void:
 	var to_player := _player_ref.global_position - global_position
 	if to_player.length() < detection_radius:
 		var dir := to_player.normalized()
-		position += dir * chase_speed * delta
+		# FR-117: KI-Schwierigkeitsskalierung — schneller in höheren Leveln/längeren Läufen
+		var speed := chase_speed * GameManager.get_difficulty_multiplier()
+		position += dir * speed * delta
 		rotation = lerp_angle(rotation, dir.angle(), 0.1)
 
 

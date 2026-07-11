@@ -17,6 +17,7 @@ var _beam_area: Area2D
 
 func _ready() -> void:
 	add_to_group("obstacles")
+	GameManager.discover_enemy("StaticTurret")  # FR-118: Bestiarium
 	_build_visual()
 
 

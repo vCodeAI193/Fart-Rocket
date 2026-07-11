@@ -17,6 +17,7 @@ var _defeated: bool = false
 
 func _ready() -> void:
 	add_to_group("obstacles")
+	GameManager.discover_enemy("ShieldedEnemy")  # FR-118: Bestiarium
 	rotation = facing_direction.angle()
 	_build_visual()
 
@@ -44,9 +45,11 @@ func _on_body_entered(body: Node) -> void:
 func _defeat(player: Player) -> void:
 	_defeated = true
 	GameManager.vibrate(50)
-	GameManager.add_coin(25)  # kleine Belohnung fürs Besiegen
+	# FR-120: Zufällige Drop-Belohnung (Münzen oder XP)
+	var reward := GameManager.grant_enemy_defeat_reward(25)
 	if FloatingText:
-		FloatingText.spawn(get_parent(), global_position, "Besiegt!", Color(0.4, 1.0, 0.5))
+		var label := "+%d" % reward["amount"] if reward["type"] == "coins" else "+%d XP" % reward["amount"]
+		FloatingText.spawn(get_parent(), global_position, label, Color(0.4, 1.0, 0.5))
 
 	var tween := create_tween()
 	tween.set_parallel(true)

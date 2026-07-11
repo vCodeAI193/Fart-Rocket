@@ -17,6 +17,7 @@ var _direction: float = 1.0
 
 func _ready() -> void:
 	add_to_group("obstacles")
+	GameManager.discover_enemy("PatrolEnemy")  # FR-118: Bestiarium
 	_start_pos = global_position
 	_build_visual()
 

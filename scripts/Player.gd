@@ -378,6 +378,8 @@ func _do_thrust(dir: Vector2, impulse: float, tint: Color) -> void:
 			apply_torque_impulse(side_component.x * impulse * 0.008)
 	fart_fired.emit(impulse)  # FR-265: Kamera-Wackeln signalisieren
 	_spawn_fart_burst(-dir, tint)
+	# FR-115: Nahe Gegner in der Gruppe "blowable" werden vom Furz weggeblasen
+	_blow_away_nearby_enemies(-dir, impulse)
 
 
 ## Erzeugt die FartBurst-Szene (eingefärbte Partikelwolke) hinter dem Männchen.
@@ -390,6 +392,23 @@ func _spawn_fart_burst(back_dir: Vector2, tint: Color = Color.WHITE) -> void:
 	# Partikel in die Furz-Richtung ausrichten
 	burst.rotation = back_dir.angle()
 	burst.erupt(tint)
+
+
+## FR-115: Schiebt nahe Gegner der Gruppe "blowable" vom Furz-Ausstoß weg.
+func _blow_away_nearby_enemies(blast_dir: Vector2, impulse: float) -> void:
+	const BLAST_RADIUS := 220.0
+	for enemy in get_tree().get_nodes_in_group("blowable"):
+		if not is_instance_valid(enemy) or not (enemy is Node2D):
+			continue
+		var to_enemy: Vector2 = enemy.global_position - global_position
+		var dist := to_enemy.length()
+		if dist > BLAST_RADIUS or dist < 1.0:
+			continue
+		var falloff := 1.0 - (dist / BLAST_RADIUS)
+		var push_dir := to_enemy.normalized()
+		var push_force := push_dir * impulse * falloff * 0.6
+		if enemy.has_method("apply_fart_push"):
+			enemy.apply_fart_push(push_force)
 
 
 # --- FR-002: Öffentliche Schnittstelle für die Furz-Typ-Auswahl -

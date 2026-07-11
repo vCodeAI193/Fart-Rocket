@@ -19,6 +19,7 @@ var _dodge_velocity: Vector2 = Vector2.ZERO
 
 func _ready() -> void:
 	add_to_group("obstacles")
+	GameManager.discover_enemy("DodgingEnemy")  # FR-118: Bestiarium
 	_build_visual()
 
 

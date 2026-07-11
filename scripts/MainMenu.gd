@@ -8,6 +8,7 @@ extends Control
 
 var _settings_screen: SettingsScreen
 var _onboarding: OnboardingScreen
+var _bestiary_screen: BestiaryScreen  # FR-118
 
 
 var _bg_node: Node2D  # FR-231: animierter Hintergrund
@@ -26,8 +27,12 @@ func _ready() -> void:
 	_onboarding = preload("res://scenes/OnboardingScreen.tscn").instantiate()
 	add_child(_onboarding)
 	_onboarding.show_if_needed()
+	# FR-118: Gegner-Bestiarium
+	_bestiary_screen = preload("res://scenes/BestiaryScreen.tscn").instantiate()
+	add_child(_bestiary_screen)
 	_build_level_buttons()
 	_build_settings_button()
+	_build_bestiary_button()
 
 
 ## FR-231: Prozeduraler Sternenhintergrund mit Drift-Animation.
@@ -107,6 +112,26 @@ func _build_settings_button() -> void:
 func _on_settings_pressed() -> void:
 	GameManager.vibrate(15)  # FR-247: UI-Feedback
 	_settings_screen.show_settings()
+
+
+## FR-118: Bestiarium-Button unten rechts hinzufügen.
+func _build_bestiary_button() -> void:
+	var btn := Button.new()
+	btn.text = "Bestiarium"
+	btn.custom_minimum_size = Vector2(260, 72)
+	btn.add_theme_font_size_override("font_size", 34)
+	btn.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+	btn.offset_left = -280.0
+	btn.offset_top = -92.0
+	btn.offset_right = -20.0
+	btn.offset_bottom = -20.0
+	btn.pressed.connect(_on_bestiary_pressed)
+	add_child(btn)
+
+
+func _on_bestiary_pressed() -> void:
+	GameManager.vibrate(15)
+	_bestiary_screen.show_bestiary()
 
 
 ## Startet das gewählte Level: Auswahl merken und zur Main-Szene wechseln.

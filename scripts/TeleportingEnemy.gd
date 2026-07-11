@@ -19,6 +19,7 @@ var _cshape: CollisionShape2D
 
 func _ready() -> void:
 	add_to_group("obstacles")
+	GameManager.discover_enemy("TeleportingEnemy")  # FR-118: Bestiarium
 	_timer = teleport_interval
 	_build_visual()
 

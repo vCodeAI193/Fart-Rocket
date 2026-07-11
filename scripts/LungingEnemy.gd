@@ -23,6 +23,7 @@ var _body_visual: Polygon2D
 
 func _ready() -> void:
 	add_to_group("obstacles")
+	GameManager.discover_enemy("LungingEnemy")  # FR-118: Bestiarium
 	_build_visual()
 
 

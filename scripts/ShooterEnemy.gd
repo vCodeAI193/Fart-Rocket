@@ -18,6 +18,7 @@ var _player_ref: Player = null
 
 func _ready() -> void:
 	add_to_group("obstacles")
+	GameManager.discover_enemy("ShooterEnemy")  # FR-118: Bestiarium
 	_build_visual()
 	_fire_timer = fire_interval * 0.5
 

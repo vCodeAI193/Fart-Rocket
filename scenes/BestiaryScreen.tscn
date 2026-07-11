@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://bestiaryscreen"]
+
+[ext_resource type="Script" path="res://scripts/BestiaryScreen.gd" id="1_bestiary"]
+
+[node name="BestiaryScreen" type="CanvasLayer"]
+script = ExtResource("1_bestiary")
