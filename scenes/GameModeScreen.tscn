@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://gamemodescreen"]
+
+[ext_resource type="Script" path="res://scripts/GameModeScreen.gd" id="1_mode"]
+
+[node name="GameModeScreen" type="CanvasLayer"]
+script = ExtResource("1_mode")

@@ -12,6 +12,7 @@ var _bestiary_screen: BestiaryScreen      # FR-118
 var _shop_screen: ShopScreen              # FR-224
 var _collection_screen: CollectionScreen  # FR-225/226/227/234
 var _progression_screen: ProgressionScreen  # FR-304/305/306/310/311/312/313
+var _game_mode_screen: GameModeScreen       # FR-342-360
 var _confirm_dialog: ConfirmDialog        # FR-228
 var _level_detail_popup: PanelContainer   # FR-232
 var _progress_label: Label                # FR-237
@@ -50,6 +51,8 @@ func _ready() -> void:
 	add_child(_collection_screen)
 	_progression_screen = preload("res://scenes/ProgressionScreen.tscn").instantiate()  # FR-304/305/306/310/311/312/313
 	add_child(_progression_screen)
+	_game_mode_screen = preload("res://scenes/GameModeScreen.tscn").instantiate()  # FR-342-360
+	add_child(_game_mode_screen)
 	_confirm_dialog = preload("res://scenes/ConfirmDialog.tscn").instantiate()  # FR-228
 	add_child(_confirm_dialog)
 
@@ -66,6 +69,7 @@ func _ready() -> void:
 	_build_quit_button()     # FR-228
 	_build_level_detail_popup()  # FR-232
 	_build_progression_button()  # FR-304/305/306/310/311/312/313
+	_build_game_mode_button()    # FR-342-360
 	_show_daily_login_reward()   # FR-309
 
 
@@ -412,6 +416,27 @@ func _on_progression_pressed() -> void:
 	GameManager.play_ui_click()
 	GameManager.vibrate(15)
 	_progression_screen.show_screen()
+
+
+## FR-342-360: Spielmodus-Button (Endlos, Überleben, Hardcore, Zen, ...).
+func _build_game_mode_button() -> void:
+	var btn := Button.new()
+	btn.text = "Spielmodus"
+	btn.custom_minimum_size = Vector2(260, 72)
+	btn.add_theme_font_size_override("font_size", 34)
+	btn.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	btn.offset_left = -280.0
+	btn.offset_top = 420.0
+	btn.offset_right = -20.0
+	btn.offset_bottom = 492.0
+	btn.pressed.connect(_on_game_mode_pressed)
+	add_child(btn)
+
+
+func _on_game_mode_pressed() -> void:
+	GameManager.play_ui_click()
+	GameManager.vibrate(15)
+	_game_mode_screen.show_screen()
 
 
 ## FR-309: Zeigt beim Menü-Start eine kurze Meldung, falls die tägliche

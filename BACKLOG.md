@@ -429,25 +429,25 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 ## Spielmodi
 
 - [x] **FR-341** Zeitrennen-Modus (Time Attack)
-- [ ] **FR-342** Prozeduraler Endlos-Modus
-- [ ] **FR-343** Ueberlebens-Modus
-- [ ] **FR-344** Hardcore-Modus (eine Furz-Ladung)
-- [ ] **FR-345** Zen-/Entspannungsmodus ohne Tod
-- [ ] **FR-346** Muenz-Jagd-Modus
-- [ ] **FR-347** Boss-Rush-Modus
-- [ ] **FR-348** Spiegel-Modus (Level gespiegelt)
-- [ ] **FR-349** Modus mit zufaelligen Mutatoren
-- [ ] **FR-350** Taeglicher Lauf mit gleichem Seed fuer alle
+- [x] **FR-342** Prozeduraler Endlos-Modus
+- [x] **FR-343** Ueberlebens-Modus
+- [x] **FR-344** Hardcore-Modus (eine Furz-Ladung)
+- [x] **FR-345** Zen-/Entspannungsmodus ohne Tod
+- [x] **FR-346** Muenz-Jagd-Modus
+- [x] **FR-347** Boss-Rush-Modus
+- [x] **FR-348** Spiegel-Modus (Level gespiegelt)
+- [x] **FR-349** Modus mit zufaelligen Mutatoren
+- [x] **FR-350** Taeglicher Lauf mit gleichem Seed fuer alle
 - [ ] **FR-351** Co-op-Modus (zwei Maennchen)
 - [ ] **FR-352** Versus-Modus (Split-Screen)
-- [ ] **FR-353** Geist-Rennen gegen die Bestzeit
-- [ ] **FR-354** Begrenzter Kein-Treibstoff-Modus
-- [ ] **FR-355** Praezisions-Modus (winzige Luecken)
-- [ ] **FR-356** Sammel-Marathon (alle Level am Stueck)
-- [ ] **FR-357** Dunkel-Modus mit begrenzter Sicht
-- [ ] **FR-358** Umgekehrte-Schwerkraft-Modus
-- [ ] **FR-359** Chaos-Modus (alles schneller)
-- [ ] **FR-360** Uebungsmodus mit freiem Neustart
+- [x] **FR-353** Geist-Rennen gegen die Bestzeit
+- [x] **FR-354** Begrenzter Kein-Treibstoff-Modus
+- [x] **FR-355** Praezisions-Modus (winzige Luecken)
+- [x] **FR-356** Sammel-Marathon (alle Level am Stueck)
+- [x] **FR-357** Dunkel-Modus mit begrenzter Sicht
+- [x] **FR-358** Umgekehrte-Schwerkraft-Modus
+- [x] **FR-359** Chaos-Modus (alles schneller)
+- [x] **FR-360** Uebungsmodus mit freiem Neustart
 
 ## Events & Live-Ops
 

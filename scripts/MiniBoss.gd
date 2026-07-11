@@ -86,6 +86,12 @@ func _find_player() -> void:
 		_player_ref = players[0]
 
 
+## FR-347: Verdoppelt die benötigten Treffer für den Boss-Rush-Modus.
+func double_difficulty() -> void:
+	if is_instance_valid(_weak_point):
+		_weak_point.hits_required *= 2
+
+
 func _on_weak_point_defeated() -> void:
 	_defeated = true
 	add_to_group("obstacles_neutral")  # nicht länger tödlich

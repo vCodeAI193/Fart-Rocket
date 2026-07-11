@@ -124,6 +124,8 @@ var _shield_aura: Polygon2D  # FR-297: Schild-Energie-Shader-Aura
 var _powerup_aura: Line2D    # FR-277: generische Power-up-Aura
 var _powerup_aura_count: int = 0  # zeitgleich aktive Power-up-Auren
 var took_hit_this_run: bool = false  # FR-325: für "Perfekt-Lauf"-Erfolg
+var ghost_path_recorded: PackedVector2Array = PackedVector2Array()  # FR-353
+var _ghost_record_timer: float = 0.0
 
 
 var _trail: Line2D = null              # FR-168: Flug-Spur
@@ -167,6 +169,13 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	if _is_dead:
 		return
+
+	# FR-353: Geister-Rennen — Position periodisch für die Wiedergabe aufzeichnen
+	if GameManager.active_game_mode == GameManager.GameMode.GHOST_RACE:
+		_ghost_record_timer += delta
+		if _ghost_record_timer >= 0.05:
+			_ghost_record_timer = 0.0
+			ghost_path_recorded.append(global_position)
 
 	# FR-008: Abklingzeit herunterzählen
 	if _cooldown_remaining > 0.0:
@@ -420,8 +429,14 @@ func _calculate_precision_bonus(dir: Vector2) -> float:
 		if diff > PI:
 			diff = TAU - diff
 		min_angle_diff = minf(min_angle_diff, diff)
-	var tolerance := PI * 0.15
-	var bonus := (1.0 - clampf(min_angle_diff / tolerance, 0.0, 1.0)) * 0.5
+	# FR-355: Präzisions-Modus verschärft die Toleranz und bestraft
+	# ungenaue Stöße zusätzlich mit einem Malus statt nur den Bonus zu entziehen
+	var precision_mode := GameManager.active_game_mode == GameManager.GameMode.PRECISION
+	var tolerance := PI * 0.05 if precision_mode else PI * 0.15
+	var off_angle := clampf(min_angle_diff / tolerance, 0.0, 1.0)
+	var bonus := (1.0 - off_angle) * 0.5
+	if precision_mode:
+		return 1.0 + bonus - off_angle * 0.3
 	return 1.0 + bonus
 
 
@@ -565,6 +580,11 @@ func _on_body_entered(body: Node) -> void:
 	if _is_dead:
 		return
 	if body.is_in_group("obstacles"):
+		# FR-345: Im Zen-Modus ist der Spieler unverwundbar — abprallen statt sterben
+		if GameManager.active_game_mode == GameManager.GameMode.ZEN:
+			apply_central_impulse(-linear_velocity.normalized() * 200.0)
+			GameManager.vibrate(20)
+			return
 		# FR-010: Schild absorbiert den ersten Treffer
 		if _shield_remaining > 0.0:
 			_shield_remaining = 0.0
