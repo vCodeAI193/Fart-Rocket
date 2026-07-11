@@ -15,6 +15,9 @@ var _scheme_btn: Button
 var _handed_btn: Button
 var _sensitivity_btn: Button
 var _deadzone_btn: Button
+# FR-189/200: Kamera-Einstellungen
+var _shake_btn: Button
+var _smoothing_btn: Button
 
 
 func _ready() -> void:
@@ -111,6 +114,25 @@ func _build_ui() -> void:
 	_deadzone_btn.pressed.connect(_on_deadzone_pressed)
 	vbox.add_child(_deadzone_btn)
 
+	# --- FR-189/200: Kamera-Einstellungen --------------------------
+	var camera_title := Label.new()
+	camera_title.text = "Kamera"
+	camera_title.add_theme_font_size_override("font_size", 30)
+	camera_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vbox.add_child(camera_title)
+
+	_shake_btn = Button.new()
+	_shake_btn.custom_minimum_size = Vector2(400, 76)
+	_shake_btn.add_theme_font_size_override("font_size", 30)
+	_shake_btn.pressed.connect(_on_shake_pressed)
+	vbox.add_child(_shake_btn)
+
+	_smoothing_btn = Button.new()
+	_smoothing_btn.custom_minimum_size = Vector2(400, 76)
+	_smoothing_btn.add_theme_font_size_override("font_size", 30)
+	_smoothing_btn.pressed.connect(_on_smoothing_pressed)
+	vbox.add_child(_smoothing_btn)
+
 	# Schliessen-Button
 	var close_btn := Button.new()
 	close_btn.text = "Schliessen"
@@ -133,6 +155,8 @@ func _update_buttons() -> void:
 	_handed_btn.text = "Linkshänder: EIN" if GameManager.left_handed_mode else "Linkshänder: AUS"
 	_sensitivity_btn.text = "Empfindlichkeit: %.1fx" % GameManager.touch_sensitivity
 	_deadzone_btn.text = "Dead-Zone: %d px" % int(GameManager.touch_dead_zone)
+	_shake_btn.text = "Kamera-Ruckeln: %d%%" % int(GameManager.camera_shake_intensity * 100)
+	_smoothing_btn.text = "Kamera-Glättung: %.0f" % GameManager.camera_smoothing
 
 
 func _on_haptics_pressed() -> void:
@@ -176,6 +200,26 @@ func _on_deadzone_pressed() -> void:
 	if next > 60.0:
 		next = 0.0
 	GameManager.set_touch_dead_zone(next)
+	GameManager.vibrate(15)
+	_update_buttons()
+
+
+## FR-189: Kamera-Rüttel-Intensität in Schritten von 50% durchschalten (0..200%).
+func _on_shake_pressed() -> void:
+	var next := GameManager.camera_shake_intensity + 0.5
+	if next > 2.0:
+		next = 0.0
+	GameManager.set_camera_shake_intensity(next)
+	GameManager.vibrate(15)
+	_update_buttons()
+
+
+## FR-200: Kamera-Glättung in Schritten von 2 durchschalten (2..16).
+func _on_smoothing_pressed() -> void:
+	var next := GameManager.camera_smoothing + 2.0
+	if next > 16.0:
+		next = 2.0
+	GameManager.set_camera_smoothing(next)
 	GameManager.vibrate(15)
 	_update_buttons()
 

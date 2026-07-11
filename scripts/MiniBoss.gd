@@ -31,6 +31,7 @@ var _defeated: bool = false
 
 func _ready() -> void:
 	add_to_group("obstacles")
+	add_to_group("bosses")
 	GameManager.discover_enemy("MiniBoss")  # FR-118
 	_build_visual()
 

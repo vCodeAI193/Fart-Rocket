@@ -81,7 +81,7 @@ signal died                                  # Männchen hat ein Hindernis getro
 signal aim_changed(direction, strength)      # Zielrichtung/-stärke geändert
 signal aim_released                          # Zielen beendet (Pfeil ausblenden)
 signal fart_type_changed(index)              # aktiver Furz-Typ gewechselt (FR-002)
-signal fart_fired(impulse)                   # FR-265: Furz ausgelöst (für Kamera-Wackeln)
+signal fart_fired(impulse, direction)         # FR-265/192: Furz ausgelöst (für Kamera-Wackeln/-Stoß)
 signal shield_changed(active)               # FR-010: Schild aktiviert/deaktiviert
 
 # --- FR-002: Verfügbare Furz-Typen ------------------------------
@@ -447,7 +447,7 @@ func _do_thrust(dir: Vector2, impulse: float, tint: Color) -> void:
 		var side_component := dir - dir.project(current_vel.normalized())
 		if side_component.length() > 0.1:
 			apply_torque_impulse(side_component.x * impulse * 0.008)
-	fart_fired.emit(impulse)  # FR-265: Kamera-Wackeln signalisieren
+	fart_fired.emit(impulse, dir)  # FR-265/192: Kamera-Wackeln/-Stoß signalisieren
 	_spawn_fart_burst(-dir, tint)
 	# FR-115: Nahe Gegner in der Gruppe "blowable" werden vom Furz weggeblasen
 	_blow_away_nearby_enemies(-dir, impulse)

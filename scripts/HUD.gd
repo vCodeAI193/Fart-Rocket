@@ -45,6 +45,8 @@ var _checkpoint_label: Label
 var _coin_progress_label: Label
 # FR-100: Power-up-Inventar-Button
 var _inventory_btn: Button
+# FR-195: Foto-Modus-Button
+var _photo_mode_btn: Button
 # FR-051: Wisch-Geste zum Pausieren (Zwei-Finger-Swipe nach unten)
 var _swipe_start: Dictionary = {}   # {finger_index: {"pos": Vector2, "time": float}}
 var _swipe_last: Dictionary = {}    # {finger_index: Vector2}
@@ -67,6 +69,7 @@ func _ready() -> void:
 	_build_checkpoint_label()
 	_build_coin_progress_label()
 	_build_inventory_button()
+	_build_photo_mode_button()
 	_apply_safe_area()  # FR-054
 	_apply_left_handed_layout()  # FR-043
 	# FR-206: Auf Schild- und Doppelmünzen-Signale lauschen
@@ -446,6 +449,39 @@ func _on_pause_pressed() -> void:
 	_is_paused = not _is_paused
 	get_tree().paused = _is_paused
 	_pause_btn.text = "▶" if _is_paused else "⏸"
+	# FR-195: Foto-Modus-Button nur im Pause-Zustand anzeigen
+	if _photo_mode_btn != null:
+		_photo_mode_btn.visible = _is_paused
+		if not _is_paused:
+			# Variant statt statischem Typ, da Node/Main hier nur per Duck-Typing
+			# (has_method) angesprochen wird und nicht jede Szene ein Main ist.
+			var main = get_parent()
+			if main != null and main.has_method("is_photo_mode") and main.is_photo_mode():
+				main.toggle_photo_mode()  # Foto-Modus beim Fortsetzen automatisch beenden
+
+
+## FR-195: Button zum Umschalten des Foto-/Replay-Kameramodus (nur bei Pause sichtbar).
+func _build_photo_mode_button() -> void:
+	_photo_mode_btn = Button.new()
+	_photo_mode_btn.text = "📷 Foto-Modus"
+	_photo_mode_btn.process_mode = Node.PROCESS_MODE_ALWAYS
+	_photo_mode_btn.custom_minimum_size = Vector2(240, 70)
+	_photo_mode_btn.add_theme_font_size_override("font_size", 26)
+	_photo_mode_btn.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	_photo_mode_btn.offset_left = -300.0
+	_photo_mode_btn.offset_top = 210.0
+	_photo_mode_btn.offset_right = -40.0
+	_photo_mode_btn.offset_bottom = 280.0
+	_photo_mode_btn.visible = false
+	_photo_mode_btn.pressed.connect(_on_photo_mode_pressed)
+	add_child(_photo_mode_btn)
+
+
+func _on_photo_mode_pressed() -> void:
+	var main = get_parent()
+	if main != null and main.has_method("toggle_photo_mode"):
+		main.toggle_photo_mode()
+		GameManager.vibrate(15)
 
 
 ## FR-003/280: Zeigt Combo-Multiplikator kurz in der Bildschirmmitte an + Feuerwerk bei hohen Combos.

@@ -244,26 +244,26 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 
 ## Kamera & Sicht
 
-- [ ] **FR-181** Dynamischer Zoom je nach Geschwindigkeit
+- [x] **FR-181** Dynamischer Zoom je nach Geschwindigkeit
 - [x] **FR-182** Kamera-Vorausschau in Bewegungsrichtung
 - [x] **FR-183** Screen-Shake bei Treffern und Explosionen
 - [x] **FR-184** Sanftes Kamera-Folgen mit Totzone
 - [x] **FR-185** Kamera-Grenzen (Bounds) pro Level
-- [ ] **FR-186** Zielfokus-Kamera beim Zielen
-- [ ] **FR-187** Kino-Modus fuer das Levelende
+- [x] **FR-186** Zielfokus-Kamera beim Zielen
+- [x] **FR-187** Kino-Modus fuer das Levelende
 - [x] **FR-188** Parallax-Hintergrundebenen
-- [ ] **FR-189** Einstellbare Ruettel-Intensitaet
-- [ ] **FR-190** Mini-Karte/Uebersichtskarte
-- [ ] **FR-191** Heranzoomen bei Zeitlupe
-- [ ] **FR-192** Kamera-Stoss beim Furz-Start
-- [ ] **FR-193** Rand-Indikatoren fuer Off-Screen-Objekte
-- [ ] **FR-194** Verfolgungs-Kamera fuer Boss-Kaempfe
-- [ ] **FR-195** Foto-/Replay-Kameramodus
-- [ ] **FR-196** Kamera-Uebergaenge zwischen Sektionen
-- [ ] **FR-197** Letterbox bei Zwischensequenzen
-- [ ] **FR-198** Erschuetterung bei Beinahe-Treffern
-- [ ] **FR-199** Fokus-Highlight auf wichtige Objekte
-- [ ] **FR-200** Kamera-Glaettung in den Einstellungen
+- [x] **FR-189** Einstellbare Ruettel-Intensitaet
+- [x] **FR-190** Mini-Karte/Uebersichtskarte
+- [x] **FR-191** Heranzoomen bei Zeitlupe
+- [x] **FR-192** Kamera-Stoss beim Furz-Start
+- [x] **FR-193** Rand-Indikatoren fuer Off-Screen-Objekte
+- [x] **FR-194** Verfolgungs-Kamera fuer Boss-Kaempfe
+- [x] **FR-195** Foto-/Replay-Kameramodus
+- [x] **FR-196** Kamera-Uebergaenge zwischen Sektionen
+- [x] **FR-197** Letterbox bei Zwischensequenzen
+- [x] **FR-198** Erschuetterung bei Beinahe-Treffern
+- [x] **FR-199** Fokus-Highlight auf wichtige Objekte
+- [x] **FR-200** Kamera-Glaettung in den Einstellungen
 
 ## HUD & In-Game-UI
 

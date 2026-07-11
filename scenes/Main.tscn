@@ -4,6 +4,7 @@
 [ext_resource type="Script" path="res://scripts/Starfield.gd" id="2_stars"]
 [ext_resource type="PackedScene" path="res://scenes/HUD.tscn" id="3_hud"]
 [ext_resource type="PackedScene" path="res://scenes/LevelComplete.tscn" id="4_lc"]
+[ext_resource type="Script" path="res://scripts/CameraZoom.gd" id="5_camzoom"]
 
 [sub_resource type="Gradient" id="Gradient_bg"]
 offsets = PackedFloat32Array(0, 1)
@@ -37,6 +38,7 @@ script = ExtResource("2_stars")
 [node name="LevelContainer" type="Node2D" parent="."]
 
 [node name="Camera2D" type="Camera2D" parent="."]
+script = ExtResource("5_camzoom")
 position_smoothing_enabled = true
 position_smoothing_speed = 6.0
 

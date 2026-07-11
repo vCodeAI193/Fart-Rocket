@@ -35,6 +35,7 @@ var _hits_taken: int = 0
 
 func _ready() -> void:
 	add_to_group("obstacles")
+	add_to_group("bosses")
 	GameManager.discover_enemy("EndBoss")  # FR-118
 	_build_visual()
 

@@ -84,6 +84,10 @@ var touch_dead_zone: float = 20.0        # FR-044, Pixel
 # --- FR-060: Geste zum Zurücksetzen der Kamera --------------------
 signal camera_reset_requested
 
+# --- FR-189/200: Kamera-Einstellungen -----------------------------
+var camera_shake_intensity: float = 1.0   # FR-189 (0.0..2.0)
+var camera_smoothing: float = 8.0         # FR-200 (2.0..16.0, höher = straffer)
+
 # --- FR-099: Sammel-Fortschritt pro Level (x/y Münzen) ------------
 var level_coin_total: int = 0
 var level_coin_collected: int = 0
@@ -225,6 +229,18 @@ func set_touch_sensitivity(value: float) -> void:
 func set_touch_dead_zone(value: float) -> void:
 	touch_dead_zone = clampf(value, 0.0, 60.0)
 	control_settings_changed.emit()
+	_save_progress()
+
+
+## FR-189: Setzt die globale Kamera-Rüttel-Intensität (0.0 = aus, 2.0 = stark).
+func set_camera_shake_intensity(value: float) -> void:
+	camera_shake_intensity = clampf(value, 0.0, 2.0)
+	_save_progress()
+
+
+## FR-200: Setzt die Kamera-Glättung (Lerp-Geschwindigkeit beim Folgen).
+func set_camera_smoothing(value: float) -> void:
+	camera_smoothing = clampf(value, 2.0, 16.0)
 	_save_progress()
 
 
@@ -468,6 +484,8 @@ func _save_progress() -> void:
 	cfg.set_value("input", "left_handed", left_handed_mode)
 	cfg.set_value("input", "touch_sensitivity", touch_sensitivity)
 	cfg.set_value("input", "touch_dead_zone", touch_dead_zone)
+	cfg.set_value("camera", "shake_intensity", camera_shake_intensity)  # FR-189
+	cfg.set_value("camera", "smoothing", camera_smoothing)  # FR-200
 	cfg.save(SAVE_PATH)
 
 
@@ -487,6 +505,8 @@ func _load_progress() -> void:
 	left_handed_mode = cfg.get_value("input", "left_handed", false)
 	touch_sensitivity = cfg.get_value("input", "touch_sensitivity", 1.0)
 	touch_dead_zone = cfg.get_value("input", "touch_dead_zone", 20.0)
+	camera_shake_intensity = cfg.get_value("camera", "shake_intensity", 1.0)  # FR-189
+	camera_smoothing = cfg.get_value("camera", "smoothing", 8.0)  # FR-200
 
 
 ## FR-118: Registriert einen Gegner-Typ als entdeckt (persistiert).

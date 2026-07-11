@@ -2,11 +2,23 @@ extends Camera2D
 class_name CameraZoom
 ## CameraZoom – Zwei-Finger-Zoom für Kamera (FR-041)
 ## =================================================
-## Erkenne Zwei-Finger-Geste zum Zoomen der Kamera.
+## Erkenne Zwei-Finger-Geste zum Zoomen der Kamera. Der Nutzer-Zoom
+## (Pinch-Geste) wird als Multiplikator `user_zoom_scale` gehalten,
+## damit Main.gd ihn mit dynamischem Geschwindigkeits-/Zeitlupen-Zoom
+## (FR-181/191) kombinieren kann, ohne sich gegenseitig zu überschreiben.
 
 @export var min_zoom: float = 0.5
 @export var max_zoom: float = 2.0
 @export var zoom_speed: float = 2.0
+
+var user_zoom_scale: float = 1.0  # FR-041: vom Spieler per Pinch gesetzt
+
+# --- FR-195: Foto-/Replay-Kameramodus -----------------------------
+# Läuft auf PROCESS_MODE_ALWAYS, damit das Ein-Finger-Verschieben
+# auch funktioniert, während das Spiel (und der Player) pausiert ist.
+var photo_mode: bool = false
+var _photo_pan_touch_index: int = -1
+var _photo_pan_last_pos: Vector2 = Vector2.ZERO
 
 var _finger_positions: Dictionary = {}
 var _last_distance: float = 0.0
@@ -18,10 +30,15 @@ var _two_finger_moved: bool = false
 
 
 func _ready() -> void:
-	pass
+	process_mode = Node.PROCESS_MODE_ALWAYS
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	# FR-195: Im Foto-Modus steuert ein einzelner Finger das Verschieben
+	if photo_mode:
+		_handle_photo_pan(event)
+		return
+
 	if event is InputEventScreenTouch:
 		if event.pressed:
 			_finger_positions[event.index] = event.position
@@ -47,6 +64,20 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_tree().root.set_input_as_handled()
 
 
+## FR-195: Verschiebt die Kamera per Ein-Finger-Zug im Foto-Modus.
+func _handle_photo_pan(event: InputEvent) -> void:
+	if event is InputEventScreenTouch:
+		if event.pressed and _photo_pan_touch_index == -1:
+			_photo_pan_touch_index = event.index
+			_photo_pan_last_pos = event.position
+		elif not event.pressed and event.index == _photo_pan_touch_index:
+			_photo_pan_touch_index = -1
+	elif event is InputEventScreenDrag and event.index == _photo_pan_touch_index:
+		var delta_pos := event.position - _photo_pan_last_pos
+		global_position -= delta_pos / zoom
+		_photo_pan_last_pos = event.position
+
+
 ## FR-060: Setzt Zoom zurück, wenn beide Finger innerhalb 0.25s ohne
 ## nennenswerte Bewegung wieder losgelassen wurden (Zwei-Finger-Tipp).
 func _try_reset_camera_gesture() -> void:
@@ -55,7 +86,7 @@ func _try_reset_camera_gesture() -> void:
 	var elapsed := Time.get_ticks_msec() / 1000.0 - _two_finger_start_time
 	if elapsed < 0.25:
 		var tween := create_tween()
-		tween.tween_property(self, "zoom", Vector2.ONE, 0.25)
+		tween.tween_property(self, "user_zoom_scale", 1.0, 0.25)
 		GameManager.camera_reset_requested.emit()
 	_two_finger_start_time = -1.0
 
@@ -73,9 +104,8 @@ func _update_zoom() -> void:
 		_last_distance = current_distance
 		return
 
-	# Zoom basierend auf Finger-Abstand-Änderung
+	# Zoom-Multiplikator basierend auf Finger-Abstand-Änderung
 	var distance_ratio := current_distance / _last_distance
-	var zoom_factor := zoom.x * distance_ratio
-	zoom = Vector2.ONE * clampf(zoom_factor, min_zoom, max_zoom)
+	user_zoom_scale = clampf(user_zoom_scale * distance_ratio, min_zoom, max_zoom)
 
 	_last_distance = current_distance

@@ -1,0 +1,8 @@
+[gd_scene load_steps=2 format=3 uid="uid://camtransition"]
+
+[ext_resource type="Script" path="res://scripts/CameraTransitionZone.gd" id="1_camtrans"]
+
+[node name="CameraTransitionZone" type="Area2D"]
+script = ExtResource("1_camtrans")
+collision_layer = 8
+collision_mask = 1
