@@ -384,24 +384,24 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 
 - [x] **FR-301** Globaler XP-/Spieler-Levelaufstieg
 - [x] **FR-302** Sterne-Gesamtzahl als Freischalt-Waehrung
-- [ ] **FR-303** Welt-Freischaltung ueber Sterne-Schwellen
-- [ ] **FR-304** Skill-Baum fuer Maennchen-Faehigkeiten
-- [ ] **FR-305** Permanente Upgrades (z.B. Furz-Staerke kaufen)
-- [ ] **FR-306** Prestige-/New-Game+-Modus
-- [ ] **FR-307** Sammel-Album-Fortschritt
-- [ ] **FR-308** Meilenstein-Belohnungen
-- [ ] **FR-309** Taegliche Login-Belohnungen
-- [ ] **FR-310** Woechentliche Ziele
-- [ ] **FR-311** Battle-Pass-/Saison-Fortschritt
-- [ ] **FR-312** Freischalt-Roadmap-Anzeige
-- [ ] **FR-313** Muenz-Sparziele (Sparschwein)
+- [x] **FR-303** Welt-Freischaltung ueber Sterne-Schwellen
+- [x] **FR-304** Skill-Baum fuer Maennchen-Faehigkeiten
+- [x] **FR-305** Permanente Upgrades (z.B. Furz-Staerke kaufen)
+- [x] **FR-306** Prestige-/New-Game+-Modus
+- [x] **FR-307** Sammel-Album-Fortschritt
+- [x] **FR-308** Meilenstein-Belohnungen
+- [x] **FR-309** Taegliche Login-Belohnungen
+- [x] **FR-310** Woechentliche Ziele
+- [x] **FR-311** Battle-Pass-/Saison-Fortschritt
+- [x] **FR-312** Freischalt-Roadmap-Anzeige
+- [x] **FR-313** Muenz-Sparziele (Sparschwein)
 - [ ] **FR-314** Geraeteuebergreifende Fortschritts-Synchronisierung
-- [ ] **FR-315** Komplettierungs-Belohnung bei 100 Prozent
-- [ ] **FR-316** Hard-Mode-Sterne (Schwierigkeits-Sterne)
-- [ ] **FR-317** Sammlung der Bestzeiten
-- [ ] **FR-318** Statistik-getriebene Abzeichen
-- [ ] **FR-319** Stufenweise Freischaltung neuer Hindernisse
-- [ ] **FR-320** Belohnungs-Vorschau fuer das naechste Ziel
+- [x] **FR-315** Komplettierungs-Belohnung bei 100 Prozent
+- [x] **FR-316** Hard-Mode-Sterne (Schwierigkeits-Sterne)
+- [x] **FR-317** Sammlung der Bestzeiten
+- [x] **FR-318** Statistik-getriebene Abzeichen
+- [x] **FR-319** Stufenweise Freischaltung neuer Hindernisse
+- [x] **FR-320** Belohnungs-Vorschau fuer das naechste Ziel
 
 ## Erfolge & Herausforderungen
 

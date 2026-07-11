@@ -18,6 +18,11 @@ signal xp_changed(total_xp, player_level)  # FR-301: XP/Level geändert
 signal double_coins_changed(active)        # FR-086: Doppel-Münzen-Status
 signal fart_letters_changed(collected)     # FR-092: F-A-R-T Buchstaben gesammelt
 signal coin_progress_changed(collected, total)  # FR-099: Sammel-Fortschritt x/y
+signal skill_unlocked(skill_id)             # FR-304/305: Skill/Upgrade freigeschaltet
+signal prestige_changed(new_level)          # FR-306: Prestige-Stufe geändert
+signal milestone_reached(milestone_id)      # FR-308: Meilenstein erreicht
+signal weekly_goal_progress(goal_id, progress, target)  # FR-310: Wochenziel-Fortschritt
+signal piggy_bank_changed(amount)           # FR-313: Sparschwein-Stand geändert
 
 # --- Konstanten -------------------------------------------------
 const TOTAL_LEVELS := 3
@@ -154,6 +159,85 @@ var favorite_levels: Array[int] = []
 
 # --- FR-238: Schnellstart letztes Level ------------------------------
 var last_played_level: int = 0
+
+# --- FR-303: Welt-Freischaltung über Sterne-Schwellen -----------------
+# (Infrastruktur für zukünftige Welten — aktuell existiert nur Welt 1,
+# die immer freigeschaltet ist; künftige Level-Design-Batches fügen
+# weitere Welten mit echten Schwellenwerten hinzu.)
+const WORLD_STAR_THRESHOLDS := {1: 0}
+
+# --- FR-304/305: Skill-Baum / permanente Upgrades ----------------------
+const SKILL_CATALOG := {
+	"fart_power_1": {"name": "Stärkerer Furz I", "cost": 60, "requires": [], "effect": "fart_power"},
+	"fart_power_2": {"name": "Stärkerer Furz II", "cost": 160, "requires": ["fart_power_1"], "effect": "fart_power"},
+	"fart_power_3": {"name": "Stärkerer Furz III", "cost": 320, "requires": ["fart_power_2"], "effect": "fart_power"},
+	"regen_speed_1": {"name": "Schnellere Regeneration I", "cost": 80, "requires": [], "effect": "regen_speed"},
+	"regen_speed_2": {"name": "Schnellere Regeneration II", "cost": 200, "requires": ["regen_speed_1"], "effect": "regen_speed"},
+	"shield_duration_1": {"name": "Längerer Schild I", "cost": 100, "requires": [], "effect": "shield_duration"},
+	"shield_duration_2": {"name": "Längerer Schild II", "cost": 220, "requires": ["shield_duration_1"], "effect": "shield_duration"},
+	"extra_charge_1": {"name": "Extra-Ladung I", "cost": 250, "requires": ["fart_power_1"], "effect": "extra_charge"},
+	"extra_charge_2": {"name": "Extra-Ladung II", "cost": 500, "requires": ["extra_charge_1"], "effect": "extra_charge"},
+}
+var unlocked_skills: Array[String] = []
+
+# --- FR-306: Prestige-/New-Game+-Modus ---------------------------------
+var prestige_level: int = 0
+const PRESTIGE_STAR_REQUIREMENT := 8  # von max. 9 (3 Level x 3 Sterne)
+
+# --- FR-308: Meilenstein-Belohnungen ------------------------------------
+const MILESTONES := [
+	{"id": "coins_500", "stat": "lifetime_coins", "threshold": 500, "reward": 100},
+	{"id": "coins_2000", "stat": "lifetime_coins", "threshold": 2000, "reward": 300},
+	{"id": "farts_100", "stat": "stat_total_farts", "threshold": 100, "reward": 50},
+	{"id": "farts_1000", "stat": "stat_total_farts", "threshold": 1000, "reward": 200},
+	{"id": "deaths_50", "stat": "stat_total_deaths", "threshold": 50, "reward": 50},
+]
+var claimed_milestones: Array[String] = []
+var lifetime_coins: int = 0  # kumulierte, jemals eingesammelte Münzen (FR-308-Basis)
+
+# --- FR-309: Tägliche Login-Belohnungen ---------------------------------
+const LOGIN_REWARD_COINS := [20, 30, 40, 60, 80, 100, 150]  # Tag 1..7, danach Wiederholung
+var login_streak_day: int = 0
+var _last_login_date: String = ""
+
+# --- FR-310: Wöchentliche Ziele -----------------------------------------
+const WEEKLY_GOALS := [
+	{"id": "weekly_coins", "name": "500 Münzen sammeln", "target": 500, "reward": 150},
+	{"id": "weekly_stars", "name": "10 Sterne erspielen", "target": 10, "reward": 150},
+	{"id": "weekly_farts", "name": "200 Mal furzen", "target": 200, "reward": 100},
+]
+var weekly_progress := {}   # goal_id -> int
+var weekly_claimed := {}    # goal_id -> bool
+var _weekly_week_id: String = ""
+
+# --- FR-311: Battle-Pass-/Saison-Fortschritt -----------------------------
+const SEASON_XP_PER_TIER := 150
+const SEASON_TIER_REWARDS := [50, 60, 70, 80, 100, 120, 150, 200]  # Münzen je Stufe
+var season_xp: int = 0
+var season_claimed_tiers: Array[int] = []
+
+# --- FR-313: Münz-Sparziele (Sparschwein) --------------------------------
+const PIGGY_BANK_CAP := 300
+const PIGGY_BANK_SAVE_RATE := 0.1  # 10% jeder verdienten Münze wandert ins Sparschwein
+var piggy_bank_amount: int = 0
+
+# --- FR-316: Hard-Mode-Sterne ---------------------------------------------
+var hard_mode_enabled: bool = false
+var hard_mode_stars := {}  # level_index -> stars, getrennt von level_stars
+
+# --- FR-318: Statistik-getriebene Abzeichen -------------------------------
+const STAT_BADGES := [
+	{"id": "badge_farter", "name": "Vielfurzer", "stat": "stat_total_farts", "threshold": 500},
+	{"id": "badge_survivor", "name": "Überlebenskünstler", "stat": "stat_total_deaths", "threshold": 100},
+	{"id": "badge_collector", "name": "Sammler", "stat": "lifetime_coins", "threshold": 1000},
+]
+var earned_badges: Array[String] = []
+
+# --- FR-319: Stufenweise Freischaltung neuer Hindernisse -------------------
+const OBSTACLE_UNLOCK_LEVELS := {
+	"electric_fence": 1, "flame_jet": 1, "rotating_wheel": 1,
+	"black_hole": 2, "lava_pool": 2, "proximity_mine": 3,
+}
 
 # --- FR-224: Shop / freischaltbare Skin-Farben -----------------------
 var unlocked_skin_colors: Array[String] = ["default"]
@@ -400,8 +484,11 @@ func start_level(level_index: int, max_charges: int) -> void:
 	current_level = level_index
 	total_coins = 0
 	total_score = 0
-	self.max_charges = max_charges
-	charges_remaining = max_charges
+	# FR-305: "Extra-Ladung"-Upgrades erhöhen die verfügbaren Furz-Ladungen
+	# (die Sternebewertung bleibt am ursprünglichen Level-Design gemessen,
+	# siehe calculate_stars-Aufruf in Main.gd mit dem unveränderten Wert)
+	self.max_charges = max_charges + get_skill_effect_level("extra_charge")
+	charges_remaining = self.max_charges
 	combo_count = 0
 	_combo_elapsed = 0.0
 	fart_letters_collected.clear()  # FR-092: Buchstaben pro Level zurücksetzen
@@ -486,11 +573,16 @@ func set_camera_smoothing(value: float) -> void:
 ## FR-226: Erhöht den Furz-Zähler (von Player bei jedem Stoß aufgerufen).
 func record_fart() -> void:
 	stat_total_farts += 1
+	add_weekly_progress("weekly_farts", 1)  # FR-310
+	_check_milestones()  # FR-308
+	_check_badges()      # FR-318
 
 
 ## FR-226: Erhöht den Tod-Zähler (von Main bei jedem Tod aufgerufen).
 func record_death() -> void:
 	stat_total_deaths += 1
+	_check_milestones()  # FR-308
+	_check_badges()      # FR-318
 	_save_progress()
 
 
@@ -669,6 +761,9 @@ func add_coin(value: int) -> void:
 	var multiplier := clampi(combo_count, 1, COMBO_MAX_MULTIPLIER)
 
 	total_coins += 1
+	lifetime_coins += 1               # FR-308: Basis für Meilensteine/Abzeichen
+	add_weekly_progress("weekly_coins", 1)  # FR-310
+	add_to_piggy_bank(1)              # FR-313
 	# FR-086: Doppel-Münzen verdoppeln den Punktewert
 	var effective_value := value * (2 if double_coins_active else 1)
 	total_score += effective_value * multiplier
@@ -944,7 +1039,265 @@ func record_stars(level_index: int, stars: int) -> void:
 		level_stars[level_index] = stars
 		# FR-301: XP für Sterne vergeben
 		add_xp(stars * XP_PER_STAR)
+		add_season_xp(stars * XP_PER_STAR)  # FR-311
 		_save_progress()
+	# FR-310: Wochenziel "Sterne erspielen" zählt jeden erspielten Stern
+	# (auch bei bereits erreichten Bestwertungen, damit Wiederholungen zählen)
+	add_weekly_progress("weekly_stars", stars)
+	if hard_mode_enabled:
+		record_hard_mode_stars(level_index, stars)  # FR-316
+	_check_milestones()   # FR-308
+	_check_badges()       # FR-318
+
+
+## FR-304/305: Prüft, ob ein Skill freigeschaltet werden kann (Kosten
+## bezahlbar, alle Voraussetzungen erfüllt, noch nicht freigeschaltet).
+func can_unlock_skill(id: String) -> bool:
+	if id in unlocked_skills or not SKILL_CATALOG.has(id):
+		return false
+	var data: Dictionary = SKILL_CATALOG[id]
+	if persistent_coins < int(data["cost"]):
+		return false
+	for req in data["requires"]:
+		if not (req in unlocked_skills):
+			return false
+	return true
+
+
+## FR-304/305: Schaltet einen Skill/permanentes Upgrade frei.
+func unlock_skill(id: String) -> bool:
+	if not can_unlock_skill(id):
+		return false
+	persistent_coins -= int(SKILL_CATALOG[id]["cost"])
+	persistent_coins_changed.emit(persistent_coins)
+	unlocked_skills.append(id)
+	skill_unlocked.emit(id)
+	_save_progress()
+	return true
+
+
+## FR-305: Anzahl freigeschalteter Skills eines Effekt-Typs (bestimmt die
+## Stärke des jeweiligen Bonus in Player.gd, z.B. "fart_power").
+func get_skill_effect_level(effect: String) -> int:
+	var count := 0
+	for id in unlocked_skills:
+		if SKILL_CATALOG[id]["effect"] == effect:
+			count += 1
+	return count
+
+
+## FR-303: Ob eine Welt anhand der insgesamt erspielten Sterne freigeschaltet ist.
+func is_world_unlocked(world_index: int) -> bool:
+	return get_total_stars_earned() >= int(WORLD_STAR_THRESHOLDS.get(world_index, 0))
+
+
+## Summe aller je erspielten Sterne über alle Level (Normalwertung).
+func get_total_stars_earned() -> int:
+	var earned := 0
+	for lvl in level_stars.keys():
+		earned += level_stars[lvl]
+	return earned
+
+
+## FR-306: Ob genug Sterne für einen Prestige-Durchlauf vorhanden sind.
+func can_prestige() -> bool:
+	return get_total_stars_earned() >= PRESTIGE_STAR_REQUIREMENT
+
+
+## FR-306: Setzt den Level-/Stern-Fortschritt zurück und erhöht die
+## Prestige-Stufe (dauerhafter Münz-Bonus). Kosmetik, Skills und
+## persistente Münzen bleiben dabei erhalten.
+func do_prestige() -> bool:
+	if not can_prestige():
+		return false
+	prestige_level += 1
+	for lvl in level_stars.keys():
+		level_stars[lvl] = 0
+	current_level = 1
+	prestige_changed.emit(prestige_level)
+	_save_progress()
+	return true
+
+
+## FR-306: Dauerhafter Münz-Bonus-Multiplikator aus Prestige-Stufen.
+func get_prestige_coin_multiplier() -> float:
+	return 1.0 + prestige_level * 0.1
+
+
+## FR-308: Prüft alle Meilensteine gegen die aktuellen Statistik-Werte und
+## zahlt neu erreichte automatisch als Münz-Bonus aus.
+func _check_milestones() -> void:
+	for m in MILESTONES:
+		if m["id"] in claimed_milestones:
+			continue
+		var value: int = get(String(m["stat"]))
+		if value >= int(m["threshold"]):
+			claimed_milestones.append(m["id"])
+			persistent_coins += int(m["reward"])
+			persistent_coins_changed.emit(persistent_coins)
+			milestone_reached.emit(m["id"])
+			_save_progress()
+
+
+## FR-318: Prüft alle statistik-getriebenen Abzeichen und schaltet neu
+## erreichte frei (keine Geld-Belohnung, reine Sammel-/Prestige-Anzeige).
+func _check_badges() -> void:
+	for b in STAT_BADGES:
+		if b["id"] in earned_badges:
+			continue
+		var value: int = get(String(b["stat"]))
+		if value >= int(b["threshold"]):
+			earned_badges.append(b["id"])
+			_save_progress()
+
+
+## FR-309: Prüft/vergibt die tägliche Login-Belohnung (einmal pro
+## Kalendertag, mit fortlaufender Streak bei täglichem Login). Gibt die
+## Anzahl gutgeschriebener Münzen zurück (0 falls heute schon abgeholt).
+func claim_daily_login_reward() -> int:
+	var today := Time.get_date_string_from_system()
+	if today == _last_login_date:
+		return 0
+	var yesterday := Time.get_date_string_from_unix_time(int(Time.get_unix_time_from_system()) - 86400)
+	login_streak_day = (login_streak_day + 1) if _last_login_date == yesterday else 1
+	_last_login_date = today
+	var reward: int = LOGIN_REWARD_COINS[(login_streak_day - 1) % LOGIN_REWARD_COINS.size()]
+	persistent_coins += reward
+	persistent_coins_changed.emit(persistent_coins)
+	_save_progress()
+	return reward
+
+
+## FR-309: Ob die heutige Login-Belohnung noch nicht abgeholt wurde.
+func has_unclaimed_daily_login() -> bool:
+	return Time.get_date_string_from_system() != _last_login_date
+
+
+func _get_week_id() -> String:
+	return str(int(Time.get_unix_time_from_system() / 86400) / 7)
+
+
+## FR-310: Setzt den Wochenziel-Fortschritt bei Wochenwechsel automatisch zurück.
+func _ensure_current_week() -> void:
+	var week_id := _get_week_id()
+	if week_id != _weekly_week_id:
+		_weekly_week_id = week_id
+		weekly_progress.clear()
+		weekly_claimed.clear()
+
+
+## FR-310: Trägt Fortschritt für ein Wochenziel ein und zahlt bei
+## Erreichen automatisch die Belohnung aus.
+func add_weekly_progress(goal_id: String, amount: int) -> void:
+	if amount <= 0:
+		return
+	_ensure_current_week()
+	weekly_progress[goal_id] = int(weekly_progress.get(goal_id, 0)) + amount
+	for goal in WEEKLY_GOALS:
+		if goal["id"] != goal_id:
+			continue
+		var progress: int = weekly_progress[goal_id]
+		weekly_goal_progress.emit(goal_id, progress, goal["target"])
+		if progress >= int(goal["target"]) and not weekly_claimed.get(goal_id, false):
+			weekly_claimed[goal_id] = true
+			persistent_coins += int(goal["reward"])
+			persistent_coins_changed.emit(persistent_coins)
+			_save_progress()
+		break
+
+
+## FR-311: Fügt der Saison-/Battle-Pass-Leiste XP hinzu.
+func add_season_xp(amount: int) -> void:
+	season_xp += amount
+
+
+## FR-311: Aktuell erreichte Saison-Stufe (0 = noch keine).
+func get_season_tier() -> int:
+	return mini(season_xp / SEASON_XP_PER_TIER, SEASON_TIER_REWARDS.size())
+
+
+## FR-311/320: Holt die Belohnung der nächsten noch nicht abgeholten
+## Saison-Stufe ab (0, falls keine neue Stufe verfügbar ist).
+func claim_season_tier_reward() -> int:
+	var tier := get_season_tier()
+	for t in range(1, tier + 1):
+		if not (t in season_claimed_tiers):
+			season_claimed_tiers.append(t)
+			var reward: int = SEASON_TIER_REWARDS[t - 1]
+			persistent_coins += reward
+			persistent_coins_changed.emit(persistent_coins)
+			_save_progress()
+			return reward
+	return 0
+
+
+## FR-312/320: Kurzbeschreibung des nächstgelegenen, noch nicht erreichten
+## Fortschritts-Ziels — für eine "Nächstes Ziel"-Vorschau in der UI.
+func get_next_goal_preview() -> String:
+	var next_tier := get_season_tier() + 1
+	if next_tier <= SEASON_TIER_REWARDS.size():
+		var needed: int = next_tier * SEASON_XP_PER_TIER - season_xp
+		return "Saison-Stufe %d: noch %d XP" % [next_tier, needed]
+	for m in MILESTONES:
+		if not (m["id"] in claimed_milestones):
+			var value: int = get(String(m["stat"]))
+			return "%s: %d / %d" % [String(m["id"]).capitalize(), value, int(m["threshold"])]
+	return "Alle Ziele erreicht!"
+
+
+## FR-313: Ein Teil jeder verdienten Münze wandert automatisch ins
+## Sparschwein, bis es voll ist.
+func add_to_piggy_bank(coin_amount: int) -> void:
+	if piggy_bank_amount >= PIGGY_BANK_CAP or coin_amount <= 0:
+		return
+	piggy_bank_amount = mini(piggy_bank_amount + int(coin_amount * PIGGY_BANK_SAVE_RATE), PIGGY_BANK_CAP)
+	piggy_bank_changed.emit(piggy_bank_amount)
+
+
+## FR-313: Leert ein volles Sparschwein und zahlt den Inhalt als Bonus aus.
+func break_piggy_bank() -> int:
+	if piggy_bank_amount < PIGGY_BANK_CAP:
+		return 0
+	var payout := piggy_bank_amount
+	piggy_bank_amount = 0
+	persistent_coins += payout
+	persistent_coins_changed.emit(persistent_coins)
+	piggy_bank_changed.emit(0)
+	_save_progress()
+	return payout
+
+
+## FR-316: Schaltet den Hard-Mode um (wirkt sich auf Main.gd/Player.gd aus).
+func set_hard_mode_enabled(enabled: bool) -> void:
+	hard_mode_enabled = enabled
+	_save_progress()
+
+
+## FR-316: Speichert die im Hard-Mode erspielten Sterne getrennt von der
+## Normalwertung und vergibt doppelte XP als zusätzlichen Anreiz.
+func record_hard_mode_stars(level_index: int, stars: int) -> void:
+	if not hard_mode_stars.has(level_index):
+		hard_mode_stars[level_index] = 0
+	if stars > hard_mode_stars[level_index]:
+		hard_mode_stars[level_index] = stars
+		add_xp(stars * XP_PER_STAR * 2)
+		_save_progress()
+
+
+## FR-317: Persönliche Bestzeit für ein Level aus allen normalen Versuchen
+## (Sekunden), -1.0 falls das Level noch nicht abgeschlossen wurde. Getrennt
+## von get_best_time(), das die Zeitrennen-Modus-Bestzeit liefert.
+func get_best_attempt_time(level_index: int) -> float:
+	var times: Array = level_attempt_times.get(level_index, [])
+	if times.is_empty():
+		return -1.0
+	return times.min()
+
+
+## FR-319: Ob ein Hindernis-Typ anhand des aktuellen Spielerlevels bereits
+## freigeschaltet ist (steigende Vielfalt mit Spielfortschritt).
+func is_obstacle_unlocked(obstacle_id: String) -> bool:
+	return player_level >= int(OBSTACLE_UNLOCK_LEVELS.get(obstacle_id, 1))
 
 
 ## Gibt true zurück, wenn ein nächstes Level existiert.
@@ -1017,6 +1370,21 @@ func _save_progress() -> void:
 	cfg.set_value("cosmetics", "fartcolor", equipped_fart_color_style)
 	cfg.set_value("cosmetics", "fartsound", equipped_fart_sound)
 	cfg.set_value("cosmetics", "daily_claimed_date", daily_skin_claimed_date)
+	cfg.set_value("progression", "unlocked_skills", unlocked_skills)          # FR-304/305
+	cfg.set_value("progression", "prestige_level", prestige_level)            # FR-306
+	cfg.set_value("progression", "claimed_milestones", claimed_milestones)    # FR-308
+	cfg.set_value("progression", "lifetime_coins", lifetime_coins)            # FR-308
+	cfg.set_value("progression", "login_streak_day", login_streak_day)        # FR-309
+	cfg.set_value("progression", "last_login_date", _last_login_date)         # FR-309
+	cfg.set_value("progression", "weekly_progress", weekly_progress)          # FR-310
+	cfg.set_value("progression", "weekly_claimed", weekly_claimed)            # FR-310
+	cfg.set_value("progression", "weekly_week_id", _weekly_week_id)           # FR-310
+	cfg.set_value("progression", "season_xp", season_xp)                      # FR-311
+	cfg.set_value("progression", "season_claimed_tiers", season_claimed_tiers)  # FR-311
+	cfg.set_value("progression", "piggy_bank_amount", piggy_bank_amount)      # FR-313
+	cfg.set_value("progression", "hard_mode_enabled", hard_mode_enabled)      # FR-316
+	cfg.set_value("progression", "hard_mode_stars", hard_mode_stars)          # FR-316
+	cfg.set_value("progression", "earned_badges", earned_badges)              # FR-318
 	cfg.save(SAVE_PATH)
 
 
@@ -1054,6 +1422,21 @@ func reset_all_progress() -> void:
 	equipped_fart_color_style = "fart_classic"
 	equipped_fart_sound = "fartsound_classic"
 	daily_skin_claimed_date = ""
+	unlocked_skills.clear()               # FR-304/305
+	prestige_level = 0                    # FR-306
+	claimed_milestones.clear()            # FR-308
+	lifetime_coins = 0                    # FR-308
+	login_streak_day = 0                  # FR-309
+	_last_login_date = ""                 # FR-309
+	weekly_progress.clear()               # FR-310
+	weekly_claimed.clear()                # FR-310
+	_weekly_week_id = ""                  # FR-310
+	season_xp = 0                         # FR-311
+	season_claimed_tiers.clear()          # FR-311
+	piggy_bank_amount = 0                 # FR-313
+	hard_mode_enabled = false             # FR-316
+	hard_mode_stars.clear()               # FR-316
+	earned_badges.clear()                 # FR-318
 
 	var dir := DirAccess.open("user://")
 	if dir != null and dir.file_exists(SAVE_PATH.trim_prefix("user://")):
@@ -1108,6 +1491,25 @@ func _load_progress() -> void:
 	equipped_fart_color_style = cfg.get_value("cosmetics", "fartcolor", "fart_classic")
 	equipped_fart_sound = cfg.get_value("cosmetics", "fartsound", "fartsound_classic")
 	daily_skin_claimed_date = cfg.get_value("cosmetics", "daily_claimed_date", "")
+	var saved_skills: Array = cfg.get_value("progression", "unlocked_skills", [])       # FR-304/305
+	unlocked_skills.assign(saved_skills)
+	prestige_level = cfg.get_value("progression", "prestige_level", 0)                  # FR-306
+	var saved_milestones: Array = cfg.get_value("progression", "claimed_milestones", [])  # FR-308
+	claimed_milestones.assign(saved_milestones)
+	lifetime_coins = cfg.get_value("progression", "lifetime_coins", 0)                  # FR-308
+	login_streak_day = cfg.get_value("progression", "login_streak_day", 0)              # FR-309
+	_last_login_date = cfg.get_value("progression", "last_login_date", "")              # FR-309
+	weekly_progress = cfg.get_value("progression", "weekly_progress", {})               # FR-310
+	weekly_claimed = cfg.get_value("progression", "weekly_claimed", {})                 # FR-310
+	_weekly_week_id = cfg.get_value("progression", "weekly_week_id", "")                # FR-310
+	season_xp = cfg.get_value("progression", "season_xp", 0)                            # FR-311
+	var saved_tiers: Array = cfg.get_value("progression", "season_claimed_tiers", [])   # FR-311
+	season_claimed_tiers.assign(saved_tiers)
+	piggy_bank_amount = cfg.get_value("progression", "piggy_bank_amount", 0)            # FR-313
+	hard_mode_enabled = cfg.get_value("progression", "hard_mode_enabled", false)        # FR-316
+	hard_mode_stars = cfg.get_value("progression", "hard_mode_stars", {})               # FR-316
+	var saved_badges: Array = cfg.get_value("progression", "earned_badges", [])         # FR-318
+	earned_badges.assign(saved_badges)
 
 
 ## FR-118: Registriert einen Gegner-Typ als entdeckt (persistiert).

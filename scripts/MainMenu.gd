@@ -11,6 +11,7 @@ var _onboarding: OnboardingScreen
 var _bestiary_screen: BestiaryScreen      # FR-118
 var _shop_screen: ShopScreen              # FR-224
 var _collection_screen: CollectionScreen  # FR-225/226/227/234
+var _progression_screen: ProgressionScreen  # FR-304/305/306/310/311/312/313
 var _confirm_dialog: ConfirmDialog        # FR-228
 var _level_detail_popup: PanelContainer   # FR-232
 var _progress_label: Label                # FR-237
@@ -47,6 +48,8 @@ func _ready() -> void:
 	add_child(_shop_screen)
 	_collection_screen = preload("res://scenes/CollectionScreen.tscn").instantiate()  # FR-225/226/227
 	add_child(_collection_screen)
+	_progression_screen = preload("res://scenes/ProgressionScreen.tscn").instantiate()  # FR-304/305/306/310/311/312/313
+	add_child(_progression_screen)
 	_confirm_dialog = preload("res://scenes/ConfirmDialog.tscn").instantiate()  # FR-228
 	add_child(_confirm_dialog)
 
@@ -62,6 +65,8 @@ func _ready() -> void:
 	_build_continue_button() # FR-238
 	_build_quit_button()     # FR-228
 	_build_level_detail_popup()  # FR-232
+	_build_progression_button()  # FR-304/305/306/310/311/312/313
+	_show_daily_login_reward()   # FR-309
 
 
 ## FR-231: Prozeduraler Sternenhintergrund mit Drift-Animation.
@@ -385,6 +390,54 @@ func _on_collection_pressed() -> void:
 	GameManager.play_ui_click()
 	GameManager.vibrate(15)
 	_collection_screen.show_screen()
+
+
+## FR-304/305/306/310/311/312/313: Fortschritts-Button (Skills, Saison,
+## Wochenziele, Sparschwein, Prestige).
+func _build_progression_button() -> void:
+	var btn := Button.new()
+	btn.text = "Fortschritt"
+	btn.custom_minimum_size = Vector2(260, 72)
+	btn.add_theme_font_size_override("font_size", 34)
+	btn.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	btn.offset_left = -280.0
+	btn.offset_top = 340.0
+	btn.offset_right = -20.0
+	btn.offset_bottom = 412.0
+	btn.pressed.connect(_on_progression_pressed)
+	add_child(btn)
+
+
+func _on_progression_pressed() -> void:
+	GameManager.play_ui_click()
+	GameManager.vibrate(15)
+	_progression_screen.show_screen()
+
+
+## FR-309: Zeigt beim Menü-Start eine kurze Meldung, falls die tägliche
+## Login-Belohnung noch nicht abgeholt wurde, und schaltet sie frei.
+func _show_daily_login_reward() -> void:
+	if not GameManager.has_unclaimed_daily_login():
+		return
+	var reward := GameManager.claim_daily_login_reward()
+	if reward <= 0:
+		return
+	var popup := Label.new()
+	popup.text = "Tag %d Login-Bonus: +%d Münzen!" % [GameManager.login_streak_day, reward]
+	popup.add_theme_font_size_override("font_size", 32)
+	popup.add_theme_color_override("font_color", Color(1.0, 0.85, 0.3))
+	popup.set_anchors_preset(Control.PRESET_CENTER_TOP)
+	popup.offset_top = 40.0
+	popup.offset_left = -300.0
+	popup.offset_right = 300.0
+	popup.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	popup.modulate.a = 0.0
+	add_child(popup)
+	var tween := create_tween()
+	tween.tween_property(popup, "modulate:a", 1.0, 0.4)
+	tween.tween_interval(2.5)
+	tween.tween_property(popup, "modulate:a", 0.0, 0.5)
+	tween.tween_callback(popup.queue_free)
 
 
 ## FR-093: Tagesmünzen-Button links oben hinzufügen.

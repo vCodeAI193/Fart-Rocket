@@ -551,12 +551,18 @@ func _load_current_level() -> void:
 
 	# Furz-Ladungen aus dem Player übernehmen
 	_max_charges = _player.max_fart_charges
-	GameManager.start_level(GameManager.current_level, _max_charges)
+	# FR-316: Hard-Mode gewährt weniger Furz-Ladungen (härtere Bedingung),
+	# die Sternebewertung bleibt am ursprünglichen Level-Design gemessen
+	var start_charges := _max_charges
+	if GameManager.hard_mode_enabled:
+		start_charges = maxi(1, _max_charges - 2)
+	GameManager.start_level(GameManager.current_level, start_charges)
 	# FR-099: Gesamtzahl der Münzen im Level für die Fortschrittsanzeige zählen
 	GameManager.set_level_coin_total(get_tree().get_nodes_in_group("coins").size())
 
-	# HUD einrichten
-	_hud.set_max_charges(_max_charges)
+	# HUD einrichten — zeigt die tatsächlich verfügbaren Ladungen (inkl.
+	# Hard-Mode-Abzug/Extra-Ladung-Skill), nicht den rohen Level-Designwert
+	_hud.set_max_charges(GameManager.max_charges)
 	_hud.start_timer()
 
 	# FR-002: Furz-Typ-Auswahl aufbauen und mit dem Player verbinden

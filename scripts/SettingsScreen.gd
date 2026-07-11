@@ -28,6 +28,7 @@ var _quality_btn: Button
 var _render_scale_btn: Button
 var _pixel_perfect_btn: Button
 var _crt_btn: Button
+var _hard_mode_btn: Button  # FR-316
 
 
 func _ready() -> void:
@@ -195,6 +196,13 @@ func _build_ui() -> void:
 	_crt_btn.pressed.connect(_on_crt_pressed)
 	vbox.add_child(_crt_btn)
 
+	# --- FR-316: Hard-Mode-Umschalter -------------------------------
+	_hard_mode_btn = Button.new()
+	_hard_mode_btn.custom_minimum_size = Vector2(400, 76)
+	_hard_mode_btn.add_theme_font_size_override("font_size", 28)
+	_hard_mode_btn.pressed.connect(_on_hard_mode_pressed)
+	vbox.add_child(_hard_mode_btn)
+
 	# --- FR-228: Fortschritt zurücksetzen ---------------------------
 	var reset_btn := Button.new()
 	reset_btn.text = "Fortschritt zurücksetzen"
@@ -234,6 +242,7 @@ func _update_buttons() -> void:
 	_render_scale_btn.text = "Auflösung: %d%%" % int(GameManager.render_scale * 100)
 	_pixel_perfect_btn.text = "Pixel-Perfect: EIN" if GameManager.pixel_perfect_mode else "Pixel-Perfect: AUS"
 	_crt_btn.text = "CRT-Filter: EIN" if GameManager.crt_filter_enabled else "CRT-Filter: AUS"
+	_hard_mode_btn.text = "Hard-Mode: EIN" if GameManager.hard_mode_enabled else "Hard-Mode: AUS"
 
 
 func _on_haptics_pressed() -> void:
@@ -351,6 +360,13 @@ func _on_crt_pressed() -> void:
 	var main = get_tree().get_first_node_in_group("main_controller")
 	if main != null and main.has_method("set_crt_filter_active"):
 		main.set_crt_filter_active(GameManager.crt_filter_enabled)
+	GameManager.vibrate(15)
+	_update_buttons()
+
+
+## FR-316: Hard-Mode umschalten (härtere Bedingungen, separate Stern-Wertung).
+func _on_hard_mode_pressed() -> void:
+	GameManager.set_hard_mode_enabled(not GameManager.hard_mode_enabled)
 	GameManager.vibrate(15)
 	_update_buttons()
 

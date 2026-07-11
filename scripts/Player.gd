@@ -220,7 +220,9 @@ func _process_regen(delta: float) -> void:
 		_regen_accum = 0.0
 		return
 
-	_regen_accum += delta
+	# FR-305: "Schnellere Regeneration"-Upgrades beschleunigen das Nachladen
+	var regen_skill_mult := 1.0 + GameManager.get_skill_effect_level("regen_speed") * 0.15
+	_regen_accum += delta * regen_skill_mult
 	# Fortschritt der gerade nachladenden Ladung an das HUD melden
 	GameManager.set_regen_progress(_regen_accum / charge_regen_time)
 
@@ -372,7 +374,9 @@ func _execute_fart(drag: Vector2) -> void:
 	var precision_mult := _calculate_precision_bonus(dir)
 	# FR-020: Anpassbare Furz-Schubkurve anwenden (Kurven-Mapping)
 	var curve_factor := power_curve.sample(strength)
-	var impulse: float = fart_power * curve_factor * fart["power"] * charge_mult * precision_mult
+	# FR-305: Permanente "Stärkerer Furz"-Upgrades erhöhen den Basis-Impuls
+	var skill_mult := 1.0 + GameManager.get_skill_effect_level("fart_power") * 0.08
+	var impulse: float = fart_power * curve_factor * fart["power"] * charge_mult * precision_mult * skill_mult
 	var bursts: int = fart["bursts"]
 	var tint: Color = fart["color"]
 
@@ -572,7 +576,9 @@ func _on_body_entered(body: Node) -> void:
 
 ## FR-010: Aktiviert den Furz-Schild für `duration` Sekunden.
 func activate_shield(duration: float) -> void:
-	_shield_remaining = duration
+	# FR-305: "Längerer Schild"-Upgrades verlängern die Schild-Dauer
+	var skill_bonus := 1.0 + GameManager.get_skill_effect_level("shield_duration") * 0.2
+	_shield_remaining = duration * skill_bonus
 	shield_changed.emit(true)
 	GameManager.vibrate(30)
 	_update_shield_aura(true)  # FR-297: Schild-Energie-Shader-Aura einblenden
