@@ -270,7 +270,7 @@ func _build_ui() -> void:
 	slots_row.add_theme_constant_override("separation", 10)
 	vbox.add_child(slots_row)
 	_slot_buttons.clear()
-	for slot in range(1, GameManager.SAVE_SLOT_COUNT + 1):
+	for slot in range(1, SaveManager.SAVE_SLOT_COUNT + 1):
 		var slot_btn := Button.new()
 		slot_btn.custom_minimum_size = Vector2(120, 70)
 		slot_btn.add_theme_font_size_override("font_size", 24)
@@ -377,11 +377,11 @@ func _update_buttons() -> void:
 	for i in range(_slot_buttons.size()):
 		var slot := i + 1
 		var btn := _slot_buttons[i]
-		if slot == GameManager.current_save_slot:
+		if slot == SaveManager.current_save_slot:
 			btn.text = "● %d" % slot
 			btn.disabled = true
 		else:
-			btn.text = "%d" % slot if GameManager.save_slot_exists(slot) else "%d (leer)" % slot
+			btn.text = "%d" % slot if SaveManager.save_slot_exists(slot) else "%d (leer)" % slot
 			btn.disabled = false
 
 
@@ -670,7 +670,7 @@ func _on_reset_pressed() -> void:
 
 
 func _on_reset_confirmed() -> void:
-	GameManager.reset_all_progress()
+	SaveManager.reset_all_progress()
 	GameManager.vibrate(80)
 	_update_buttons()
 	get_tree().reload_current_scene()
@@ -680,27 +680,27 @@ func _on_reset_confirmed() -> void:
 ## damit alle UI-Elemente den neuen Spielstand konsistent anzeigen.
 func _on_slot_pressed(slot: int) -> void:
 	GameManager.play_ui_click()
-	GameManager.switch_save_slot(slot)
+	SaveManager.switch_save_slot(slot)
 	GameManager.vibrate(30)
 	get_tree().reload_current_scene()
 
 
 ## FR-406: Legt sofort ein Backup des aktuellen Spielstands an.
 func _on_backup_pressed() -> void:
-	GameManager.export_save()
+	SaveManager.export_save()
 	GameManager.play_ui_click()
 	GameManager.vibrate(30)
 
 
 ## FR-407/411: Stellt das neueste Backup des aktuellen Profils wieder her.
 func _on_restore_pressed() -> void:
-	var backups := GameManager.list_backups()
+	var backups := SaveManager.list_backups()
 	if backups.is_empty():
 		GameManager.play_ui_click()
 		return
 	GameManager.play_ui_click()
 	_confirm_dialog.confirmed.connect(func():
-		GameManager.restore_backup(backups[0])
+		SaveManager.restore_backup(backups[0])
 		GameManager.vibrate(60)
 		get_tree().reload_current_scene()
 	, CONNECT_ONE_SHOT)
@@ -722,7 +722,7 @@ func _on_delete_all_pressed() -> void:
 
 
 func _on_delete_all_confirmed() -> void:
-	GameManager.delete_all_user_data()
+	SaveManager.delete_all_user_data()
 	GameManager.vibrate(100)
 	get_tree().reload_current_scene()
 

@@ -57,7 +57,7 @@ func show_shop() -> void:
 
 func _refresh() -> void:
 	_balance_label.text = "Guthaben: %d Münzen" % GameManager.persistent_coins
-	var progress := GameManager.get_cosmetics_collection_progress()
+	var progress := CosmeticsManager.get_cosmetics_collection_progress()
 	_progress_label.text = "Sammlung: %d / %d freigeschaltet" % [progress.x, progress.y]  # FR-178
 	_refresh_preview()  # FR-171
 	_refresh_color_tab()
@@ -70,12 +70,12 @@ func _refresh() -> void:
 func _refresh_preview() -> void:
 	var parts := []
 	for id in [
-		GameManager.equipped_helmet, GameManager.equipped_outfit, GameManager.equipped_hat,
-		GameManager.equipped_arrow_style, GameManager.equipped_death_anim,
-		GameManager.equipped_victory_pose, GameManager.equipped_fart_color_style,
-		GameManager.equipped_fart_sound,
+		CosmeticsManager.equipped_helmet, CosmeticsManager.equipped_outfit, CosmeticsManager.equipped_hat,
+		CosmeticsManager.equipped_arrow_style, CosmeticsManager.equipped_death_anim,
+		CosmeticsManager.equipped_victory_pose, CosmeticsManager.equipped_fart_color_style,
+		CosmeticsManager.equipped_fart_sound,
 	]:
-		var info: Dictionary = GameManager.COSMETIC_CATALOG.get(id, {})
+		var info: Dictionary = CosmeticsManager.COSMETIC_CATALOG.get(id, {})
 		if not info.is_empty():
 			parts.append(info["name"])
 	_preview_label.text = "Ausgerüstet: " + " · ".join(parts)
@@ -83,9 +83,9 @@ func _refresh_preview() -> void:
 
 ## FR-174: Skin-des-Tages-Button aktualisieren.
 func _refresh_daily_skin_button() -> void:
-	if GameManager.is_daily_skin_available():
-		var id := GameManager.get_daily_skin_id()
-		var info: Dictionary = GameManager.COSMETIC_CATALOG.get(id, {})
+	if CosmeticsManager.is_daily_skin_available():
+		var id := CosmeticsManager.get_daily_skin_id()
+		var info: Dictionary = CosmeticsManager.COSMETIC_CATALOG.get(id, {})
 		_daily_skin_btn.text = "🎁 Skin des Tages: %s (gratis!)" % info.get("name", "?")
 		_daily_skin_btn.disabled = false
 	else:
@@ -95,7 +95,7 @@ func _refresh_daily_skin_button() -> void:
 
 func _on_daily_skin_pressed() -> void:
 	GameManager.play_ui_click()
-	if GameManager.claim_daily_skin():
+	if CosmeticsManager.claim_daily_skin():
 		GameManager.vibrate(60)
 	_refresh()
 
@@ -117,8 +117,8 @@ func _refresh_color_tab() -> void:
 		name_label.custom_minimum_size = Vector2(220, 0)
 		name_label.add_theme_font_size_override("font_size", 30)
 		row.add_child(name_label)
-		var owned: bool = offer["id"] in GameManager.unlocked_skin_colors
-		var active: bool = GameManager.active_skin_color == offer["id"]
+		var owned: bool = offer["id"] in CosmeticsManager.unlocked_skin_colors
+		var active: bool = CosmeticsManager.active_skin_color == offer["id"]
 		var btn := Button.new()
 		btn.custom_minimum_size = Vector2(220, 64)
 		btn.add_theme_font_size_override("font_size", 26)
@@ -145,26 +145,26 @@ func _refresh_color_tab() -> void:
 	custom_row.add_child(custom_label)
 	_custom_color_picker = ColorPickerButton.new()
 	_custom_color_picker.custom_minimum_size = Vector2(220, 64)
-	_custom_color_picker.color = GameManager.custom_skin_color
+	_custom_color_picker.color = CosmeticsManager.custom_skin_color
 	_custom_color_picker.color_changed.connect(_on_custom_color_changed)
 	custom_row.add_child(_custom_color_picker)
 	_color_tab.add_child(custom_row)
 
 
 func _on_custom_color_changed(color: Color) -> void:
-	GameManager.set_custom_skin_color(color)
+	CosmeticsManager.set_custom_skin_color(color)
 
 
 func _on_buy_skin_pressed(id: String, cost: int) -> void:
 	GameManager.play_ui_click()
-	if GameManager.unlock_skin_color(id, cost):
+	if CosmeticsManager.unlock_skin_color(id, cost):
 		GameManager.vibrate(40)
 		_refresh()
 
 
 func _on_equip_skin_pressed(id: String) -> void:
 	GameManager.play_ui_click()
-	GameManager.active_skin_color = id
+	CosmeticsManager.active_skin_color = id
 	GameManager.vibrate(20)
 	_refresh()
 
@@ -177,12 +177,12 @@ func _refresh_slot_tab(slot: String) -> void:
 	for child in list.get_children():
 		child.queue_free()
 
-	for id in GameManager.COSMETIC_CATALOG.keys():
-		var info: Dictionary = GameManager.COSMETIC_CATALOG[id]
+	for id in CosmeticsManager.COSMETIC_CATALOG.keys():
+		var info: Dictionary = CosmeticsManager.COSMETIC_CATALOG[id]
 		if info["slot"] != slot:
 			continue
 		# FR-334: Erfolgs-exklusive Items werden nicht im Shop gelistet
-		if info.get("achievement_only", false) and not (id in GameManager.unlocked_cosmetics):
+		if info.get("achievement_only", false) and not (id in CosmeticsManager.unlocked_cosmetics):
 			continue
 
 		var row := HBoxContainer.new()
@@ -200,8 +200,8 @@ func _refresh_slot_tab(slot: String) -> void:
 		name_label.add_theme_font_size_override("font_size", 28)
 		row.add_child(name_label)
 
-		var seasonal_ok := GameManager.is_cosmetic_seasonally_available(id)  # FR-172
-		var owned: bool = id in GameManager.unlocked_cosmetics
+		var seasonal_ok := CosmeticsManager.is_cosmetic_seasonally_available(id)  # FR-172
+		var owned: bool = id in CosmeticsManager.unlocked_cosmetics
 		var active: bool = _is_equipped(id, slot)
 
 		var btn := Button.new()
@@ -227,27 +227,27 @@ func _refresh_slot_tab(slot: String) -> void:
 
 func _is_equipped(id: String, slot: String) -> bool:
 	match slot:
-		"helmet": return GameManager.equipped_helmet == id
-		"outfit": return GameManager.equipped_outfit == id
-		"hat": return GameManager.equipped_hat == id
-		"arrow": return GameManager.equipped_arrow_style == id
-		"death": return GameManager.equipped_death_anim == id
-		"pose": return GameManager.equipped_victory_pose == id
-		"fartcolor": return GameManager.equipped_fart_color_style == id
-		"fartsound": return GameManager.equipped_fart_sound == id
+		"helmet": return CosmeticsManager.equipped_helmet == id
+		"outfit": return CosmeticsManager.equipped_outfit == id
+		"hat": return CosmeticsManager.equipped_hat == id
+		"arrow": return CosmeticsManager.equipped_arrow_style == id
+		"death": return CosmeticsManager.equipped_death_anim == id
+		"pose": return CosmeticsManager.equipped_victory_pose == id
+		"fartcolor": return CosmeticsManager.equipped_fart_color_style == id
+		"fartsound": return CosmeticsManager.equipped_fart_sound == id
 	return false
 
 
 func _on_buy_cosmetic_pressed(id: String) -> void:
 	GameManager.play_ui_click()
-	if GameManager.unlock_cosmetic(id):
+	if CosmeticsManager.unlock_cosmetic(id):
 		GameManager.vibrate(40)
 		_refresh()
 
 
 func _on_equip_cosmetic_pressed(id: String) -> void:
 	GameManager.play_ui_click()
-	GameManager.equip_cosmetic(id)
+	CosmeticsManager.equip_cosmetic(id)
 	GameManager.vibrate(20)
 	_refresh()
 

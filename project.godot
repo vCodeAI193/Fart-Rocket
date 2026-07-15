@@ -20,6 +20,14 @@ boot_splash/show_image=false
 
 ; Globaler Spielzustand: Punkte, aktuelles Level, Sterne usw.
 GameManager="*res://scripts/GameManager.gd"
+; Kosmetik-Katalog, Freischaltung & Ausrüstung (Mix&Match). Ausgelagert aus
+; GameManager.gd ("God Object"-Refactoring, siehe README.md); referenziert
+; GameManager.persistent_coins für Käufe.
+CosmeticsManager="*res://scripts/CosmeticsManager.gd"
+; Gehärtetes, mehrfach-profilfähiges Speichersystem. Ausgelagert aus
+; GameManager.gd; nach GameManager/CosmeticsManager geladen, da es beide
+; beim Speichern/Laden per Cross-Reference liest/schreibt.
+SaveManager="*res://scripts/SaveManager.gd"
 ; FR-321: Lokales Achievement-/Herausforderungs-Framework (nach GameManager
 ; geladen, da es dessen Statistik-Signale abonniert).
 AchievementManager="*res://scripts/AchievementManager.gd"

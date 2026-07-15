@@ -493,7 +493,7 @@ func _do_thrust(dir: Vector2, impulse: float, tint: Color) -> void:
 
 ## FR-164: Überschreibt die Furz-Wolken-Farbe je nach ausgerüstetem Stil.
 func _apply_fart_color_style(base_tint: Color) -> Color:
-	match GameManager.equipped_fart_color_style:
+	match CosmeticsManager.equipped_fart_color_style:
 		"fart_toxic":
 			return Color(0.4, 1.0, 0.2)
 		"fart_rainbow":
@@ -716,10 +716,10 @@ func _die() -> void:
 
 
 ## FR-040/176: Ragdoll-Modus aktivieren — Verhalten je nach gewählter
-## Tod-Animation (GameManager.equipped_death_anim).
+## Tod-Animation (CosmeticsManager.equipped_death_anim).
 func _activate_ragdoll() -> void:
 	_ragdoll_active = true
-	match GameManager.equipped_death_anim:
+	match CosmeticsManager.equipped_death_anim:
 		"death_confetti":
 			gravity_scale = 1.0
 			angular_velocity = randf_range(-15.0, 15.0)
@@ -820,13 +820,13 @@ func _spawn_crash_particles() -> void:
 ## FR-224/180: Übernimmt die im Shop ausgerüstete Skin-Farbe (falls nicht
 ## Standard) oder die frei gewählte Farbe aus dem Farb-Editor.
 func _apply_shop_skin() -> void:
-	if GameManager.active_skin_color == "default":
+	if CosmeticsManager.active_skin_color == "default":
 		return
-	if GameManager.active_skin_color == "custom":
-		skin_color = GameManager.custom_skin_color
+	if CosmeticsManager.active_skin_color == "custom":
+		skin_color = CosmeticsManager.custom_skin_color
 		return
 	for offer in ShopScreen.SKIN_OFFERS:
-		if offer["id"] == GameManager.active_skin_color:
+		if offer["id"] == CosmeticsManager.active_skin_color:
 			skin_color = offer["color"]
 			return
 
@@ -839,7 +839,7 @@ func _build_stick_figure() -> void:
 	var head_center := Vector2(0, -34)
 	var head_radius := 16.0
 
-	# FR-161: Helm-Design (abhängig von GameManager.equipped_helmet)
+	# FR-161: Helm-Design (abhängig von CosmeticsManager.equipped_helmet)
 	_build_helmet(head_center, head_radius)
 
 	# Körper (Torso)
@@ -907,7 +907,7 @@ func _build_player_light() -> void:
 
 ## FR-161: Zeichnet das gewählte Helm-Design.
 func _build_helmet(head_center: Vector2, radius: float) -> void:
-	var style := GameManager.equipped_helmet
+	var style := CosmeticsManager.equipped_helmet
 	if style == "helmet_none":
 		return
 
@@ -976,7 +976,7 @@ func _build_helmet(head_center: Vector2, radius: float) -> void:
 
 ## FR-163: Zeichnet das gewählte Kostüm-Overlay.
 func _build_outfit(head_center: Vector2, head_radius: float) -> void:
-	match GameManager.equipped_outfit:
+	match CosmeticsManager.equipped_outfit:
 		"outfit_astronaut":
 			var suit := Polygon2D.new()
 			suit.color = Color(0.9, 0.9, 0.95, 0.85)
@@ -1024,7 +1024,7 @@ func _build_outfit(head_center: Vector2, head_radius: float) -> void:
 
 ## FR-166: Zeichnet ein Hut-Accessoire über dem Helm.
 func _build_hat(head_center: Vector2, head_radius: float) -> void:
-	match GameManager.equipped_hat:
+	match CosmeticsManager.equipped_hat:
 		"hat_top":
 			var brim := ColorRect.new()
 			brim.size = Vector2(head_radius * 2.2, 4)
@@ -1091,7 +1091,7 @@ func _build_face(head_center: Vector2) -> void:
 	_face_node = Node2D.new()
 	_face_node.position = head_center
 	add_child(_face_node)
-	_render_face(GameManager.equipped_face)
+	_render_face(CosmeticsManager.equipped_face)
 
 
 func _render_face(expression: String) -> void:
@@ -1232,7 +1232,7 @@ func play_victory_pose() -> void:
 	if _arms == null:
 		return
 	var tween := create_tween()
-	match GameManager.equipped_victory_pose:
+	match CosmeticsManager.equipped_victory_pose:
 		"pose_flex":
 			tween.set_loops(2)
 			tween.tween_method(_set_arm_point.bind(1), Vector2(0, -10), Vector2(0, -26), 0.25)
@@ -1283,7 +1283,7 @@ func _update_trail() -> void:
 
 ## FR-175: Liefert die Pfeil-Farbe passend zum ausgerüsteten Pfeil-Design.
 func _aim_arrow_color(charge: float) -> Color:
-	match GameManager.equipped_arrow_style:
+	match CosmeticsManager.equipped_arrow_style:
 		"arrow_neon":
 			return Color(0.2, 1.0, 0.9, 0.9).lerp(Color(1.0, 0.1, 0.9, 1.0), charge)
 		"arrow_rainbow":

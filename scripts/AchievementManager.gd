@@ -102,7 +102,7 @@ func _unlock(id: String) -> void:
 		GameManager.persistent_coins += int(data["reward_coins"])
 		GameManager.persistent_coins_changed.emit(GameManager.persistent_coins)
 	if data.has("reward_cosmetic"):
-		GameManager.grant_cosmetic_free(String(data["reward_cosmetic"]))
+		CosmeticsManager.grant_cosmetic_free(String(data["reward_cosmetic"]))
 	achievement_unlocked.emit(id)
 	_show_unlock_toast(data)
 	_save()
@@ -345,7 +345,7 @@ func _load() -> void:
 
 ## FR-420: Setzt den kompletten Erfolgs-/Herausforderungs-Zustand im
 ## Speicher auf den Ausgangswert zurück (die Speicherdatei selbst wird
-## vom Aufrufer separat gelöscht, siehe GameManager.delete_all_user_data()).
+## vom Aufrufer separat gelöscht, siehe SaveManager.delete_all_user_data()).
 func reset_all() -> void:
 	unlocked.clear()
 	_max_combo_seen = 0

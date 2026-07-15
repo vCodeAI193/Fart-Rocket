@@ -98,24 +98,24 @@ var language: String = "de"
 func set_colorblind_mode(mode: ColorblindMode) -> void:
 	colorblind_mode = mode
 	accessibility_changed.emit()
-	_save_settings()
+	SaveManager.save_settings()
 
 
 func set_high_contrast_enabled(enabled: bool) -> void:
 	high_contrast_enabled = enabled
 	accessibility_changed.emit()
-	_save_settings()
+	SaveManager.save_settings()
 
 
 func set_reduced_motion_enabled(enabled: bool) -> void:
 	reduced_motion_enabled = enabled
-	_save_settings()
+	SaveManager.save_settings()
 
 
 func set_menu_ui_scale(value: float) -> void:
 	menu_ui_scale = clampf(value, 0.85, 1.3)
 	accessibility_changed.emit()
-	_save_settings()
+	SaveManager.save_settings()
 
 
 ## FR-424: Skaliert eine Menü-CanvasLayer um die Bildschirmmitte (gleiches
@@ -130,57 +130,57 @@ func apply_menu_ui_scale(layer: CanvasLayer, viewport_size: Vector2) -> void:
 
 func set_sound_captions_enabled(enabled: bool) -> void:
 	sound_captions_enabled = enabled
-	_save_settings()
+	SaveManager.save_settings()
 
 
 func set_one_handed_mode(enabled: bool) -> void:
 	one_handed_mode = enabled
 	accessibility_changed.emit()
-	_save_settings()
+	SaveManager.save_settings()
 
 
 func set_assist_aim_enabled(enabled: bool) -> void:
 	assist_aim_enabled = enabled
-	_save_settings()
+	SaveManager.save_settings()
 
 
 func set_screen_brightness(value: float) -> void:
 	screen_brightness = clampf(value, 0.5, 1.0)
 	accessibility_changed.emit()
-	_save_settings()
+	SaveManager.save_settings()
 
 
 func set_fps_counter_enabled(enabled: bool) -> void:
 	fps_counter_enabled = enabled
-	_save_settings()
+	SaveManager.save_settings()
 
 
 ## FR-432: 0 = unbegrenzt, sonst 30/60 als Akkuspar-Obergrenze.
 func set_fps_limit(limit: int) -> void:
 	fps_limit = limit
 	Engine.max_fps = limit
-	_save_settings()
+	SaveManager.save_settings()
 
 
 func set_tap_confirmations_enabled(enabled: bool) -> void:
 	tap_confirmations_enabled = enabled
-	_save_settings()
+	SaveManager.save_settings()
 
 
 func set_pause_on_focus_loss(enabled: bool) -> void:
 	pause_on_focus_loss = enabled
-	_save_settings()
+	SaveManager.save_settings()
 
 
 func set_difficulty_assist_enabled(enabled: bool) -> void:
 	difficulty_assist_enabled = enabled
-	_save_settings()
+	SaveManager.save_settings()
 
 
 func set_master_volume(value: float) -> void:
 	master_volume = clampf(value, 0.0, 1.0)
 	AudioServer.set_bus_volume_db(0, linear_to_db(maxf(master_volume, 0.0001)))
-	_save_settings()
+	SaveManager.save_settings()
 
 
 ## FR-439: Sprache umschalten (Übersetzungs-Anwendung folgt in Batch 17).
@@ -188,7 +188,7 @@ func set_language(lang_code: String) -> void:
 	if lang_code in LANGUAGES:
 		language = lang_code
 		TranslationServer.set_locale(lang_code)
-		_save_settings()
+		SaveManager.save_settings()
 
 
 ## FR-440: Setzt nur die Einstellungen (nicht den Spielfortschritt) auf
@@ -227,7 +227,7 @@ func reset_settings_to_default() -> void:
 	Engine.max_fps = 0
 	AudioServer.set_bus_volume_db(0, 0.0)
 	accessibility_changed.emit()
-	_save_settings()
+	SaveManager.save_settings()
 
 # --- FR-341: Zeitrennen-Modus (Time Attack) ----------------------
 var time_attack_mode: bool = false
@@ -283,7 +283,7 @@ func set_game_mode(mode: GameMode) -> void:
 		current_level = 1  # Marathon startet immer bei Level 1
 	if mode == GameMode.BOSS_RUSH:
 		current_level = TOTAL_LEVELS  # FR-347: direkt zum Boss-Level springen
-	_save_progress()
+	SaveManager.save_now()
 
 
 ## FR-350: Liefert einen für alle Spieler an diesem Kalendertag gleichen
@@ -302,7 +302,7 @@ func get_daily_seed_params() -> Dictionary:
 ## eine neue Bestzeit erzielt wurde — siehe record_time_attack()).
 func store_ghost_path(level_index: int, path: PackedVector2Array) -> void:
 	ghost_paths[level_index] = path
-	_save_progress()
+	SaveManager.save_now()
 
 
 func get_ghost_path(level_index: int) -> PackedVector2Array:
@@ -342,13 +342,13 @@ var pixel_perfect_mode: bool = false
 func set_shader_quality(quality: String) -> void:
 	shader_quality = quality
 	render_settings_changed.emit()
-	_save_settings()  # FR-414
+	SaveManager.save_settings()  # FR-414
 
 
 ## FR-282: Schaltet den optionalen CRT-/Retro-Filter um.
 func set_crt_filter_enabled(enabled: bool) -> void:
 	crt_filter_enabled = enabled
-	_save_settings()  # FR-414
+	SaveManager.save_settings()  # FR-414
 
 
 ## FR-291: Setzt die Render-Auflösungsskalierung (niedriger = schneller,
@@ -356,7 +356,7 @@ func set_crt_filter_enabled(enabled: bool) -> void:
 func set_render_scale(scale: float) -> void:
 	render_scale = clampf(scale, 0.5, 1.0)
 	get_tree().root.content_scale_factor = render_scale
-	_save_settings()  # FR-414
+	SaveManager.save_settings()  # FR-414
 
 
 ## FR-299: Schaltet den Pixel-Perfect-Modus um (Nearest-Filter,
@@ -367,7 +367,7 @@ func set_pixel_perfect_mode(enabled: bool) -> void:
 		Viewport.DEFAULT_CANVAS_ITEM_TEXTURE_FILTER_NEAREST if enabled
 		else Viewport.DEFAULT_CANVAS_ITEM_TEXTURE_FILTER_LINEAR
 	)
-	_save_settings()  # FR-414
+	SaveManager.save_settings()  # FR-414
 
 
 # --- FR-215/216/220: HUD-Einstellungen -----------------------------
@@ -471,182 +471,6 @@ const OBSTACLE_UNLOCK_LEVELS := {
 	"black_hole": 2, "lava_pool": 2, "proximity_mine": 3,
 }
 
-# --- FR-224: Shop / freischaltbare Skin-Farben -----------------------
-var unlocked_skin_colors: Array[String] = ["default"]
-var active_skin_color: String = "default"
-
-# --- FR-180: Eigener Farb-Editor für den Standard-Skin -----------------
-var custom_skin_color: Color = Color(0.95, 0.95, 0.95)
-
-
-## FR-180: Setzt eine frei gewählte Skin-Farbe und rüstet sie sofort aus.
-func set_custom_skin_color(color: Color) -> void:
-	custom_skin_color = color
-	active_skin_color = "custom"
-	_save_progress()
-
-# --- FR-161/163/166/167/175/176: Kosmetik-Ausrüstung (Mix&Match, FR-179) --
-signal cosmetics_changed
-
-var equipped_helmet: String = "helmet_none"
-var equipped_outfit: String = "outfit_none"
-var equipped_hat: String = "hat_none"
-var equipped_face: String = "neutral"       # FR-167
-var equipped_arrow_style: String = "arrow_classic"  # FR-175
-var equipped_death_anim: String = "death_spin"      # FR-176
-var equipped_victory_pose: String = "pose_wave"     # FR-177
-var equipped_fart_color_style: String = "fart_classic"  # FR-164
-var equipped_fart_sound: String = "fartsound_classic"    # FR-165
-
-# FR-170: Seltenheitsstufen (beeinflussen Preis/Optik im Shop)
-enum Rarity { COMMON, RARE, EPIC, LEGENDARY }
-
-# id -> {name, slot, cost, rarity, unlocked_by_default}
-const COSMETIC_CATALOG := {
-	"helmet_none": {"name": "Kein Helm", "slot": "helmet", "cost": 0, "rarity": Rarity.COMMON},
-	"helmet_visor": {"name": "Visier-Helm", "slot": "helmet", "cost": 150, "rarity": Rarity.COMMON},
-	"helmet_viking": {"name": "Wikinger-Hörner", "slot": "helmet", "cost": 350, "rarity": Rarity.RARE},
-	"helmet_mohawk": {"name": "Iro-Helm", "slot": "helmet", "cost": 350, "rarity": Rarity.RARE},
-	"helmet_crown": {"name": "Krone", "slot": "helmet", "cost": 900, "rarity": Rarity.LEGENDARY},
-
-	"outfit_none": {"name": "Kein Anzug", "slot": "outfit", "cost": 0, "rarity": Rarity.COMMON},
-	"outfit_astronaut": {"name": "Astronaut", "slot": "outfit", "cost": 400, "rarity": Rarity.RARE},
-	"outfit_hero": {"name": "Superheld", "slot": "outfit", "cost": 400, "rarity": Rarity.RARE},
-	"outfit_animal": {"name": "Tier-Kostüm", "slot": "outfit", "cost": 400, "rarity": Rarity.RARE},
-
-	"hat_none": {"name": "Kein Hut", "slot": "hat", "cost": 0, "rarity": Rarity.COMMON},
-	"hat_top": {"name": "Zylinder", "slot": "hat", "cost": 200, "rarity": Rarity.COMMON},
-	"hat_cap": {"name": "Käppi", "slot": "hat", "cost": 150, "rarity": Rarity.COMMON},
-	"hat_shades": {"name": "Sonnenbrille", "slot": "hat", "cost": 250, "rarity": Rarity.RARE},
-	# FR-334: Nicht im Shop kaufbar — nur als Erfolgs-Belohnung für
-	# "Sternensammler" per grant_cosmetic_free() (siehe "achievement_only").
-	"hat_crown": {"name": "Krone", "slot": "hat", "cost": 0, "rarity": Rarity.LEGENDARY, "achievement_only": true},
-
-	"arrow_classic": {"name": "Klassisch", "slot": "arrow", "cost": 0, "rarity": Rarity.COMMON},
-	"arrow_neon": {"name": "Neon", "slot": "arrow", "cost": 200, "rarity": Rarity.COMMON},
-	"arrow_rainbow": {"name": "Regenbogen", "slot": "arrow", "cost": 500, "rarity": Rarity.EPIC},
-
-	"death_spin": {"name": "Taumeln", "slot": "death", "cost": 0, "rarity": Rarity.COMMON},
-	"death_confetti": {"name": "Konfetti-Explosion", "slot": "death", "cost": 300, "rarity": Rarity.RARE},
-	"death_ghost": {"name": "Geist-Verblassen", "slot": "death", "cost": 300, "rarity": Rarity.RARE},
-
-	"pose_wave": {"name": "Winken", "slot": "pose", "cost": 0, "rarity": Rarity.COMMON},
-	"pose_flex": {"name": "Muskeln zeigen", "slot": "pose", "cost": 250, "rarity": Rarity.RARE},
-	"pose_dance": {"name": "Freuden-Tanz", "slot": "pose", "cost": 250, "rarity": Rarity.RARE},
-
-	"fart_classic": {"name": "Klassisch", "slot": "fartcolor", "cost": 0, "rarity": Rarity.COMMON},
-	"fart_toxic": {"name": "Toxisch-Grün", "slot": "fartcolor", "cost": 200, "rarity": Rarity.COMMON},
-	"fart_rainbow": {"name": "Regenbogen", "slot": "fartcolor", "cost": 500, "rarity": Rarity.EPIC},
-
-	"fartsound_classic": {"name": "Klassisch", "slot": "fartsound", "cost": 0, "rarity": Rarity.COMMON},
-	"fartsound_deep": {"name": "Basslastig", "slot": "fartsound", "cost": 200, "rarity": Rarity.COMMON},
-	"fartsound_squeaky": {"name": "Quietschig", "slot": "fartsound", "cost": 200, "rarity": Rarity.COMMON},
-	"fartsound_robotic": {"name": "Robotisch", "slot": "fartsound", "cost": 400, "rarity": Rarity.RARE},
-}
-
-var unlocked_cosmetics: Array[String] = [
-	"helmet_none", "outfit_none", "hat_none", "arrow_classic",
-	"death_spin", "pose_wave", "fart_classic", "fartsound_classic",
-]
-
-# FR-172: Saisonale Skins — nur in bestimmten Monaten kaufbar
-const SEASONAL_COSMETICS := {
-	"helmet_viking": [12, 1],  # Winter (Dez/Jan)
-	"hat_top": [10, 11],       # Herbst (Okt/Nov)
-}
-
-# FR-174: Skin-des-Tages — täglich rotierender Gratis-Skin
-var daily_skin_claimed_date: String = ""
-
-
-## FR-169/170: Schaltet ein Kosmetik-Item per Guthaben frei.
-func unlock_cosmetic(id: String) -> bool:
-	if id in unlocked_cosmetics:
-		return true
-	var info: Dictionary = COSMETIC_CATALOG.get(id, {})
-	if info.is_empty():
-		return false
-	var cost: int = info["cost"]
-	if persistent_coins < cost:
-		return false
-	persistent_coins -= cost
-	persistent_coins_changed.emit(persistent_coins)
-	unlocked_cosmetics.append(id)
-	_save_progress()
-	return true
-
-
-## FR-334: Schaltet ein Kosmetik-Item kostenlos frei (z.B. als
-## Erfolgs-Belohnung) — im Gegensatz zu unlock_cosmetic() ohne Kaufpreis.
-func grant_cosmetic_free(id: String) -> void:
-	if id in unlocked_cosmetics:
-		return
-	unlocked_cosmetics.append(id)
-	_save_progress()
-
-
-## FR-179: Rüstet ein Kosmetik-Item in seinem Slot aus (Mix&Match).
-func equip_cosmetic(id: String) -> void:
-	if not id in unlocked_cosmetics:
-		return
-	var info: Dictionary = COSMETIC_CATALOG.get(id, {})
-	if info.is_empty():
-		return
-	match info["slot"]:
-		"helmet": equipped_helmet = id
-		"outfit": equipped_outfit = id
-		"hat": equipped_hat = id
-		"arrow": equipped_arrow_style = id
-		"death": equipped_death_anim = id
-		"pose": equipped_victory_pose = id
-		"fartcolor": equipped_fart_color_style = id
-		"fartsound": equipped_fart_sound = id
-	cosmetics_changed.emit()
-	_save_progress()
-
-
-## FR-172: Prüft, ob ein saisonales Kosmetik-Item aktuell verfügbar ist.
-func is_cosmetic_seasonally_available(id: String) -> bool:
-	if not SEASONAL_COSMETICS.has(id):
-		return true
-	var current_month := Time.get_date_dict_from_system()["month"]
-	return current_month in SEASONAL_COSMETICS[id]
-
-
-## FR-174: Skin-des-Tages — liefert eine deterministische, täglich
-## wechselnde Auswahl aus dem Katalog und schaltet sie beim Abholen frei.
-func get_daily_skin_id() -> String:
-	var pool := COSMETIC_CATALOG.keys().filter(func(id): return COSMETIC_CATALOG[id]["cost"] > 0)
-	if pool.is_empty():
-		return ""
-	var day_seed := int(Time.get_unix_time_from_system() / 86400.0)
-	return pool[day_seed % pool.size()]
-
-
-func is_daily_skin_available() -> bool:
-	return daily_skin_claimed_date != Time.get_date_string_from_system()
-
-
-## FR-174: Schaltet den heutigen Skin-des-Tages kostenlos frei.
-func claim_daily_skin() -> bool:
-	if not is_daily_skin_available():
-		return false
-	var id := get_daily_skin_id()
-	if id == "" or id in unlocked_cosmetics:
-		daily_skin_claimed_date = Time.get_date_string_from_system()
-		_save_progress()
-		return false
-	unlocked_cosmetics.append(id)
-	daily_skin_claimed_date = Time.get_date_string_from_system()
-	_save_progress()
-	return true
-
-
-## FR-178: Fortschritt der Kosmetik-Sammlung (freigeschaltet / gesamt).
-func get_cosmetics_collection_progress() -> Vector2i:
-	return Vector2i(unlocked_cosmetics.size(), COSMETIC_CATALOG.size())
-
-
 # --- FR-224: Persistente Währung fürs Menü/Shop --------------------
 # Hinweis: total_coins/total_score sind reine Session-Werte pro Level-
 # Versuch (werden bei jedem start_level() zurückgesetzt). Für den Shop
@@ -703,9 +527,9 @@ var discovered_enemies: Array[String] = []
 
 func _ready() -> void:
 	# FR-414: Einstellungen zuerst laden (bestimmt u.a. den aktiven Speicherplatz)
-	_load_settings()
+	SaveManager.load_settings()
 	# Beim Start einmal den gespeicherten Fortschritt laden (falls vorhanden)
-	_load_progress()
+	SaveManager.load_now()
 	# Gespeicherte Audio-/Grafik-Einstellungen anwenden
 	_apply_mute()
 	get_tree().root.content_scale_factor = render_scale  # FR-291
@@ -791,40 +615,40 @@ func get_difficulty_multiplier() -> float:
 func set_control_scheme(scheme: String) -> void:
 	control_scheme = scheme
 	control_settings_changed.emit()
-	_save_settings()  # FR-414
+	SaveManager.save_settings()  # FR-414
 
 
 ## FR-043: Schaltet den Linkshänder-Modus (gespiegeltes HUD) um.
 func set_left_handed(enabled: bool) -> void:
 	left_handed_mode = enabled
 	control_settings_changed.emit()
-	_save_settings()  # FR-414
+	SaveManager.save_settings()  # FR-414
 
 
 ## FR-044: Setzt die Touch-Empfindlichkeit (0.5 = träge, 2.0 = sehr empfindlich).
 func set_touch_sensitivity(value: float) -> void:
 	touch_sensitivity = clampf(value, 0.5, 2.0)
 	control_settings_changed.emit()
-	_save_settings()  # FR-414
+	SaveManager.save_settings()  # FR-414
 
 
 ## FR-044: Setzt die Dead-Zone in Pixeln (minimale Zugweite fürs Zielen).
 func set_touch_dead_zone(value: float) -> void:
 	touch_dead_zone = clampf(value, 0.0, 60.0)
 	control_settings_changed.emit()
-	_save_settings()  # FR-414
+	SaveManager.save_settings()  # FR-414
 
 
 ## FR-189: Setzt die globale Kamera-Rüttel-Intensität (0.0 = aus, 2.0 = stark).
 func set_camera_shake_intensity(value: float) -> void:
 	camera_shake_intensity = clampf(value, 0.0, 2.0)
-	_save_settings()  # FR-414
+	SaveManager.save_settings()  # FR-414
 
 
 ## FR-200: Setzt die Kamera-Glättung (Lerp-Geschwindigkeit beim Folgen).
 func set_camera_smoothing(value: float) -> void:
 	camera_smoothing = clampf(value, 2.0, 16.0)
-	_save_settings()  # FR-414
+	SaveManager.save_settings()  # FR-414
 
 
 ## FR-226: Erhöht den Furz-Zähler (von Player bei jedem Stoß aufgerufen).
@@ -843,7 +667,7 @@ func record_death() -> void:
 	show_sound_caption(tr("caption_crash"))  # FR-425
 	_check_milestones()  # FR-308
 	_check_badges()      # FR-318
-	_save_progress()
+	SaveManager.save_now()
 
 
 ## FR-236: Schaltet den Favoriten-Status eines Levels um.
@@ -852,7 +676,7 @@ func toggle_favorite_level(level_index: int) -> void:
 		favorite_levels.erase(level_index)
 	else:
 		favorite_levels.append(level_index)
-	_save_progress()
+	SaveManager.save_now()
 
 
 ## FR-237: Gesamtfortschritt in Prozent (erreichte Sterne / maximal mögliche).
@@ -873,40 +697,27 @@ func bank_level_coins(score_amount: int) -> void:
 		return
 	persistent_coins += score_amount
 	persistent_coins_changed.emit(persistent_coins)
-	_save_progress()
-
-
-## FR-224: Schaltet eine Skin-Farbe per dauerhaftem Guthaben frei.
-func unlock_skin_color(id: String, cost: int) -> bool:
-	if id in unlocked_skin_colors:
-		return true
-	if persistent_coins < cost:
-		return false
-	persistent_coins -= cost
-	persistent_coins_changed.emit(persistent_coins)
-	unlocked_skin_colors.append(id)
-	_save_progress()
-	return true
+	SaveManager.save_now()
 
 
 ## FR-210: Markiert den Tutorial-Hinweis dauerhaft als gesehen.
 func mark_tutorial_hint_seen() -> void:
 	tutorial_hint_seen = true
-	_save_progress()
+	SaveManager.save_now()
 
 
 ## FR-215: Schaltet den minimalistischen HUD-Modus um.
 func set_hud_minimal_mode(enabled: bool) -> void:
 	hud_minimal_mode = enabled
 	hud_settings_changed.emit()
-	_save_settings()  # FR-414
+	SaveManager.save_settings()  # FR-414
 
 
 ## FR-216: Setzt die HUD-Skalierung (0.75..1.5).
 func set_hud_scale(value: float) -> void:
 	hud_scale = clampf(value, 0.75, 1.5)
 	hud_settings_changed.emit()
-	_save_settings()  # FR-414
+	SaveManager.save_settings()  # FR-414
 
 
 ## FR-219: Registriert eine abgeschlossene Levelzeit für die lokale
@@ -916,7 +727,7 @@ func record_attempt_time(level_index: int, time_sec: float) -> int:
 		level_attempt_times[level_index] = []
 	var times: Array = level_attempt_times[level_index]
 	times.append(time_sec)
-	_save_progress()
+	SaveManager.save_now()
 	return get_live_rank(level_index, time_sec)
 
 
@@ -941,7 +752,7 @@ func collect_random_sticker() -> String:
 	var picked: String = missing[randi() % missing.size()]
 	collected_stickers.append(picked)
 	sticker_collected.emit(picked)
-	_save_progress()
+	SaveManager.save_now()
 	return picked
 
 
@@ -973,7 +784,7 @@ func claim_daily_coin() -> bool:
 		return false
 	last_daily_coin_date = Time.get_date_string_from_system()
 	add_coin(DAILY_COIN_REWARD)
-	_save_progress()
+	SaveManager.save_now()
 	return true
 
 
@@ -1077,14 +888,14 @@ func vibrate(duration_ms: int = 30) -> void:
 
 func set_haptics(enabled: bool) -> void:
 	haptics_enabled = enabled
-	_save_settings()  # FR-414 (vorher fälschlich gar nicht persistiert)
+	SaveManager.save_settings()  # FR-414 (vorher fälschlich gar nicht persistiert)
 
 
 # --- FR-249: Stummschaltung -------------------------------------
 func set_muted(muted: bool) -> void:
 	sound_muted = muted
 	_apply_mute()
-	_save_settings()  # FR-414 (vorher fälschlich gar nicht persistiert)
+	SaveManager.save_settings()  # FR-414 (vorher fälschlich gar nicht persistiert)
 
 
 func toggle_muted() -> void:
@@ -1190,7 +1001,7 @@ const FART_SOUND_POOL_SIZE := 3
 func play_fart_sound(strength: float = 1.0) -> void:
 	if sound_muted:
 		return
-	var pack := equipped_fart_sound
+	var pack := CosmeticsManager.equipped_fart_sound
 	if not _fart_sound_cache.has(pack):
 		_fart_sound_cache[pack] = _generate_fart_tone(pack)
 	var player := _get_free_fart_player()
@@ -1333,7 +1144,7 @@ func record_stars(level_index: int, stars: int) -> void:
 		# FR-301: XP für Sterne vergeben
 		add_xp(stars * XP_PER_STAR)
 		add_season_xp(stars * XP_PER_STAR)  # FR-311
-		_save_progress()
+		SaveManager.save_now()
 	# FR-310: Wochenziel "Sterne erspielen" zählt jeden erspielten Stern
 	# (auch bei bereits erreichten Bestwertungen, damit Wiederholungen zählen)
 	add_weekly_progress("weekly_stars", stars)
@@ -1365,7 +1176,7 @@ func unlock_skill(id: String) -> bool:
 	persistent_coins_changed.emit(persistent_coins)
 	unlocked_skills.append(id)
 	skill_unlocked.emit(id)
-	_save_progress()
+	SaveManager.save_now()
 	return true
 
 
@@ -1408,7 +1219,7 @@ func do_prestige() -> bool:
 		level_stars[lvl] = 0
 	current_level = 1
 	prestige_changed.emit(prestige_level)
-	_save_progress()
+	SaveManager.save_now()
 	return true
 
 
@@ -1429,7 +1240,7 @@ func _check_milestones() -> void:
 			persistent_coins += int(m["reward"])
 			persistent_coins_changed.emit(persistent_coins)
 			milestone_reached.emit(m["id"])
-			_save_progress()
+			SaveManager.save_now()
 
 
 ## FR-318: Prüft alle statistik-getriebenen Abzeichen und schaltet neu
@@ -1441,7 +1252,7 @@ func _check_badges() -> void:
 		var value: int = get(String(b["stat"]))
 		if value >= int(b["threshold"]):
 			earned_badges.append(b["id"])
-			_save_progress()
+			SaveManager.save_now()
 
 
 ## FR-309: Prüft/vergibt die tägliche Login-Belohnung (einmal pro
@@ -1457,7 +1268,7 @@ func claim_daily_login_reward() -> int:
 	var reward: int = LOGIN_REWARD_COINS[(login_streak_day - 1) % LOGIN_REWARD_COINS.size()]
 	persistent_coins += reward
 	persistent_coins_changed.emit(persistent_coins)
-	_save_progress()
+	SaveManager.save_now()
 	return reward
 
 
@@ -1495,7 +1306,7 @@ func add_weekly_progress(goal_id: String, amount: int) -> void:
 			weekly_claimed[goal_id] = true
 			persistent_coins += int(goal["reward"])
 			persistent_coins_changed.emit(persistent_coins)
-			_save_progress()
+			SaveManager.save_now()
 		break
 
 
@@ -1519,7 +1330,7 @@ func claim_season_tier_reward() -> int:
 			var reward: int = SEASON_TIER_REWARDS[t - 1]
 			persistent_coins += reward
 			persistent_coins_changed.emit(persistent_coins)
-			_save_progress()
+			SaveManager.save_now()
 			return reward
 	return 0
 
@@ -1556,14 +1367,14 @@ func break_piggy_bank() -> int:
 	persistent_coins += payout
 	persistent_coins_changed.emit(persistent_coins)
 	piggy_bank_changed.emit(0)
-	_save_progress()
+	SaveManager.save_now()
 	return payout
 
 
 ## FR-316: Schaltet den Hard-Mode um (wirkt sich auf Main.gd/Player.gd aus).
 func set_hard_mode_enabled(enabled: bool) -> void:
 	hard_mode_enabled = enabled
-	_save_progress()
+	SaveManager.save_now()
 
 
 ## FR-316: Speichert die im Hard-Mode erspielten Sterne getrennt von der
@@ -1574,7 +1385,7 @@ func record_hard_mode_stars(level_index: int, stars: int) -> void:
 	if stars > hard_mode_stars[level_index]:
 		hard_mode_stars[level_index] = stars
 		add_xp(stars * XP_PER_STAR * 2)
-		_save_progress()
+		SaveManager.save_now()
 
 
 ## FR-317: Persönliche Bestzeit für ein Level aus allen normalen Versuchen
@@ -1605,7 +1416,7 @@ func record_time_attack(level_index: int, time_sec: float) -> bool:
 		time_attack_best_times[level_index] = INF
 	if time_sec < time_attack_best_times[level_index]:
 		time_attack_best_times[level_index] = time_sec
-		_save_progress()
+		SaveManager.save_now()
 		return true
 	return false
 
@@ -1621,504 +1432,9 @@ func get_level_scene_path(level_index: int) -> String:
 	return LEVEL_SCENES[idx]
 
 
-# --- Speichern / Laden des Fortschritts -------------------------
-const SAVE_VERSION := 1                                   # FR-416
-const SETTINGS_PATH := "user://fartrocket_settings.cfg"    # FR-414
-const BACKUP_DIR := "user://backups/"                       # FR-406/407/411/417
-const MAX_BACKUPS_PER_SLOT := 5
-const SAVE_SLOT_COUNT := 3                                  # FR-403
-# FR-409: Rein clientseitige Verschleierung gegen beiläufiges Editieren
-# der Speicherdatei mit einem Texteditor — kein Schutz vor einem
-# entschlossenen Angreifer (der Schlüssel liegt im Spiel-Code selbst).
-const SAVE_PASSPHRASE := "fartrocket-local-save-v1"
-
-var current_save_slot: int = 1                              # FR-403
-
-
-func _save_path(slot: int = -1) -> String:
-	var s: int = current_save_slot if slot < 0 else slot
-	return "user://fartrocket_save_slot%d.cfg" % s
-
-
-## FR-401/409/413/416: Serialisiert den kompletten Fortschritt
-## (Prüfsumme + Versionsnummer), verschlüsselt und atomar gespeichert,
-## mit anschließendem Backup (FR-406/411/417).
-func _save_progress() -> void:
-	var cfg := ConfigFile.new()
-	cfg.set_value("meta", "version", SAVE_VERSION)  # FR-416
-	for lvl in level_stars.keys():
-		cfg.set_value("stars", str(lvl), level_stars[lvl])
-	cfg.set_value("bestiary", "discovered", discovered_enemies)
-	cfg.set_value("daily", "last_coin_date", last_daily_coin_date)  # FR-093
-	cfg.set_value("stickers", "collected", collected_stickers)  # FR-089
-	cfg.set_value("hud", "attempt_times", level_attempt_times)  # FR-219
-	cfg.set_value("hud", "tutorial_hint_seen", tutorial_hint_seen)  # FR-210
-	cfg.set_value("stats", "total_farts", stat_total_farts)  # FR-226
-	cfg.set_value("stats", "total_deaths", stat_total_deaths)  # FR-226
-	cfg.set_value("menu", "favorites", favorite_levels)  # FR-236
-	cfg.set_value("menu", "last_played_level", last_played_level)  # FR-238
-	cfg.set_value("shop", "unlocked_skins", unlocked_skin_colors)  # FR-224
-	cfg.set_value("shop", "active_skin", active_skin_color)  # FR-224
-	cfg.set_value("shop", "custom_skin_color", custom_skin_color)  # FR-180
-	cfg.set_value("shop", "persistent_coins", persistent_coins)  # FR-224
-	cfg.set_value("cosmetics", "unlocked", unlocked_cosmetics)
-	cfg.set_value("cosmetics", "helmet", equipped_helmet)
-	cfg.set_value("cosmetics", "outfit", equipped_outfit)
-	cfg.set_value("cosmetics", "hat", equipped_hat)
-	cfg.set_value("cosmetics", "arrow", equipped_arrow_style)
-	cfg.set_value("cosmetics", "death", equipped_death_anim)
-	cfg.set_value("cosmetics", "pose", equipped_victory_pose)
-	cfg.set_value("cosmetics", "fartcolor", equipped_fart_color_style)
-	cfg.set_value("cosmetics", "fartsound", equipped_fart_sound)
-	cfg.set_value("cosmetics", "daily_claimed_date", daily_skin_claimed_date)
-	cfg.set_value("progression", "unlocked_skills", unlocked_skills)          # FR-304/305
-	cfg.set_value("progression", "prestige_level", prestige_level)            # FR-306
-	cfg.set_value("progression", "claimed_milestones", claimed_milestones)    # FR-308
-	cfg.set_value("progression", "lifetime_coins", lifetime_coins)            # FR-308
-	cfg.set_value("progression", "login_streak_day", login_streak_day)        # FR-309
-	cfg.set_value("progression", "last_login_date", _last_login_date)         # FR-309
-	cfg.set_value("progression", "weekly_progress", weekly_progress)          # FR-310
-	cfg.set_value("progression", "weekly_claimed", weekly_claimed)            # FR-310
-	cfg.set_value("progression", "weekly_week_id", _weekly_week_id)           # FR-310
-	cfg.set_value("progression", "season_xp", season_xp)                      # FR-311
-	cfg.set_value("progression", "season_claimed_tiers", season_claimed_tiers)  # FR-311
-	cfg.set_value("progression", "piggy_bank_amount", piggy_bank_amount)      # FR-313
-	cfg.set_value("progression", "hard_mode_enabled", hard_mode_enabled)      # FR-316
-	cfg.set_value("progression", "hard_mode_stars", hard_mode_stars)          # FR-316
-	cfg.set_value("progression", "earned_badges", earned_badges)              # FR-318
-	cfg.set_value("modes", "active_game_mode", active_game_mode)              # FR-342-360
-	cfg.set_value("modes", "endless_best_loops", endless_best_loops)          # FR-342
-	cfg.set_value("modes", "survival_best_time", survival_best_time)          # FR-343
-	cfg.set_value("modes", "coin_hunt_best_score", coin_hunt_best_score)      # FR-346
-	cfg.set_value("modes", "ghost_paths", ghost_paths)                       # FR-353
-	cfg.set_value("modes", "daily_seed_date", daily_seed_date)                # FR-350
-	cfg.set_value("modes", "daily_seed_modifier_id", daily_seed_modifier_id)  # FR-350
-	cfg.set_value("meta", "checksum", _compute_checksum(cfg))  # FR-413
-	_write_config_atomic(cfg, _save_path())
-	_create_backup(_save_path())  # FR-406/411/417
-
-
-## FR-404: Öffentlicher Alias, damit Aufrufer (z.B. nach jedem Level)
-## nicht auf die intern-benannte Funktion zugreifen müssen.
-func save_now() -> void:
-	_save_progress()
-
-
-## Test-Infrastruktur: Öffentlicher Alias für _load_progress(), analog zu
-## save_now() — ermöglicht gezieltes Neuladen in Tests, ohne auf die
-## konventionell private Funktion zuzugreifen.
-func load_now() -> void:
-	_load_progress()
-
-
-## Test-Infrastruktur: Öffentlicher Zugriff auf den Speicherpfad eines
-## Profils (für Tests, die absichtlich Korruption simulieren wollen).
-func get_save_path(slot: int = -1) -> String:
-	return _save_path(slot)
-
-
-## FR-414: Speichert Einstellungen (Steuerung/Kamera/HUD/Grafik/Audio +
-## aktiver Speicherplatz) in einer eigenen, vom Spielfortschritt
-## unabhängigen Datei — ein Fortschritts-Reset (FR-228/420) wirkt sich
-## dadurch nie auf diese Einstellungen aus (und umgekehrt).
-func _save_settings() -> void:
-	var cfg := ConfigFile.new()
-	cfg.set_value("meta", "version", SAVE_VERSION)
-	cfg.set_value("profile", "current_slot", current_save_slot)  # FR-403
-	cfg.set_value("input", "control_scheme", control_scheme)  # FR-042/043/044
-	cfg.set_value("input", "left_handed", left_handed_mode)
-	cfg.set_value("input", "touch_sensitivity", touch_sensitivity)
-	cfg.set_value("input", "touch_dead_zone", touch_dead_zone)
-	cfg.set_value("camera", "shake_intensity", camera_shake_intensity)  # FR-189
-	cfg.set_value("camera", "smoothing", camera_smoothing)  # FR-200
-	cfg.set_value("hud", "minimal_mode", hud_minimal_mode)  # FR-215
-	cfg.set_value("hud", "scale", hud_scale)  # FR-216
-	cfg.set_value("render", "shader_quality", shader_quality)  # FR-300
-	cfg.set_value("render", "render_scale", render_scale)  # FR-291
-	cfg.set_value("render", "pixel_perfect", pixel_perfect_mode)  # FR-299
-	cfg.set_value("render", "crt_filter", crt_filter_enabled)  # FR-282
-	cfg.set_value("audio", "haptics_enabled", haptics_enabled)
-	cfg.set_value("audio", "sound_muted", sound_muted)
-	cfg.set_value("audio", "master_volume", master_volume)              # FR-438
-	cfg.set_value("accessibility", "colorblind_mode", colorblind_mode)  # FR-421
-	cfg.set_value("accessibility", "high_contrast", high_contrast_enabled)  # FR-422
-	cfg.set_value("accessibility", "reduced_motion", reduced_motion_enabled)  # FR-423
-	cfg.set_value("accessibility", "menu_ui_scale", menu_ui_scale)      # FR-424
-	cfg.set_value("accessibility", "sound_captions", sound_captions_enabled)  # FR-425
-	cfg.set_value("accessibility", "one_handed", one_handed_mode)       # FR-426
-	cfg.set_value("accessibility", "assist_aim", assist_aim_enabled)    # FR-427
-	cfg.set_value("accessibility", "screen_brightness", screen_brightness)  # FR-429
-	cfg.set_value("accessibility", "fps_counter", fps_counter_enabled)  # FR-431
-	cfg.set_value("accessibility", "fps_limit", fps_limit)              # FR-432
-	cfg.set_value("accessibility", "tap_confirmations", tap_confirmations_enabled)  # FR-435
-	cfg.set_value("accessibility", "pause_on_focus_loss", pause_on_focus_loss)  # FR-436
-	cfg.set_value("accessibility", "difficulty_assist", difficulty_assist_enabled)  # FR-437
-	cfg.set_value("accessibility", "language", language)                # FR-439
-	_write_config_atomic(cfg, SETTINGS_PATH)
-
-
-func _load_settings() -> void:
-	var cfg := ConfigFile.new()
-	if cfg.load_encrypted_pass(SETTINGS_PATH, SAVE_PASSPHRASE) != OK:
-		return  # Noch keine Einstellungen gespeichert – Standardwerte gelten
-	current_save_slot = cfg.get_value("profile", "current_slot", 1)  # FR-403
-	control_scheme = cfg.get_value("input", "control_scheme", "direct")
-	left_handed_mode = cfg.get_value("input", "left_handed", false)
-	touch_sensitivity = cfg.get_value("input", "touch_sensitivity", 1.0)
-	touch_dead_zone = cfg.get_value("input", "touch_dead_zone", 20.0)
-	camera_shake_intensity = cfg.get_value("camera", "shake_intensity", 1.0)
-	camera_smoothing = cfg.get_value("camera", "smoothing", 8.0)
-	hud_minimal_mode = cfg.get_value("hud", "minimal_mode", false)
-	hud_scale = cfg.get_value("hud", "scale", 1.0)
-	shader_quality = cfg.get_value("render", "shader_quality", "high")
-	render_scale = cfg.get_value("render", "render_scale", 1.0)
-	pixel_perfect_mode = cfg.get_value("render", "pixel_perfect", false)
-	crt_filter_enabled = cfg.get_value("render", "crt_filter", false)
-	haptics_enabled = cfg.get_value("audio", "haptics_enabled", true)
-	sound_muted = cfg.get_value("audio", "sound_muted", false)
-	master_volume = cfg.get_value("audio", "master_volume", 1.0)                    # FR-438
-	colorblind_mode = cfg.get_value("accessibility", "colorblind_mode", ColorblindMode.NONE)  # FR-421
-	high_contrast_enabled = cfg.get_value("accessibility", "high_contrast", false)  # FR-422
-	reduced_motion_enabled = cfg.get_value("accessibility", "reduced_motion", false)  # FR-423
-	menu_ui_scale = cfg.get_value("accessibility", "menu_ui_scale", 1.0)            # FR-424
-	sound_captions_enabled = cfg.get_value("accessibility", "sound_captions", false)  # FR-425
-	one_handed_mode = cfg.get_value("accessibility", "one_handed", false)           # FR-426
-	assist_aim_enabled = cfg.get_value("accessibility", "assist_aim", false)        # FR-427
-	screen_brightness = cfg.get_value("accessibility", "screen_brightness", 1.0)    # FR-429
-	fps_counter_enabled = cfg.get_value("accessibility", "fps_counter", false)      # FR-431
-	fps_limit = cfg.get_value("accessibility", "fps_limit", 0)                      # FR-432
-	tap_confirmations_enabled = cfg.get_value("accessibility", "tap_confirmations", true)  # FR-435
-	pause_on_focus_loss = cfg.get_value("accessibility", "pause_on_focus_loss", true)  # FR-436
-	difficulty_assist_enabled = cfg.get_value("accessibility", "difficulty_assist", false)  # FR-437
-	language = cfg.get_value("accessibility", "language", "de")                    # FR-439
-
-
-## FR-401: Schreibt eine ConfigFile verschlüsselt (FR-409) und atomar —
-## zuerst in eine Temp-Datei, dann per Umbenennen an die Zielposition
-## verschoben, damit ein Absturz mitten im Schreiben nie die vorherige,
-## intakte Datei zerstört.
-func _write_config_atomic(cfg: ConfigFile, path: String) -> void:
-	var tmp_path := path + ".tmp"
-	var err := cfg.save_encrypted_pass(tmp_path, SAVE_PASSPHRASE)
-	if err != OK:
-		push_warning("Speichern fehlgeschlagen (%s): Fehlercode %d" % [path, err])
-		return
-	var dir := DirAccess.open("user://")
-	if dir == null:
-		return
-	var rel_path := path.trim_prefix("user://")
-	var rel_tmp := tmp_path.trim_prefix("user://")
-	if dir.file_exists(rel_path):
-		dir.remove(rel_path)
-	dir.rename(rel_tmp, rel_path)
-
-
-## FR-413: Einfache Prüfsumme über alle gespeicherten Werte (außer der
-## Prüfsumme selbst), um grobe Speicher-Korruption beim Laden zu
-## erkennen — kein Kryptografie-Anspruch, nur ein Korruptions-Indikator.
-func _compute_checksum(cfg: ConfigFile) -> int:
-	var parts := PackedStringArray()
-	for section in cfg.get_sections():
-		for key in cfg.get_section_keys(section):
-			if section == "meta" and key == "checksum":
-				continue
-			parts.append("%s.%s=%s" % [section, key, cfg.get_value(section, key)])
-	parts.sort()
-	return "|".join(parts).hash()
-
-
-func _verify_checksum(cfg: ConfigFile) -> bool:
-	if not cfg.has_section_key("meta", "checksum"):
-		return true  # ältere Speicherstände ohne Prüfsumme werden akzeptiert
-	return _compute_checksum(cfg) == int(cfg.get_value("meta", "checksum"))
-
-
-## FR-406/411/417: Legt eine Zeitstempel-Kopie der Speicherdatei im
-## Backup-Verzeichnis an und behält nur die letzten MAX_BACKUPS_PER_SLOT.
-func _create_backup(source_path: String) -> void:
-	DirAccess.make_dir_recursive_absolute(BACKUP_DIR)
-	var dir := DirAccess.open("user://")
-	if dir == null or not dir.file_exists(source_path.trim_prefix("user://")):
-		return
-	var stamp := Time.get_datetime_string_from_system().replace(":", "-").replace(" ", "_")
-	var backup_name := "slot%d_%s.cfg" % [current_save_slot, stamp]
-	dir.copy(source_path, BACKUP_DIR + backup_name)
-	_prune_backups()
-
-
-func _list_slot_backup_files() -> Array:
-	var dir := DirAccess.open(BACKUP_DIR)
-	if dir == null:
-		return []
-	var files := []
-	dir.list_dir_begin()
-	var f := dir.get_next()
-	while f != "":
-		if not dir.current_is_dir() and f.begins_with("slot%d_" % current_save_slot):
-			files.append(f)
-		f = dir.get_next()
-	dir.list_dir_end()
-	files.sort()
-	return files
-
-
-func _prune_backups() -> void:
-	var dir := DirAccess.open(BACKUP_DIR)
-	if dir == null:
-		return
-	var files := _list_slot_backup_files()
-	while files.size() > MAX_BACKUPS_PER_SLOT:
-		dir.remove(BACKUP_DIR + files[0])
-		files.remove_at(0)
-
-
-## FR-407/418: Liste vorhandener Backups für den aktuellen Speicherplatz,
-## neueste zuerst — für die Speicher-Slot-Verwaltungs-UI.
-func list_backups() -> Array:
-	var files := _list_slot_backup_files()
-	files.reverse()
-	return files
-
-
-## FR-407/411: Stellt den Fortschritt aus einer Backup-Datei wieder her.
-func restore_backup(backup_filename: String) -> bool:
-	var dir := DirAccess.open("user://")
-	if dir == null:
-		return false
-	if dir.copy(BACKUP_DIR + backup_filename, _save_path()) != OK:
-		return false
-	_load_progress()
-	return true
-
-
-## FR-406: Exportiert den aktuellen Spielstand als benannte Backup-Datei
-## (z.B. für einen manuellen "Jetzt sichern"-Button).
-func export_save() -> String:
-	_save_progress()
-	var backups := list_backups()
-	return backups[0] if not backups.is_empty() else ""
-
-
-## FR-403: Wechselt zum angegebenen Speicherprofil (1..SAVE_SLOT_COUNT)
-## und lädt dessen Stand (oder setzt auf Standardwerte zurück, falls das
-## Profil noch leer ist).
-func switch_save_slot(slot: int) -> void:
-	current_save_slot = clampi(slot, 1, SAVE_SLOT_COUNT)
-	_save_settings()
-	# FR-403: Erst auf Standardwerte zurücksetzen, damit ein noch leeres
-	# Zielprofil nicht versehentlich den Stand des vorherigen Profils
-	# übernimmt (_load_progress() kehrt bei fehlender Datei früh zurück).
-	_reset_progress_vars_to_default()
-	_load_progress()
-
-
-## FR-403/418: Ob für einen Speicherplatz bereits ein Spielstand existiert.
-func save_slot_exists(slot: int) -> bool:
-	return FileAccess.file_exists(_save_path(slot))
-
-
-## FR-403/418: Löscht den Spielstand eines Profils (auch das aktuell
-## aktive, das dann beim nächsten Laden leer erscheint).
-func delete_save_slot(slot: int) -> void:
-	var dir := DirAccess.open("user://")
-	if dir == null:
-		return
-	var p := _save_path(slot).trim_prefix("user://")
-	if dir.file_exists(p):
-		dir.remove(p)
-
-
-## FR-228: Setzt den gesamten Spielstand auf den Ausgangszustand zurück
-## (Sterne, Statistiken, Sammlungen, Guthaben) und löscht die
-## Speicherdatei des aktuellen Profils. Einstellungen (FR-414) sind
-## davon unberührt. Wird nach Bestätigung im Reset-Dialog aufgerufen.
-func reset_all_progress() -> void:
-	_reset_progress_vars_to_default()
-	var dir := DirAccess.open("user://")
-	var p := _save_path().trim_prefix("user://")
-	if dir != null and dir.file_exists(p):
-		dir.remove(p)
-	_save_progress()
-
-
-## FR-401/403/411/417: Setzt alle Fortschritts-Variablen (nicht die
-## Einstellungen) auf ihre Ausgangswerte — gemeinsam genutzt von
-## reset_all_progress(), einem leeren Speicherplatz-Wechsel und als
-## Fallback, wenn weder Primärdatei noch Backup lesbar sind.
-func _reset_progress_vars_to_default() -> void:
-	level_stars = {1: 0, 2: 0, 3: 0}
-	total_xp = 0
-	player_level = 1
-	discovered_enemies.clear()
-	collected_stickers.clear()
-	last_daily_coin_date = ""
-	tutorial_hint_seen = false
-	stat_total_farts = 0
-	stat_total_deaths = 0
-	favorite_levels.clear()
-	last_played_level = 0
-	unlocked_skin_colors = ["default"]
-	active_skin_color = "default"
-	custom_skin_color = Color(0.95, 0.95, 0.95)
-	persistent_coins = 0
-	level_attempt_times.clear()
-	time_attack_best_times = {1: INF, 2: INF, 3: INF}
-	unlocked_cosmetics = [
-		"helmet_none", "outfit_none", "hat_none", "arrow_classic",
-		"death_spin", "pose_wave", "fart_classic", "fartsound_classic",
-	]
-	equipped_helmet = "helmet_none"
-	equipped_outfit = "outfit_none"
-	equipped_hat = "hat_none"
-	equipped_arrow_style = "arrow_classic"
-	equipped_death_anim = "death_spin"
-	equipped_victory_pose = "pose_wave"
-	equipped_fart_color_style = "fart_classic"
-	equipped_fart_sound = "fartsound_classic"
-	daily_skin_claimed_date = ""
-	unlocked_skills.clear()               # FR-304/305
-	prestige_level = 0                    # FR-306
-	claimed_milestones.clear()            # FR-308
-	lifetime_coins = 0                    # FR-308
-	login_streak_day = 0                  # FR-309
-	_last_login_date = ""                 # FR-309
-	weekly_progress.clear()               # FR-310
-	weekly_claimed.clear()                # FR-310
-	_weekly_week_id = ""                  # FR-310
-	season_xp = 0                         # FR-311
-	season_claimed_tiers.clear()          # FR-311
-	piggy_bank_amount = 0                 # FR-313
-	hard_mode_enabled = false             # FR-316
-	hard_mode_stars.clear()               # FR-316
-	earned_badges.clear()                 # FR-318
-	active_game_mode = GameMode.NORMAL    # FR-342-360
-	endless_loop_count = 0                # FR-342
-	endless_best_loops = 0                # FR-342
-	survival_best_time = 0.0              # FR-343
-	coin_hunt_best_score = 0              # FR-346
-	marathon_level_index = 0              # FR-356
-	ghost_paths.clear()                   # FR-353
-	daily_seed_date = ""                  # FR-350
-	daily_seed_modifier_id = "none"       # FR-350
-
-
-## FR-420: DSGVO-konformes vollständiges Löschen aller lokal
-## gespeicherten Daten dieser App — alle Speicherplätze, Einstellungen,
-## Erfolge/Herausforderungen und Backups. Deutlich weitreichender als
-## reset_all_progress() (die nur das aktive Profil zurücksetzt).
-func delete_all_user_data() -> void:
-	var dir := DirAccess.open("user://")
-	if dir != null:
-		for slot in range(1, SAVE_SLOT_COUNT + 1):
-			var p := _save_path(slot).trim_prefix("user://")
-			if dir.file_exists(p):
-				dir.remove(p)
-		var settings_rel := SETTINGS_PATH.trim_prefix("user://")
-		if dir.file_exists(settings_rel):
-			dir.remove(settings_rel)
-	var backup_dir := DirAccess.open(BACKUP_DIR)
-	if backup_dir != null:
-		backup_dir.list_dir_begin()
-		var f := backup_dir.get_next()
-		while f != "":
-			if not backup_dir.current_is_dir():
-				backup_dir.remove(f)
-			f = backup_dir.get_next()
-		backup_dir.list_dir_end()
-	if FileAccess.file_exists(AchievementManager.SAVE_PATH):
-		DirAccess.remove_absolute(AchievementManager.SAVE_PATH)
-	AchievementManager.reset_all()
-	_reset_progress_vars_to_default()
-	current_save_slot = 1
-	_save_settings()
-
-
-## FR-401/411/413/417: Lädt den Fortschritt des aktuellen Speicherplatzes.
-## Bei fehlender/beschädigter Primärdatei wird automatisch versucht, das
-## neueste Backup wiederherzustellen, bevor auf Standardwerte
-## zurückgefallen wird.
-func _load_progress() -> void:
-	var cfg := ConfigFile.new()
-	var err := cfg.load_encrypted_pass(_save_path(), SAVE_PASSPHRASE)
-	if err != OK or not _verify_checksum(cfg):
-		if err != OK and err != ERR_FILE_NOT_FOUND:
-			push_warning("Speicherstand beschädigt oder unlesbar — versuche Backup-Wiederherstellung.")
-		elif err == OK:
-			push_warning("Speicherstand-Prüfsumme ungültig — versuche Backup-Wiederherstellung.")
-		var backups := list_backups()
-		var restored := false
-		for backup_name in backups:
-			var candidate := ConfigFile.new()
-			if candidate.load_encrypted_pass(BACKUP_DIR + backup_name, SAVE_PASSPHRASE) == OK \
-					and _verify_checksum(candidate):
-				cfg = candidate
-				restored = true
-				break
-		if not restored:
-			if err != ERR_FILE_NOT_FOUND:
-				_reset_progress_vars_to_default()  # FR-417: kein brauchbarer Stand vorhanden
-			return  # Erstinstallation (kein Fehler) oder unrettbar beschädigt
-	for lvl in level_stars.keys():
-		level_stars[lvl] = int(cfg.get_value("stars", str(lvl), 0))
-	var saved: Array = cfg.get_value("bestiary", "discovered", [])
-	discovered_enemies.assign(saved)
-	last_daily_coin_date = cfg.get_value("daily", "last_coin_date", "")  # FR-093
-	var saved_stickers: Array = cfg.get_value("stickers", "collected", [])  # FR-089
-	collected_stickers.assign(saved_stickers)
-	level_attempt_times = cfg.get_value("hud", "attempt_times", {})  # FR-219
-	tutorial_hint_seen = cfg.get_value("hud", "tutorial_hint_seen", false)  # FR-210
-	stat_total_farts = cfg.get_value("stats", "total_farts", 0)  # FR-226
-	stat_total_deaths = cfg.get_value("stats", "total_deaths", 0)  # FR-226
-	var saved_favorites: Array = cfg.get_value("menu", "favorites", [])  # FR-236
-	favorite_levels.assign(saved_favorites)
-	last_played_level = cfg.get_value("menu", "last_played_level", 0)  # FR-238
-	var saved_skins: Array = cfg.get_value("shop", "unlocked_skins", ["default"])  # FR-224
-	unlocked_skin_colors.assign(saved_skins)
-	active_skin_color = cfg.get_value("shop", "active_skin", "default")  # FR-224
-	custom_skin_color = cfg.get_value("shop", "custom_skin_color", Color(0.95, 0.95, 0.95))  # FR-180
-	persistent_coins = cfg.get_value("shop", "persistent_coins", 0)  # FR-224
-	var saved_cosmetics: Array = cfg.get_value("cosmetics", "unlocked", unlocked_cosmetics)
-	unlocked_cosmetics.assign(saved_cosmetics)
-	equipped_helmet = cfg.get_value("cosmetics", "helmet", "helmet_none")
-	equipped_outfit = cfg.get_value("cosmetics", "outfit", "outfit_none")
-	equipped_hat = cfg.get_value("cosmetics", "hat", "hat_none")
-	equipped_arrow_style = cfg.get_value("cosmetics", "arrow", "arrow_classic")
-	equipped_death_anim = cfg.get_value("cosmetics", "death", "death_spin")
-	equipped_victory_pose = cfg.get_value("cosmetics", "pose", "pose_wave")
-	equipped_fart_color_style = cfg.get_value("cosmetics", "fartcolor", "fart_classic")
-	equipped_fart_sound = cfg.get_value("cosmetics", "fartsound", "fartsound_classic")
-	daily_skin_claimed_date = cfg.get_value("cosmetics", "daily_claimed_date", "")
-	var saved_skills: Array = cfg.get_value("progression", "unlocked_skills", [])       # FR-304/305
-	unlocked_skills.assign(saved_skills)
-	prestige_level = cfg.get_value("progression", "prestige_level", 0)                  # FR-306
-	var saved_milestones: Array = cfg.get_value("progression", "claimed_milestones", [])  # FR-308
-	claimed_milestones.assign(saved_milestones)
-	lifetime_coins = cfg.get_value("progression", "lifetime_coins", 0)                  # FR-308
-	login_streak_day = cfg.get_value("progression", "login_streak_day", 0)              # FR-309
-	_last_login_date = cfg.get_value("progression", "last_login_date", "")              # FR-309
-	weekly_progress = cfg.get_value("progression", "weekly_progress", {})               # FR-310
-	weekly_claimed = cfg.get_value("progression", "weekly_claimed", {})                 # FR-310
-	_weekly_week_id = cfg.get_value("progression", "weekly_week_id", "")                # FR-310
-	season_xp = cfg.get_value("progression", "season_xp", 0)                            # FR-311
-	var saved_tiers: Array = cfg.get_value("progression", "season_claimed_tiers", [])   # FR-311
-	season_claimed_tiers.assign(saved_tiers)
-	piggy_bank_amount = cfg.get_value("progression", "piggy_bank_amount", 0)            # FR-313
-	hard_mode_enabled = cfg.get_value("progression", "hard_mode_enabled", false)        # FR-316
-	hard_mode_stars = cfg.get_value("progression", "hard_mode_stars", {})               # FR-316
-	var saved_badges: Array = cfg.get_value("progression", "earned_badges", [])         # FR-318
-	earned_badges.assign(saved_badges)
-	active_game_mode = cfg.get_value("modes", "active_game_mode", GameMode.NORMAL)      # FR-342-360
-	endless_best_loops = cfg.get_value("modes", "endless_best_loops", 0)                # FR-342
-	survival_best_time = cfg.get_value("modes", "survival_best_time", 0.0)              # FR-343
-	coin_hunt_best_score = cfg.get_value("modes", "coin_hunt_best_score", 0)            # FR-346
-	ghost_paths = cfg.get_value("modes", "ghost_paths", {})                             # FR-353
-	daily_seed_date = cfg.get_value("modes", "daily_seed_date", "")                     # FR-350
-	daily_seed_modifier_id = cfg.get_value("modes", "daily_seed_modifier_id", "none")   # FR-350
-
-
 ## FR-118: Registriert einen Gegner-Typ als entdeckt (persistiert).
 func discover_enemy(class_id: String) -> void:
 	if class_id in discovered_enemies:
 		return
 	discovered_enemies.append(class_id)
-	_save_progress()
+	SaveManager.save_now()
