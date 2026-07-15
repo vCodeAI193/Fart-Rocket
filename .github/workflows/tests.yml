@@ -1,0 +1,62 @@
+name: Tests
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+
+env:
+  GODOT_VERSION: "4.3"
+
+jobs:
+  compile-check:
+    name: Compile check (script parse/import)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download Godot ${{ env.GODOT_VERSION }} (headless-capable editor build)
+        run: |
+          curl -sSL -o godot.zip \
+            "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
+          unzip -q godot.zip
+          mv Godot_v${GODOT_VERSION}-stable_linux.x86_64 godot
+          chmod +x godot
+
+      # Imports all resources and reports any script parse errors. This is
+      # the check that would have caught this session's duplicate-function
+      # compile errors (HUD.gd, CoinMagnet.gd) automatically instead of
+      # relying on manual grep review.
+      - name: Import project and check for errors
+        run: |
+          ./godot --headless --path . --import --quit 2>&1 | tee import.log
+          if grep -qiE "SCRIPT ERROR|Parse Error|Compile Error" import.log; then
+            echo "Script errors found during import — failing build."
+            exit 1
+          fi
+
+  tests:
+    name: Run test suite
+    runs-on: ubuntu-latest
+    needs: compile-check
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download Godot ${{ env.GODOT_VERSION }}
+        run: |
+          curl -sSL -o godot.zip \
+            "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
+          unzip -q godot.zip
+          mv Godot_v${GODOT_VERSION}-stable_linux.x86_64 godot
+          chmod +x godot
+
+      - name: Import project
+        run: ./godot --headless --path . --import --quit
+
+      # tests/TestMain.gd discovers all tests/test_*.gd scripts (each
+      # extending tests/TestCase.gd), runs every test_*() method, and
+      # exits with code 0 (all passed) or 1 (at least one failure) — see
+      # tests/TestMain.gd for the runner itself.
+      - name: Run tests
+        run: ./godot --headless --path . res://tests/TestMain.tscn

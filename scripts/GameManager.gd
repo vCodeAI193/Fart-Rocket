@@ -1704,6 +1704,19 @@ func save_now() -> void:
 	_save_progress()
 
 
+## Test-Infrastruktur: Öffentlicher Alias für _load_progress(), analog zu
+## save_now() — ermöglicht gezieltes Neuladen in Tests, ohne auf die
+## konventionell private Funktion zuzugreifen.
+func load_now() -> void:
+	_load_progress()
+
+
+## Test-Infrastruktur: Öffentlicher Zugriff auf den Speicherpfad eines
+## Profils (für Tests, die absichtlich Korruption simulieren wollen).
+func get_save_path(slot: int = -1) -> String:
+	return _save_path(slot)
+
+
 ## FR-414: Speichert Einstellungen (Steuerung/Kamera/HUD/Grafik/Audio +
 ## aktiver Speicherplatz) in einer eigenen, vom Spielfortschritt
 ## unabhängigen Datei — ein Fortschritts-Reset (FR-228/420) wirkt sich
