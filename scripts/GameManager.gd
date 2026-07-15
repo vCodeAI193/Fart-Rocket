@@ -226,6 +226,8 @@ func reset_settings_to_default() -> void:
 	_apply_mute()
 	Engine.max_fps = 0
 	AudioServer.set_bus_volume_db(0, 0.0)
+	SoundManager.music_volume = 0.8  # FR-249
+	SoundManager.apply_music_volume()
 	accessibility_changed.emit()
 	SaveManager.save_settings()
 
@@ -1001,6 +1003,7 @@ const FART_SOUND_POOL_SIZE := 3
 func play_fart_sound(strength: float = 1.0) -> void:
 	if sound_muted:
 		return
+	SoundManager.duck_for_sfx()  # FR-251: Musik kurz leiser für den Stoß
 	var pack := CosmeticsManager.equipped_fart_sound
 	if not _fart_sound_cache.has(pack):
 		_fart_sound_cache[pack] = _generate_fart_tone(pack)

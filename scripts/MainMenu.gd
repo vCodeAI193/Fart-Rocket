@@ -26,6 +26,9 @@ var _bg_node: Node2D  # FR-231: animierter Hintergrund
 
 
 func _ready() -> void:
+	# FR-256: Menü-Musik
+	SoundManager.play_menu_music()
+
 	# FR-231: Animierter Sternenhintergrund im Hauptmenü
 	_bg_node = Node2D.new()
 	_bg_node.z_index = -10

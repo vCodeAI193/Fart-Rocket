@@ -313,23 +313,23 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 
 ## Audio & Musik
 
-- [ ] **FR-241** Hintergrundmusik pro Welt
-- [ ] **FR-242** Dynamische Musik (Intensitaet bei Gefahr)
+- [x] **FR-241** Hintergrundmusik pro Welt
+- [x] **FR-242** Dynamische Musik (Intensitaet bei Gefahr)
 - [ ] **FR-243** Muenz-Sammel-Sounds mit steigender Tonleiter
 - [ ] **FR-244** Umfangreiche Furz-Sound-Bibliothek
 - [ ] **FR-245** Treffer- und Tod-Sounds
-- [ ] **FR-246** Sieg-Fanfare beim Levelende
+- [x] **FR-246** Sieg-Fanfare beim Levelende
 - [x] **FR-247** UI-Klick-Sounds
 - [ ] **FR-248** Ambient-Soundscapes pro Thema
-- [ ] **FR-249** Getrennte Lautstaerkeregler (Musik/SFX)
+- [x] **FR-249** Getrennte Lautstaerkeregler (Musik/SFX)
 - [x] **FR-250** Stumm-Schalter
-- [ ] **FR-251** Audio-Ducking (Musik leiser bei SFX)
+- [x] **FR-251** Audio-Ducking (Musik leiser bei SFX)
 - [ ] **FR-252** Positions-/3D-Audio fuer Hindernisse
-- [ ] **FR-253** Countdown-Sound beim Start
-- [ ] **FR-254** Combo-Steigerungs-Sound
-- [ ] **FR-255** Boss-Kampf-Musik
-- [ ] **FR-256** Menue-Musik
-- [ ] **FR-257** Furz-Sound an Stoss-Staerke koppeln
+- [x] **FR-253** Countdown-Sound beim Start
+- [x] **FR-254** Combo-Steigerungs-Sound
+- [x] **FR-255** Boss-Kampf-Musik
+- [x] **FR-256** Menue-Musik
+- [x] **FR-257** Furz-Sound an Stoss-Staerke koppeln
 - [ ] **FR-258** Audio-Bus-Setup mit Effekten (Reverb)
 - [ ] **FR-259** Stille-Modus fuer Hintergrund-Spielen
 - [ ] **FR-260** Freischaltbare Soundpakete

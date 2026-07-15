@@ -652,6 +652,13 @@ func _load_current_level() -> void:
 			# statisch nicht kennt (nur MiniBoss/EndBoss deklarieren es).
 			_active_boss.connect("boss_defeated", _on_active_boss_defeated)
 
+	# FR-241/253/255: Level- bzw. Boss-Musik starten + Countdown-Sound
+	if _active_boss != null:
+		SoundManager.play_boss_music()
+	else:
+		SoundManager.play_level_music(GameManager.current_level)
+	SoundManager.play_countdown()
+
 	# FR-342-360: Spielmodus-spezifische Regeln anwenden
 	_apply_game_mode_setup(level)
 
@@ -887,6 +894,9 @@ func _on_level_reached() -> void:
 	# FR-346: Münzjagd-Bestwert aktualisieren
 	if GameManager.active_game_mode == GameManager.GameMode.COIN_HUNT:
 		GameManager.coin_hunt_best_score = maxi(GameManager.coin_hunt_best_score, GameManager.total_coins)
+
+	# FR-246: Sieg-Fanfare
+	SoundManager.play_victory_fanfare()
 
 	# FR-404: Auto-Speichern nach jedem abgeschlossenen Level
 	SaveManager.save_now()

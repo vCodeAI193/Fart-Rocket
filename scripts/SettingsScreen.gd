@@ -45,6 +45,7 @@ var _tap_confirm_btn: Button
 var _focus_pause_btn: Button
 var _difficulty_assist_btn: Button
 var _volume_btn: Button
+var _music_volume_btn: Button  # FR-249
 var _language_btn: Button
 
 
@@ -249,6 +250,7 @@ func _build_ui() -> void:
 	_focus_pause_btn = _make_settings_button(vbox, _on_focus_pause_pressed)
 	_difficulty_assist_btn = _make_settings_button(vbox, _on_difficulty_assist_pressed)
 	_volume_btn = _make_settings_button(vbox, _on_volume_pressed)
+	_music_volume_btn = _make_settings_button(vbox, _on_music_volume_pressed)  # FR-249
 	_language_btn = _make_settings_button(vbox, _on_language_pressed)
 
 	var reset_settings_btn := Button.new()
@@ -372,6 +374,7 @@ func _update_buttons() -> void:
 	_focus_pause_btn.text = "Pause bei Fokusverlust: EIN" if GameManager.pause_on_focus_loss else "Pause bei Fokusverlust: AUS"
 	_difficulty_assist_btn.text = "Schwierigkeits-Assist: EIN" if GameManager.difficulty_assist_enabled else "Schwierigkeits-Assist: AUS"
 	_volume_btn.text = "Lautstärke: %d%%" % int(GameManager.master_volume * 100)
+	_music_volume_btn.text = "Musik-Lautstärke: %d%%" % int(SoundManager.music_volume * 100)  # FR-249
 	_language_btn.text = "%s: %s" % [tr("settings_language"), GameManager.language.to_upper()]
 	# FR-403/418: Speicherplatz-Buttons
 	for i in range(_slot_buttons.size()):
@@ -637,6 +640,16 @@ func _on_volume_pressed() -> void:
 	if next < 0.0:
 		next = 1.0
 	GameManager.set_master_volume(next)
+	GameManager.vibrate(15)
+	_update_buttons()
+
+
+## FR-249: Musik-Lautstärke getrennt von der Gesamtlautstärke durchschalten.
+func _on_music_volume_pressed() -> void:
+	var next := SoundManager.music_volume - 0.25
+	if next < 0.0:
+		next = 1.0
+	SoundManager.set_music_volume(next)
 	GameManager.vibrate(15)
 	_update_buttons()
 

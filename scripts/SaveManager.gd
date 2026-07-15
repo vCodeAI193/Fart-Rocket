@@ -136,6 +136,7 @@ func _save_settings() -> void:
 	cfg.set_value("audio", "haptics_enabled", GameManager.haptics_enabled)
 	cfg.set_value("audio", "sound_muted", GameManager.sound_muted)
 	cfg.set_value("audio", "master_volume", GameManager.master_volume)              # FR-438
+	cfg.set_value("audio", "music_volume", SoundManager.music_volume)               # FR-249
 	cfg.set_value("accessibility", "colorblind_mode", GameManager.colorblind_mode)  # FR-421
 	cfg.set_value("accessibility", "high_contrast", GameManager.high_contrast_enabled)  # FR-422
 	cfg.set_value("accessibility", "reduced_motion", GameManager.reduced_motion_enabled)  # FR-423
@@ -173,6 +174,8 @@ func _load_settings() -> void:
 	GameManager.haptics_enabled = cfg.get_value("audio", "haptics_enabled", true)
 	GameManager.sound_muted = cfg.get_value("audio", "sound_muted", false)
 	GameManager.master_volume = cfg.get_value("audio", "master_volume", 1.0)                    # FR-438
+	SoundManager.music_volume = cfg.get_value("audio", "music_volume", 0.8)                     # FR-249
+	SoundManager.apply_music_volume()
 	GameManager.colorblind_mode = cfg.get_value("accessibility", "colorblind_mode", GameManager.ColorblindMode.NONE)  # FR-421
 	GameManager.high_contrast_enabled = cfg.get_value("accessibility", "high_contrast", false)  # FR-422
 	GameManager.reduced_motion_enabled = cfg.get_value("accessibility", "reduced_motion", false)  # FR-423

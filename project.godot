@@ -28,6 +28,10 @@ CosmeticsManager="*res://scripts/CosmeticsManager.gd"
 ; GameManager.gd; nach GameManager/CosmeticsManager geladen, da es beide
 ; beim Speichern/Laden per Cross-Reference liest/schreibt.
 SaveManager="*res://scripts/SaveManager.gd"
+; FR-241/242/246/249/251/253-256: Prozedurale Musik & Audio-Bus-Verwaltung
+; (nach GameManager/SaveManager geladen, da es deren Signale abonniert
+; bzw. beim Speichern der Musik-Lautstärke SaveManager aufruft).
+SoundManager="*res://scripts/SoundManager.gd"
 ; FR-321: Lokales Achievement-/Herausforderungs-Framework (nach GameManager
 ; geladen, da es dessen Statistik-Signale abonniert).
 AchievementManager="*res://scripts/AchievementManager.gd"
