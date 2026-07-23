@@ -236,22 +236,22 @@ func _build_ui() -> void:
 	a11y_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vbox.add_child(a11y_title)
 
-	_colorblind_btn = _make_settings_button(vbox, _on_colorblind_pressed)
-	_contrast_btn = _make_settings_button(vbox, _on_contrast_pressed)
-	_motion_btn = _make_settings_button(vbox, _on_motion_pressed)
-	_ui_scale_btn = _make_settings_button(vbox, _on_ui_scale_pressed)
-	_captions_btn = _make_settings_button(vbox, _on_captions_pressed)
-	_one_handed_btn = _make_settings_button(vbox, _on_one_handed_pressed)
-	_assist_aim_btn = _make_settings_button(vbox, _on_assist_aim_pressed)
-	_brightness_btn = _make_settings_button(vbox, _on_brightness_pressed)
-	_fps_counter_btn = _make_settings_button(vbox, _on_fps_counter_pressed)
-	_fps_limit_btn = _make_settings_button(vbox, _on_fps_limit_pressed)
-	_tap_confirm_btn = _make_settings_button(vbox, _on_tap_confirm_pressed)
-	_focus_pause_btn = _make_settings_button(vbox, _on_focus_pause_pressed)
-	_difficulty_assist_btn = _make_settings_button(vbox, _on_difficulty_assist_pressed)
-	_volume_btn = _make_settings_button(vbox, _on_volume_pressed)
-	_music_volume_btn = _make_settings_button(vbox, _on_music_volume_pressed)  # FR-249
-	_language_btn = _make_settings_button(vbox, _on_language_pressed)
+	_colorblind_btn = UIHelpers.make_button(vbox, _on_colorblind_pressed)
+	_contrast_btn = UIHelpers.make_button(vbox, _on_contrast_pressed)
+	_motion_btn = UIHelpers.make_button(vbox, _on_motion_pressed)
+	_ui_scale_btn = UIHelpers.make_button(vbox, _on_ui_scale_pressed)
+	_captions_btn = UIHelpers.make_button(vbox, _on_captions_pressed)
+	_one_handed_btn = UIHelpers.make_button(vbox, _on_one_handed_pressed)
+	_assist_aim_btn = UIHelpers.make_button(vbox, _on_assist_aim_pressed)
+	_brightness_btn = UIHelpers.make_button(vbox, _on_brightness_pressed)
+	_fps_counter_btn = UIHelpers.make_button(vbox, _on_fps_counter_pressed)
+	_fps_limit_btn = UIHelpers.make_button(vbox, _on_fps_limit_pressed)
+	_tap_confirm_btn = UIHelpers.make_button(vbox, _on_tap_confirm_pressed)
+	_focus_pause_btn = UIHelpers.make_button(vbox, _on_focus_pause_pressed)
+	_difficulty_assist_btn = UIHelpers.make_button(vbox, _on_difficulty_assist_pressed)
+	_volume_btn = UIHelpers.make_button(vbox, _on_volume_pressed)
+	_music_volume_btn = UIHelpers.make_button(vbox, _on_music_volume_pressed)  # FR-249
+	_language_btn = UIHelpers.make_button(vbox, _on_language_pressed)
 
 	var reset_settings_btn := Button.new()
 	reset_settings_btn.text = tr("action_reset_settings")
@@ -512,16 +512,6 @@ func _on_hard_mode_pressed() -> void:
 	GameManager.set_hard_mode_enabled(not GameManager.hard_mode_enabled)
 	GameManager.vibrate(15)
 	_update_buttons()
-
-
-## FR-421-440: Kleine Hilfsfunktion für einheitlich gestaltete Buttons.
-func _make_settings_button(vbox: VBoxContainer, callback: Callable) -> Button:
-	var btn := Button.new()
-	btn.custom_minimum_size = Vector2(400, 76)
-	btn.add_theme_font_size_override("font_size", 26)
-	btn.pressed.connect(callback)
-	vbox.add_child(btn)
-	return btn
 
 
 ## FR-421: Farbenblind-Modus durchschalten.

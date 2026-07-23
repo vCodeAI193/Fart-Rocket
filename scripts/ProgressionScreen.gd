@@ -125,17 +125,7 @@ func _build_ui() -> void:
 
 	_tab_container.tab_changed.connect(func(_i): GameManager.play_ui_click())
 
-	var close_btn := Button.new()
-	close_btn.text = "Schließen"
-	close_btn.custom_minimum_size = Vector2(240, 70)
-	close_btn.add_theme_font_size_override("font_size", 32)
-	close_btn.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
-	close_btn.offset_left = -260
-	close_btn.offset_top = -90
-	close_btn.offset_right = -20
-	close_btn.offset_bottom = -20
-	close_btn.pressed.connect(func(): GameManager.play_ui_click(); visible = false)
-	bg.add_child(close_btn)
+	UIHelpers.make_close_button(bg, func(): visible = false)
 
 
 ## FR-304/305: Skill-Baum-Liste mit Freischalt-Buttons.

@@ -337,14 +337,4 @@ func _build_ui() -> void:
 		# Tab-Titel (sichtbarer Name) separat setzen
 		_tab_container.set_tab_title(_tab_container.get_tab_count() - 1, slot_entry[1])
 
-	var close_btn := Button.new()
-	close_btn.text = "Schließen"
-	close_btn.custom_minimum_size = Vector2(240, 70)
-	close_btn.add_theme_font_size_override("font_size", 32)
-	close_btn.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
-	close_btn.offset_left = -260
-	close_btn.offset_top = -90
-	close_btn.offset_right = -20
-	close_btn.offset_bottom = -20
-	close_btn.pressed.connect(func(): GameManager.play_ui_click(); visible = false)
-	bg.add_child(close_btn)
+	UIHelpers.make_close_button(bg, func(): visible = false)
