@@ -28,6 +28,11 @@ var _lunge_dir: Vector2 = Vector2.ZERO
 var _player_ref: Player = null
 var _body_visual: Polygon2D
 var _weak_point: BossWeakPoint
+
+# FR-461: Pool wiederverwendbarer Projektile (Phase 2+), analog zu
+# ShooterEnemy.gd — vermeidet instantiate()/queue_free()-Churn.
+var _projectile_pool: Array[Projectile] = []
+const PROJECTILE_POOL_SIZE := 4
 var _defeated: bool = false
 var _phase: int = 1
 var _hits_taken: int = 0
@@ -93,12 +98,21 @@ func _fire_projectile() -> void:
 	if _player_ref == null or not is_instance_valid(_player_ref):
 		return
 	var dir := (_player_ref.global_position - global_position).normalized()
-	var projectile := Projectile.new()
-	projectile.direction = dir
-	projectile.speed = projectile_speed
-	projectile.global_position = global_position
-	get_parent().add_child(projectile)
+	var projectile := _get_free_projectile()
+	projectile.activate_for_shot(dir, projectile_speed, global_position)
 	GameManager.vibrate(15)
+
+
+func _get_free_projectile() -> Projectile:
+	for p in _projectile_pool:
+		if is_instance_valid(p) and not p.is_active:
+			return p
+	if _projectile_pool.size() < PROJECTILE_POOL_SIZE:
+		var new_projectile := Projectile.new()
+		get_parent().add_child(new_projectile)
+		_projectile_pool.append(new_projectile)
+		return new_projectile
+	return _projectile_pool[0]  # Pool voll: älteste Instanz wiederverwenden
 
 
 func _find_player() -> void:

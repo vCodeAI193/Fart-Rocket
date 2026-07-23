@@ -566,24 +566,24 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 
 ## Performance & Technik
 
-- [ ] **FR-461** Objekt-Pooling fuer Partikel/Hindernisse
+- [x] **FR-461** Objekt-Pooling fuer Partikel/Hindernisse
 - [ ] **FR-462** Texturen-Atlas/Sprite-Sheets
 - [ ] **FR-463** Level-Streaming fuer grosse Level
-- [ ] **FR-464** Bildraten-Profiling-Overlay
+- [x] **FR-464** Bildraten-Profiling-Overlay
 - [ ] **FR-465** Speicher-Leck-Tests
 - [ ] **FR-466** Reduzierte Partikel auf schwachen Geraeten
 - [ ] **FR-467** Automatische Qualitaetserkennung
 - [ ] **FR-468** Hintergrund-Pausierung/Akku-Optimierung
 - [ ] **FR-469** Ladezeiten-Optimierung
 - [ ] **FR-470** Asset-Vorladen pro Welt
-- [ ] **FR-471** Tuning des Physik-Schritts
-- [ ] **FR-472** Garbage-Collection-Spitzen vermeiden
+- [x] **FR-471** Tuning des Physik-Schritts
+- [x] **FR-472** Garbage-Collection-Spitzen vermeiden
 - [ ] **FR-473** Shader-Vorkompilierung
 - [ ] **FR-474** APK-/AAB-Groessen-Optimierung
 - [ ] **FR-475** Stresstest-Szene
 - [ ] **FR-476** Crash-Reporting-Integration
 - [ ] **FR-477** ANR-Vermeidung (Main-Thread nicht blockieren)
-- [ ] **FR-478** Frame-Pacing/VSync-Handhabung
+- [x] **FR-478** Frame-Pacing/VSync-Handhabung
 - [ ] **FR-479** Geraete-Kompatibilitaetsmatrix
 - [ ] **FR-480** Automatisierte Performance-Benchmarks
 

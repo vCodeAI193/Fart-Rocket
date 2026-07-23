@@ -50,6 +50,10 @@ window/handheld/orientation=0
 window/stretch/mode="canvas_items"
 ; "expand" füllt verschiedene Seitenverhältnisse (16:10 und 4:3) aus
 window/stretch/aspect="expand"
+; FR-478: VSync explizit aktiv statt Engine-Default — vermeidet Tearing
+; und unregelmäßiges Frame-Pacing auf mobilen Geräten (kostet auf den
+; meisten Android-GPUs kaum Overhead, im Gegensatz zu Desktop-Perf-Fällen).
+window/vsync/vsync_mode=1
 
 [input_devices]
 
@@ -58,6 +62,12 @@ pointing/emulate_touch_from_mouse=true
 pointing/emulate_mouse_from_touch=true
 
 [physics]
+
+; FR-471: Physik-Schritt explizit statt Engine-Default — 60 Hz passt zum
+; Ziel-Framerate-Bereich mobiler Android-Geräte (API 21+) und macht das
+; Zeitverhalten (Kollisionen, RigidBody-Impulse) reproduzierbar statt vom
+; jeweiligen Gerät abhängig.
+common/physics_ticks_per_second=60
 
 ; 2D-Schwerkraft (wird zusätzlich pro Spieler über gravity_scale skaliert)
 2d/default_gravity=980.0

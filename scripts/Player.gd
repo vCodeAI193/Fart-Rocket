@@ -503,16 +503,37 @@ func _apply_fart_color_style(base_tint: Color) -> Color:
 			return base_tint
 
 
+# FR-461: Pool wiederverwendbarer FartBurst-Instanzen — vermeidet
+# instantiate()/queue_free()-Churn bei schnellem Furz-Feuer (Combo-System
+# erlaubt Stöße im Sekundenbruchteil-Abstand), analog zum bestehenden
+# AudioStreamPlayer-Pool-Muster (z.B. SoundManager._get_free_stinger_player()).
+var _fart_burst_pool: Array[FartBurst] = []
+const FART_BURST_POOL_SIZE := 6
+
+
 ## Erzeugt die FartBurst-Szene (eingefärbte Partikelwolke) hinter dem Männchen.
 func _spawn_fart_burst(back_dir: Vector2, tint: Color = Color.WHITE) -> void:
 	if fart_burst_scene == null:
 		return
-	var burst := fart_burst_scene.instantiate() as FartBurst
-	get_parent().add_child(burst)
+	var burst := _get_free_fart_burst()
+	if burst == null:
+		return
 	burst.global_position = global_position + back_dir * 30.0
 	# Partikel in die Furz-Richtung ausrichten
 	burst.rotation = back_dir.angle()
 	burst.erupt(tint)
+
+
+func _get_free_fart_burst() -> FartBurst:
+	for b in _fart_burst_pool:
+		if is_instance_valid(b) and not b.is_active:
+			return b
+	if _fart_burst_pool.size() < FART_BURST_POOL_SIZE:
+		var new_burst := fart_burst_scene.instantiate() as FartBurst
+		get_parent().add_child(new_burst)
+		_fart_burst_pool.append(new_burst)
+		return new_burst
+	return _fart_burst_pool[0]  # Pool voll: älteste Instanz wiederverwenden
 
 
 ## FR-115: Schiebt nahe Gegner der Gruppe "blowable" vom Furz-Ausstoß weg.

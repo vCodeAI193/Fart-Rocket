@@ -15,6 +15,11 @@ class_name ShooterEnemy
 var _fire_timer: float = 0.0
 var _player_ref: Player = null
 
+# FR-461: Pool wiederverwendbarer Projektile — vermeidet instantiate()/
+# queue_free()-Churn, wenn mehrere Türme gleichzeitig aktiv sind.
+var _projectile_pool: Array[Projectile] = []
+const PROJECTILE_POOL_SIZE := 4
+
 
 func _ready() -> void:
 	add_to_group("obstacles")
@@ -51,21 +56,28 @@ func _shoot() -> void:
 		return
 
 	var dir := (_player_ref.global_position - global_position).normalized()
-
-	var projectile: Projectile
-	if projectile_scene != null:
-		projectile = projectile_scene.instantiate()
-	else:
-		projectile = Projectile.new()
-
-	projectile.direction = dir
-	projectile.speed = projectile_speed
-	projectile.global_position = global_position
-
-	get_parent().add_child(projectile)
+	var projectile := _get_free_projectile()
+	projectile.activate_for_shot(dir, projectile_speed, global_position)
 
 	GameManager.vibrate(15)
 	_muzzle_flash(dir)
+
+
+func _get_free_projectile() -> Projectile:
+	for p in _projectile_pool:
+		if is_instance_valid(p) and not p.is_active:
+			return p
+	if _projectile_pool.size() < PROJECTILE_POOL_SIZE:
+		var new_projectile: Projectile
+		if projectile_scene != null:
+			new_projectile = projectile_scene.instantiate()
+		else:
+			new_projectile = Projectile.new()
+		new_projectile.color = color
+		get_parent().add_child(new_projectile)
+		_projectile_pool.append(new_projectile)
+		return new_projectile
+	return _projectile_pool[0]  # Pool voll: älteste Instanz wiederverwenden
 
 
 func _muzzle_flash(dir: Vector2) -> void:
