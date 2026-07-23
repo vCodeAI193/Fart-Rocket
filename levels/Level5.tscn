@@ -1,0 +1,95 @@
+[gd_scene load_steps=12 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/Player.tscn" id="1_player"]
+[ext_resource type="PackedScene" path="res://scenes/Obstacle.tscn" id="2_obs"]
+[ext_resource type="PackedScene" path="res://scenes/Coin.tscn" id="3_coin"]
+[ext_resource type="PackedScene" path="res://scenes/LevelEnd.tscn" id="4_end"]
+[ext_resource type="PackedScene" path="res://scenes/ChargePickup.tscn" id="5_cp"]
+[ext_resource type="PackedScene" path="res://scenes/MovingPlatform.tscn" id="6_mpl"]
+[ext_resource type="PackedScene" path="res://scenes/ConveyorBelt.tscn" id="7_cv"]
+[ext_resource type="PackedScene" path="res://scenes/ChaserEnemy.tscn" id="8_ce"]
+[ext_resource type="PackedScene" path="res://scenes/ShooterEnemy.tscn" id="9_se"]
+[ext_resource type="PackedScene" path="res://scenes/Checkpoint.tscn" id="10_chk"]
+[ext_resource type="PackedScene" path="res://scenes/BoostRing.tscn" id="11_br"]
+
+[node name="Level5" type="Node2D"]
+
+[node name="Player" parent="." instance=ExtResource("1_player")]
+position = Vector2(250, 600)
+max_fart_charges = 4
+
+[node name="Bar1" parent="." instance=ExtResource("2_obs")]
+position = Vector2(800, 300)
+type = 0
+obstacle_size = Vector2(60, 500)
+
+[node name="Coin1" parent="." instance=ExtResource("3_coin")]
+position = Vector2(600, 550)
+
+[node name="MovingPlatform1" parent="." instance=ExtResource("6_mpl")]
+position = Vector2(1100, 700)
+move_offset = Vector2(0, -200)
+move_duration = 2.0
+
+[node name="LaneDivider" parent="." instance=ExtResource("2_obs")]
+position = Vector2(2150, 600)
+type = 0
+obstacle_size = Vector2(1500, 60)
+
+[node name="ChaserEnemy1" parent="." instance=ExtResource("8_ce")]
+position = Vector2(1800, 300)
+chase_speed = 170.0
+
+[node name="CoinUpper1" parent="." instance=ExtResource("3_coin")]
+position = Vector2(1600, 300)
+coin_value = 25
+
+[node name="SawUpper" parent="." instance=ExtResource("2_obs")]
+position = Vector2(2300, 250)
+type = 2
+saw_radius = 70.0
+rotation_speed = 4.0
+
+[node name="CoinUpper2" parent="." instance=ExtResource("3_coin")]
+position = Vector2(2000, 280)
+
+[node name="BoostRing1" parent="." instance=ExtResource("11_br")]
+position = Vector2(2450, 300)
+
+[node name="ShooterEnemy1" parent="." instance=ExtResource("9_se")]
+position = Vector2(1800, 900)
+fire_interval = 1.8
+
+[node name="ConveyorBelt1" parent="." instance=ExtResource("7_cv")]
+position = Vector2(2100, 950)
+belt_direction = Vector2(1, 0)
+belt_speed = 220.0
+
+[node name="CoinLower1" parent="." instance=ExtResource("3_coin")]
+position = Vector2(1650, 900)
+coin_value = 25
+
+[node name="CoinLower2" parent="." instance=ExtResource("3_coin")]
+position = Vector2(2350, 900)
+
+[node name="ChargePickup1" parent="." instance=ExtResource("5_cp")]
+position = Vector2(2000, 1000)
+
+[node name="Checkpoint1" parent="." instance=ExtResource("10_chk")]
+position = Vector2(2900, 600)
+
+[node name="CoinReconverge" parent="." instance=ExtResource("3_coin")]
+position = Vector2(2900, 450)
+
+[node name="Saw2" parent="." instance=ExtResource("2_obs")]
+position = Vector2(3300, 600)
+type = 2
+saw_radius = 85.0
+rotation_speed = -3.5
+
+[node name="Coin7" parent="." instance=ExtResource("3_coin")]
+position = Vector2(3550, 600)
+coin_value = 50
+
+[node name="LevelEnd" parent="." instance=ExtResource("4_end")]
+position = Vector2(3700, 600)

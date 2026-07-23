@@ -49,7 +49,7 @@ var daily_seed_modifier_id: String = "none" # FR-350
 
 # --- FR-341: Zeitrennen-Modus (Time Attack) ----------------------
 var time_attack_mode: bool = false
-var time_attack_best_times := {1: INF, 2: INF, 3: INF}  # Level -> beste Zeit (Sek.)
+var time_attack_best_times := {1: INF, 2: INF, 3: INF, 4: INF, 5: INF, 6: INF, 7: INF}  # Level -> beste Zeit (Sek.)
 
 
 ## FR-342-360: Wechselt den aktiven Spielmodus (wirkt sich beim nächsten
@@ -145,4 +145,4 @@ func reset_to_default() -> void:
 	ghost_paths.clear()                   # FR-353
 	daily_seed_date = ""                  # FR-350
 	daily_seed_modifier_id = "none"       # FR-350
-	time_attack_best_times = {1: INF, 2: INF, 3: INF}
+	time_attack_best_times = {1: INF, 2: INF, 3: INF, 4: INF, 5: INF, 6: INF, 7: INF}

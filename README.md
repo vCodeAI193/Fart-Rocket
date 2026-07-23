@@ -7,9 +7,9 @@ Gegnern aus, nutze Power-ups und erreiche die Zielflagge — mit Dutzenden
 Spielmodi, einem Fortschritts-/Shop-System, Erfolgen und mehr.
 
 Das Projekt ist aus einem kleinen Prototyp (3 Level, ein Skript) zu einem
-umfangreichen Spiel mit über 100 Skripten und ~90 Gameplay-Objekttypen
-gewachsen. 341 von 500 geplanten Features aus [`BACKLOG.md`](BACKLOG.md)
-sind bereits umgesetzt.
+umfangreichen Spiel mit über 100 Skripten, ~90 Gameplay-Objekttypen und 7
+Leveln gewachsen. 358 von 500 geplanten Features aus
+[`BACKLOG.md`](BACKLOG.md) sind bereits umgesetzt.
 
 ## 🎮 Spielprinzip
 
@@ -131,7 +131,7 @@ führt danach `tests/TestMain.tscn` aus.
 Fart-Rocket/
 ├── project.godot          # Projektkonfiguration (Landscape, Touch, 1920x1200, Autoloads)
 ├── export_presets.cfg     # Android-Export (API 21+)
-├── BACKLOG.md             # 500-Feature-Backlog (Fortschritt: 341/500)
+├── BACKLOG.md             # 500-Feature-Backlog (Fortschritt: 358/500)
 ├── icon.svg               # App-Icon
 ├── scripts/                       # >100 GDScript-Dateien
 │   ├── GameManager.gd             # Autoload: Kern-Zustand
@@ -154,7 +154,11 @@ Fart-Rocket/
 ├── levels/
 │   ├── Level1.tscn        # Weite Lücken, wenig Hindernisse, 5 Ladungen
 │   ├── Level2.tscn        # Enge Gänge, rotierende Sägen, 4 Ladungen
-│   └── Level3.tscn        # Kombination aus allem, 3 Ladungen
+│   ├── Level3.tscn        # Kombination aus allem, 3 Ladungen
+│   ├── Level4.tscn        # Höhlen-Thema, erste Gegner (Patrol/Jumping), 4 Ladungen
+│   ├── Level5.tscn        # Verzweigter Pfad (FR-134): obere/untere Route, 4 Ladungen
+│   ├── Level6.tscn        # Erster Bosskampf (MiniBoss), 3 Ladungen
+│   └── Level7.tscn        # Bonus-/Geheimlevel, münzlastig, 5 Ladungen
 └── tests/                 # Eigenes Test-Framework (siehe oben)
 ```
 

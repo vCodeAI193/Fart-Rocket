@@ -243,6 +243,10 @@ func _apply_background_shader() -> void:
 		[Color(0.15, 0.05, 0.35), Color(0.02, 0.05, 0.15)],
 		[Color(0.05, 0.25, 0.2), Color(0.02, 0.1, 0.08)],
 		[Color(0.35, 0.1, 0.08), Color(0.12, 0.02, 0.02)],
+		[Color(0.25, 0.15, 0.05), Color(0.08, 0.04, 0.01)],
+		[Color(0.05, 0.2, 0.3), Color(0.01, 0.06, 0.1)],
+		[Color(0.4, 0.05, 0.05), Color(0.15, 0.01, 0.01)],
+		[Color(0.35, 0.28, 0.05), Color(0.12, 0.09, 0.01)],
 	]
 	var idx := clampi(GameManager.current_level - 1, 0, palette.size() - 1)
 	mat.set_shader_parameter("nebula_color_a", palette[idx][0])

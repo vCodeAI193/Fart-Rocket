@@ -1,0 +1,81 @@
+[gd_scene load_steps=10 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/Player.tscn" id="1_player"]
+[ext_resource type="PackedScene" path="res://scenes/Obstacle.tscn" id="2_obs"]
+[ext_resource type="PackedScene" path="res://scenes/Coin.tscn" id="3_coin"]
+[ext_resource type="PackedScene" path="res://scenes/LevelEnd.tscn" id="4_end"]
+[ext_resource type="PackedScene" path="res://scenes/ChargePickup.tscn" id="5_cp"]
+[ext_resource type="PackedScene" path="res://scenes/FartShield.tscn" id="6_fs"]
+[ext_resource type="PackedScene" path="res://scenes/GemCollectible.tscn" id="7_gem"]
+[ext_resource type="PackedScene" path="res://scenes/PatrolEnemy.tscn" id="8_pe"]
+[ext_resource type="PackedScene" path="res://scenes/JumpingEnemy.tscn" id="9_je"]
+
+[node name="Level4" type="Node2D"]
+
+[node name="Player" parent="." instance=ExtResource("1_player")]
+position = Vector2(250, 600)
+max_fart_charges = 4
+
+[node name="Bar1" parent="." instance=ExtResource("2_obs")]
+position = Vector2(900, 300)
+type = 0
+obstacle_size = Vector2(60, 520)
+
+[node name="Coin1" parent="." instance=ExtResource("3_coin")]
+position = Vector2(700, 540)
+
+[node name="PatrolEnemy1" parent="." instance=ExtResource("8_pe")]
+position = Vector2(1300, 700)
+patrol_distance = 250.0
+vertical = false
+
+[node name="Coin2" parent="." instance=ExtResource("3_coin")]
+position = Vector2(1100, 780)
+coin_value = 25
+
+[node name="Saw1" parent="." instance=ExtResource("2_obs")]
+position = Vector2(1700, 600)
+type = 2
+saw_radius = 80.0
+rotation_speed = 3.5
+
+[node name="ChargePickup1" parent="." instance=ExtResource("5_cp")]
+position = Vector2(1950, 500)
+
+[node name="Coin3" parent="." instance=ExtResource("3_coin")]
+position = Vector2(1700, 850)
+
+[node name="JumpingEnemy1" parent="." instance=ExtResource("9_je")]
+position = Vector2(2100, 950)
+jump_height = 180.0
+jump_interval = 1.4
+
+[node name="Bar2" parent="." instance=ExtResource("2_obs")]
+position = Vector2(2500, 350)
+type = 0
+obstacle_size = Vector2(70, 540)
+
+[node name="Coin4" parent="." instance=ExtResource("3_coin")]
+position = Vector2(2500, 750)
+
+[node name="GemCollectible1" parent="." instance=ExtResource("7_gem")]
+position = Vector2(2700, 750)
+
+[node name="PatrolEnemy2" parent="." instance=ExtResource("8_pe")]
+position = Vector2(2900, 600)
+patrol_distance = 220.0
+vertical = true
+
+[node name="FartShield1" parent="." instance=ExtResource("6_fs")]
+position = Vector2(3100, 450)
+
+[node name="Coin5" parent="." instance=ExtResource("3_coin")]
+position = Vector2(2900, 850)
+coin_value = 25
+
+[node name="Coin6" parent="." instance=ExtResource("3_coin")]
+position = Vector2(3300, 600)
+coin_value = 50
+
+[node name="LevelEnd" parent="." instance=ExtResource("4_end")]
+position = Vector2(3500, 600)

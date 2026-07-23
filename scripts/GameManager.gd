@@ -25,7 +25,7 @@ signal weekly_goal_progress(goal_id, progress, target)  # FR-310: Wochenziel-For
 signal piggy_bank_changed(amount)           # FR-313: Sparschwein-Stand geändert
 
 # --- Konstanten -------------------------------------------------
-const TOTAL_LEVELS := 3
+const TOTAL_LEVELS := 7
 
 # FR-003: Zeitfenster (Sekunden), in dem Folge-Münzen die Combo erhöhen
 const COMBO_WINDOW := 2.0
@@ -37,6 +37,10 @@ const LEVEL_SCENES := [
 	"res://levels/Level1.tscn",
 	"res://levels/Level2.tscn",
 	"res://levels/Level3.tscn",
+	"res://levels/Level4.tscn",
+	"res://levels/Level5.tscn",
+	"res://levels/Level6.tscn",
+	"res://levels/Level7.tscn",
 ]
 
 # --- Laufender Spielzustand -------------------------------------
@@ -48,7 +52,7 @@ var max_charges: int = 0                 # maximale Furz-Ladungen im aktuellen L
 var level_farts_used: int = 0            # FR-327: Furz-Stöße im aktuellen Level
 
 # Bestwertung (Sterne 0..3) je Level, persistent während der Sitzung
-var level_stars := {1: 0, 2: 0, 3: 0}
+var level_stars := {1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0}
 
 # --- FR-003: Combo-Zustand --------------------------------------
 var combo_count: int = 0

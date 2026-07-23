@@ -175,20 +175,20 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 
 ## Level-Design & Inhalte
 
-- [ ] **FR-121** Welt 2: Hoehlen-Thema
+- [x] **FR-121** Welt 2: Hoehlen-Thema (Level4: eigene Farbpalette + erste Gegner-Nutzung)
 - [ ] **FR-122** Welt 3: Unterwasser-Thema
 - [ ] **FR-123** Welt 4: Fabrik-/Industrie-Thema
 - [ ] **FR-124** Welt 5: Weltraum-Station
 - [ ] **FR-125** Welt 6: Vulkan-/Lava-Thema
-- [ ] **FR-126** 30 zusaetzliche Hauptlevel
-- [ ] **FR-127** Bonus- und Geheimlevel
+- [ ] **FR-126** 30 zusaetzliche Hauptlevel (4 von 30 ergaenzt: Level4-7, siehe Commit-Historie)
+- [x] **FR-127** Bonus- und Geheimlevel (Level7)
 - [ ] **FR-128** Speedrun-Sektionen
 - [ ] **FR-129** Autoscroller-Level
 - [ ] **FR-130** Dunkelheits-Level mit begrenzter Sicht
 - [ ] **FR-131** Rueckwaerts-Schwerkraft-Level
 - [ ] **FR-132** Level mit beweglichem Wasserstand
 - [ ] **FR-133** Pflichtlevel: alle Muenzen sammeln
-- [ ] **FR-134** Mehrere verzweigte Pfade pro Level
+- [x] **FR-134** Mehrere verzweigte Pfade pro Level (Level5)
 - [x] **FR-135** Checkpoint-System in langen Leveln
 - [ ] **FR-136** Versteckte Raeume mit Belohnungen
 - [ ] **FR-137** Themen-spezifische Hindernis-Sets

@@ -1,0 +1,56 @@
+[gd_scene load_steps=10 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/Player.tscn" id="1_player"]
+[ext_resource type="PackedScene" path="res://scenes/Coin.tscn" id="2_coin"]
+[ext_resource type="PackedScene" path="res://scenes/LevelEnd.tscn" id="3_end"]
+[ext_resource type="PackedScene" path="res://scenes/Obstacle.tscn" id="4_obs"]
+[ext_resource type="PackedScene" path="res://scenes/MysteryBox.tscn" id="5_mb"]
+[ext_resource type="PackedScene" path="res://scenes/RewardChest.tscn" id="6_rc"]
+[ext_resource type="PackedScene" path="res://scenes/HiddenStar.tscn" id="7_hs"]
+[ext_resource type="PackedScene" path="res://scenes/CoinChain.tscn" id="8_cc"]
+[ext_resource type="PackedScene" path="res://scenes/CoinMagnet.tscn" id="9_cm"]
+
+[node name="Level7" type="Node2D"]
+
+[node name="Player" parent="." instance=ExtResource("1_player")]
+position = Vector2(250, 600)
+max_fart_charges = 5
+
+[node name="Coin1" parent="." instance=ExtResource("2_coin")]
+position = Vector2(600, 550)
+
+[node name="CoinChain1" parent="." instance=ExtResource("8_cc")]
+position = Vector2(900, 500)
+coin_scene = ExtResource("2_coin")
+chain_bonus = 100
+
+[node name="MysteryBox1" parent="." instance=ExtResource("5_mb")]
+position = Vector2(1300, 600)
+
+[node name="Coin2" parent="." instance=ExtResource("2_coin")]
+position = Vector2(1600, 450)
+
+[node name="HiddenStar1" parent="." instance=ExtResource("7_hs")]
+position = Vector2(1900, 280)
+
+[node name="CoinMagnet1" parent="." instance=ExtResource("9_cm")]
+position = Vector2(2100, 600)
+
+[node name="RewardChest1" parent="." instance=ExtResource("6_rc")]
+position = Vector2(2500, 550)
+
+[node name="Saw1" parent="." instance=ExtResource("4_obs")]
+position = Vector2(2850, 600)
+type = 2
+saw_radius = 70.0
+rotation_speed = 3.0
+
+[node name="Coin3" parent="." instance=ExtResource("2_coin")]
+position = Vector2(3100, 500)
+
+[node name="Coin4" parent="." instance=ExtResource("2_coin")]
+position = Vector2(3300, 700)
+coin_value = 25
+
+[node name="LevelEnd" parent="." instance=ExtResource("3_end")]
+position = Vector2(3550, 600)
