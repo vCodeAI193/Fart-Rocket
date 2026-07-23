@@ -589,7 +589,7 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 
 ## Android-Plattform & Veroeffentlichung
 
-- [ ] **FR-481** Adaptive Launcher-Icons
+- [x] **FR-481** Adaptive Launcher-Icons
 - [ ] **FR-482** App-Splash-Screen (Android 12+)
 - [ ] **FR-483** Google Play Billing fuer kosmetische Kaeufe
 - [ ] **FR-484** Optionale belohnte Werbeanzeigen
@@ -603,7 +603,7 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 - [ ] **FR-492** Altersfreigabe/Content-Rating
 - [ ] **FR-493** Store-Listing-Assets (Screenshots, Video)
 - [ ] **FR-494** Beta-/Testkanal-Einrichtung
-- [ ] **FR-495** Versionierungs-/Release-Notes-Prozess
+- [x] **FR-495** Versionierungs-/Release-Notes-Prozess (Konvention dokumentiert, siehe README.md)
 - [ ] **FR-496** Tablet-optimierte Layouts (grosse Bildschirme)
 - [ ] **FR-497** Foldable-Unterstuetzung
 - [ ] **FR-498** Edge-to-Edge-/Notch-Handhabung

@@ -172,7 +172,8 @@ Fart-Rocket/
 | Orientierung       | Nur Querformat (Landscape)            |
 | Eingabe            | Touch (Maus-Emulation am Desktop)     |
 | Min. Android API   | 21                                    |
-| Package-Name       | `com.yourname.fartrocket`             |
+| Package-Name       | `com.fartrocket.game`                 |
+| Version            | `0.2.0` (Code 2)                      |
 
 ## ▶️ Starten
 
@@ -180,6 +181,35 @@ Fart-Rocket/
 2. Mit **F5** starten – auf dem Desktop emuliert die Maus die Touch-Eingabe.
 3. Für Android: Android-Build-Vorlage installieren und über
    **Projekt → Exportieren → Android** exportieren.
+
+## 📦 Android-Veröffentlichung: Stand & offene Schritte
+
+`export_presets.cfg` ist so weit vorbereitet, wie es ohne echtes Android-
+Gerät/-Konto in dieser Umgebung möglich ist:
+
+- **Package-Name** (`com.fartrocket.game`) ist kein Platzhalter mehr,
+  sollte vor einer echten Veröffentlichung aber final auf eine Domain
+  festgelegt werden, die ihr tatsächlich kontrolliert.
+- **Berechtigungen**: `vibrate` korrigiert auf `true` (Haptik wird an
+  über 100 Stellen im Code genutzt, war aber nie freigegeben).
+  `internet`/`access_network_state`/`write_external_storage` bleiben
+  `false` — das Spiel macht keine Netzwerkaufrufe und speichert
+  ausschließlich in den app-eigenen `user://`-Pfad.
+- **Launcher-Icons**: `icons/android/*.png` wurden prozedural (reines
+  Python, ohne Bildbearbeitungs-Tools/-Bibliotheken) im selben Flach-
+  Design wie `icon.svg` erzeugt — Haupt-Icon (192×192) sowie adaptive
+  Vordergrund-/Hintergrund-/Monochrom-Varianten (432×432) für Android 8+/
+  13+. Bewusst ehrlich: das ist einfache Geometrie, kein illustriertes
+  App-Icon — vor einer echten Store-Veröffentlichung lohnt sich ein
+  Durchgang mit echtem Grafik-Werkzeug.
+- **Versionierung**: `version/code`/`version/name` folgen ab jetzt
+  Semantic Versioning (`MAJOR.MINOR.PATCH`) mit einem bei jeder
+  Veröffentlichung um 1 erhöhten `version/code` — z.B. `0.2.0`/Code 2 für
+  diesen Batch.
+- **Nicht Teil dieser Vorbereitung** (liegt außerhalb der Sandbox):
+  Signing-Keystore, Gradle-Build-Aktivierung, Google Play Billing/Play
+  Games Login, Store-Listing (Screenshots/Video), sowie das eigentliche
+  Erstellen/Hochladen eines Android-Builds.
 
 ## 🔊 Audio
 
