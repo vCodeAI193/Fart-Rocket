@@ -19,7 +19,7 @@ func _ready() -> void:
 func show_screen() -> void:
 	_refresh()
 	visible = true
-	GameManager.apply_menu_ui_scale(self, get_viewport().get_visible_rect().size)  # FR-424
+	AccessibilityManager.apply_menu_ui_scale(self, get_viewport().get_visible_rect().size)  # FR-424
 
 
 func _build_ui() -> void:
@@ -70,16 +70,16 @@ func _build_ui() -> void:
 
 
 func _refresh() -> void:
-	var active_info: Dictionary = GameManager.GAME_MODE_INFO[GameManager.active_game_mode]
+	var active_info: Dictionary = GameModeManager.GAME_MODE_INFO[GameModeManager.active_game_mode]
 	_active_label.text = "Aktiv: %s" % String(active_info["name"])
 
 	for child in _list.get_children():
 		child.queue_free()
 
-	for mode in GameManager.GAME_MODE_INFO.keys():
-		if mode == GameManager.GameMode.TIME_ATTACK:
+	for mode in GameModeManager.GAME_MODE_INFO.keys():
+		if mode == GameModeManager.GameMode.TIME_ATTACK:
 			continue  # bereits über den bestehenden Zeitrennen-Umschalter erreichbar
-		var info: Dictionary = GameManager.GAME_MODE_INFO[mode]
+		var info: Dictionary = GameModeManager.GAME_MODE_INFO[mode]
 		var row := PanelContainer.new()
 		var hbox := HBoxContainer.new()
 		row.add_child(hbox)
@@ -90,7 +90,7 @@ func _refresh() -> void:
 		var name_label := Label.new()
 		name_label.text = String(info["name"])
 		name_label.add_theme_font_size_override("font_size", 26)
-		if mode == GameManager.active_game_mode:
+		if mode == GameModeManager.active_game_mode:
 			name_label.add_theme_color_override("font_color", Color(0.4, 1.0, 0.5))
 		text_box.add_child(name_label)
 		var desc_label := Label.new()
@@ -100,12 +100,12 @@ func _refresh() -> void:
 		text_box.add_child(desc_label)
 
 		var select_btn := Button.new()
-		select_btn.text = "Aktiv" if mode == GameManager.active_game_mode else "Wählen"
-		select_btn.disabled = mode == GameManager.active_game_mode
+		select_btn.text = "Aktiv" if mode == GameModeManager.active_game_mode else "Wählen"
+		select_btn.disabled = mode == GameModeManager.active_game_mode
 		select_btn.custom_minimum_size = Vector2(160, 60)
 		select_btn.add_theme_font_size_override("font_size", 22)
 		select_btn.pressed.connect(func():
-			GameManager.set_game_mode(mode)
+			GameModeManager.set_game_mode(mode)
 			GameManager.play_ui_click()
 			GameManager.vibrate(15)
 			_refresh()
@@ -118,11 +118,11 @@ func _refresh() -> void:
 ## Hängt einen Bestwert-Hinweis an die Beschreibung an, falls vorhanden.
 func _best_score_suffix(mode: int) -> String:
 	match mode:
-		GameManager.GameMode.ENDLESS:
-			return "\nBeste Runden-Serie: %d" % GameManager.endless_best_loops
-		GameManager.GameMode.SURVIVAL:
-			return "\nLängste Überlebenszeit: %.1f s" % GameManager.survival_best_time
-		GameManager.GameMode.COIN_HUNT:
-			return "\nBeste Münzjagd: %d" % GameManager.coin_hunt_best_score
+		GameModeManager.GameMode.ENDLESS:
+			return "\nBeste Runden-Serie: %d" % GameModeManager.endless_best_loops
+		GameModeManager.GameMode.SURVIVAL:
+			return "\nLängste Überlebenszeit: %.1f s" % GameModeManager.survival_best_time
+		GameModeManager.GameMode.COIN_HUNT:
+			return "\nBeste Münzjagd: %d" % GameModeManager.coin_hunt_best_score
 		_:
 			return ""

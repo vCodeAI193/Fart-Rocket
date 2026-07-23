@@ -32,11 +32,18 @@ SaveManager="*res://scripts/SaveManager.gd"
 ; (nach GameManager/SaveManager geladen, da es deren Signale abonniert
 ; bzw. beim Speichern der Musik-Lautstärke SaveManager aufruft).
 SoundManager="*res://scripts/SoundManager.gd"
+; FR-421-440: Barrierefreiheits-/Einstellungs-Felder. Ausgelagert aus
+; GameManager.gd (zweite Runde des "God Object"-Refactorings).
+AccessibilityManager="*res://scripts/AccessibilityManager.gd"
+; FR-341-360: Spielmodi (GameMode-Enum, Bestwerte, Zeitrennen, Geister-
+; Pfade, Tages-Seed). Ebenfalls aus GameManager.gd ausgelagert; ruft
+; AchievementManager.MODIFIERS auf (Konstante, ladereihenfolge-unabhängig).
+GameModeManager="*res://scripts/GameModeManager.gd"
 ; FR-321: Lokales Achievement-/Herausforderungs-Framework (nach GameManager
 ; geladen, da es dessen Statistik-Signale abonniert).
 AchievementManager="*res://scripts/AchievementManager.gd"
-; FR-441: Lokalisierungs-System (nach GameManager geladen, da es
-; GameManager.language beim Start liest).
+; FR-441: Lokalisierungs-System (nach AccessibilityManager geladen, da es
+; AccessibilityManager.language beim Start liest).
 LocalizationManager="*res://scripts/LocalizationManager.gd"
 
 [display]

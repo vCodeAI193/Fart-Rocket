@@ -169,7 +169,7 @@ func _build_ghost_label() -> void:
 func update_ghost_display(elapsed: float) -> void:
 	if _ghost_label == null:
 		return
-	var best := GameManager.get_best_time(GameManager.current_level)
+	var best := GameModeManager.get_best_time(GameManager.current_level)
 	if best == INF:
 		_ghost_label.visible = false
 		return

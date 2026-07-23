@@ -46,7 +46,7 @@ func show_screen() -> void:
 	_refresh_prestige()
 	_refresh_achievements()
 	visible = true
-	GameManager.apply_menu_ui_scale(self, get_viewport().get_visible_rect().size)  # FR-424
+	AccessibilityManager.apply_menu_ui_scale(self, get_viewport().get_visible_rect().size)  # FR-424
 
 
 func _build_ui() -> void:

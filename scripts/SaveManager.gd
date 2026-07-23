@@ -70,13 +70,7 @@ func _save_progress() -> void:
 	cfg.set_value("progression", "hard_mode_enabled", GameManager.hard_mode_enabled)      # FR-316
 	cfg.set_value("progression", "hard_mode_stars", GameManager.hard_mode_stars)          # FR-316
 	cfg.set_value("progression", "earned_badges", GameManager.earned_badges)              # FR-318
-	cfg.set_value("modes", "active_game_mode", GameManager.active_game_mode)              # FR-342-360
-	cfg.set_value("modes", "endless_best_loops", GameManager.endless_best_loops)          # FR-342
-	cfg.set_value("modes", "survival_best_time", GameManager.survival_best_time)          # FR-343
-	cfg.set_value("modes", "coin_hunt_best_score", GameManager.coin_hunt_best_score)      # FR-346
-	cfg.set_value("modes", "ghost_paths", GameManager.ghost_paths)                       # FR-353
-	cfg.set_value("modes", "daily_seed_date", GameManager.daily_seed_date)                # FR-350
-	cfg.set_value("modes", "daily_seed_modifier_id", GameManager.daily_seed_modifier_id)  # FR-350
+	GameModeManager.write_to_save(cfg)  # FR-342-360
 	cfg.set_value("meta", "checksum", _compute_checksum(cfg))  # FR-413
 	_write_config_atomic(cfg, _save_path())
 	_create_backup(_save_path())  # FR-406/411/417
@@ -134,23 +128,10 @@ func _save_settings() -> void:
 	cfg.set_value("render", "pixel_perfect", GameManager.pixel_perfect_mode)  # FR-299
 	cfg.set_value("render", "crt_filter", GameManager.crt_filter_enabled)  # FR-282
 	cfg.set_value("audio", "haptics_enabled", GameManager.haptics_enabled)
-	cfg.set_value("audio", "sound_muted", GameManager.sound_muted)
+	cfg.set_value("audio", "sound_muted", SoundManager.sound_muted)                 # FR-250
 	cfg.set_value("audio", "master_volume", GameManager.master_volume)              # FR-438
 	cfg.set_value("audio", "music_volume", SoundManager.music_volume)               # FR-249
-	cfg.set_value("accessibility", "colorblind_mode", GameManager.colorblind_mode)  # FR-421
-	cfg.set_value("accessibility", "high_contrast", GameManager.high_contrast_enabled)  # FR-422
-	cfg.set_value("accessibility", "reduced_motion", GameManager.reduced_motion_enabled)  # FR-423
-	cfg.set_value("accessibility", "menu_ui_scale", GameManager.menu_ui_scale)      # FR-424
-	cfg.set_value("accessibility", "sound_captions", GameManager.sound_captions_enabled)  # FR-425
-	cfg.set_value("accessibility", "one_handed", GameManager.one_handed_mode)       # FR-426
-	cfg.set_value("accessibility", "assist_aim", GameManager.assist_aim_enabled)    # FR-427
-	cfg.set_value("accessibility", "screen_brightness", GameManager.screen_brightness)  # FR-429
-	cfg.set_value("accessibility", "fps_counter", GameManager.fps_counter_enabled)  # FR-431
-	cfg.set_value("accessibility", "fps_limit", GameManager.fps_limit)              # FR-432
-	cfg.set_value("accessibility", "tap_confirmations", GameManager.tap_confirmations_enabled)  # FR-435
-	cfg.set_value("accessibility", "pause_on_focus_loss", GameManager.pause_on_focus_loss)  # FR-436
-	cfg.set_value("accessibility", "difficulty_assist", GameManager.difficulty_assist_enabled)  # FR-437
-	cfg.set_value("accessibility", "language", GameManager.language)                # FR-439
+	AccessibilityManager.write_to_save(cfg)
 	_write_config_atomic(cfg, SETTINGS_PATH)
 
 
@@ -172,24 +153,11 @@ func _load_settings() -> void:
 	GameManager.pixel_perfect_mode = cfg.get_value("render", "pixel_perfect", false)
 	GameManager.crt_filter_enabled = cfg.get_value("render", "crt_filter", false)
 	GameManager.haptics_enabled = cfg.get_value("audio", "haptics_enabled", true)
-	GameManager.sound_muted = cfg.get_value("audio", "sound_muted", false)
+	SoundManager.sound_muted = cfg.get_value("audio", "sound_muted", false)                     # FR-250
 	GameManager.master_volume = cfg.get_value("audio", "master_volume", 1.0)                    # FR-438
 	SoundManager.music_volume = cfg.get_value("audio", "music_volume", 0.8)                     # FR-249
 	SoundManager.apply_music_volume()
-	GameManager.colorblind_mode = cfg.get_value("accessibility", "colorblind_mode", GameManager.ColorblindMode.NONE)  # FR-421
-	GameManager.high_contrast_enabled = cfg.get_value("accessibility", "high_contrast", false)  # FR-422
-	GameManager.reduced_motion_enabled = cfg.get_value("accessibility", "reduced_motion", false)  # FR-423
-	GameManager.menu_ui_scale = cfg.get_value("accessibility", "menu_ui_scale", 1.0)            # FR-424
-	GameManager.sound_captions_enabled = cfg.get_value("accessibility", "sound_captions", false)  # FR-425
-	GameManager.one_handed_mode = cfg.get_value("accessibility", "one_handed", false)           # FR-426
-	GameManager.assist_aim_enabled = cfg.get_value("accessibility", "assist_aim", false)        # FR-427
-	GameManager.screen_brightness = cfg.get_value("accessibility", "screen_brightness", 1.0)    # FR-429
-	GameManager.fps_counter_enabled = cfg.get_value("accessibility", "fps_counter", false)      # FR-431
-	GameManager.fps_limit = cfg.get_value("accessibility", "fps_limit", 0)                      # FR-432
-	GameManager.tap_confirmations_enabled = cfg.get_value("accessibility", "tap_confirmations", true)  # FR-435
-	GameManager.pause_on_focus_loss = cfg.get_value("accessibility", "pause_on_focus_loss", true)  # FR-436
-	GameManager.difficulty_assist_enabled = cfg.get_value("accessibility", "difficulty_assist", false)  # FR-437
-	GameManager.language = cfg.get_value("accessibility", "language", "de")                    # FR-439
+	AccessibilityManager.read_from_save(cfg)
 
 
 ## FR-401: Schreibt eine ConfigFile verschlüsselt (FR-409) und atomar —
@@ -358,7 +326,6 @@ func _reset_progress_vars_to_default() -> void:
 	GameManager.last_played_level = 0
 	GameManager.persistent_coins = 0
 	GameManager.level_attempt_times.clear()
-	GameManager.time_attack_best_times = {1: INF, 2: INF, 3: INF}
 	CosmeticsManager.reset_to_default()
 	GameManager.unlocked_skills.clear()               # FR-304/305
 	GameManager.prestige_level = 0                    # FR-306
@@ -375,15 +342,7 @@ func _reset_progress_vars_to_default() -> void:
 	GameManager.hard_mode_enabled = false             # FR-316
 	GameManager.hard_mode_stars.clear()               # FR-316
 	GameManager.earned_badges.clear()                 # FR-318
-	GameManager.active_game_mode = GameManager.GameMode.NORMAL    # FR-342-360
-	GameManager.endless_loop_count = 0                # FR-342
-	GameManager.endless_best_loops = 0                # FR-342
-	GameManager.survival_best_time = 0.0              # FR-343
-	GameManager.coin_hunt_best_score = 0              # FR-346
-	GameManager.marathon_level_index = 0              # FR-356
-	GameManager.ghost_paths.clear()                   # FR-353
-	GameManager.daily_seed_date = ""                  # FR-350
-	GameManager.daily_seed_modifier_id = "none"       # FR-350
+	GameModeManager.reset_to_default()                # FR-342-360
 
 
 ## FR-420: DSGVO-konformes vollständiges Löschen aller lokal
@@ -477,10 +436,4 @@ func _load_progress() -> void:
 	GameManager.hard_mode_stars = cfg.get_value("progression", "hard_mode_stars", {})               # FR-316
 	var saved_badges: Array = cfg.get_value("progression", "earned_badges", [])         # FR-318
 	GameManager.earned_badges.assign(saved_badges)
-	GameManager.active_game_mode = cfg.get_value("modes", "active_game_mode", GameManager.GameMode.NORMAL)      # FR-342-360
-	GameManager.endless_best_loops = cfg.get_value("modes", "endless_best_loops", 0)                # FR-342
-	GameManager.survival_best_time = cfg.get_value("modes", "survival_best_time", 0.0)              # FR-343
-	GameManager.coin_hunt_best_score = cfg.get_value("modes", "coin_hunt_best_score", 0)            # FR-346
-	GameManager.ghost_paths = cfg.get_value("modes", "ghost_paths", {})                             # FR-353
-	GameManager.daily_seed_date = cfg.get_value("modes", "daily_seed_date", "")                     # FR-350
-	GameManager.daily_seed_modifier_id = cfg.get_value("modes", "daily_seed_modifier_id", "none")   # FR-350
+	GameModeManager.read_from_save(cfg)  # FR-342-360

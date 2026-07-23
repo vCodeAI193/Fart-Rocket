@@ -20,6 +20,7 @@ const MUSIC_BUS_NAME := "Music"
 const STINGER_POOL_SIZE := 4
 
 var music_volume: float = 0.8  # FR-249
+var sound_muted: bool = false  # FR-250
 
 var _music_bus_idx: int = -1
 var _music_player_calm: AudioStreamPlayer
@@ -33,6 +34,11 @@ var _duck_tween: Tween
 
 var _loop_cache: Dictionary = {}  # "<track_id>:<intense>" -> AudioStreamWAV
 var _tone_cache: Dictionary = {}  # Schlüssel -> AudioStreamWAV (Einzeltöne/Fanfare)
+
+# --- FR-165: Prozedurale Furz-Sound-Pakete -------------------------------
+var _fart_sound_cache: Dictionary = {}  # pack_id -> AudioStreamWAV
+var _fart_sound_players: Array[AudioStreamPlayer] = []
+const FART_SOUND_POOL_SIZE := 3
 
 
 func _ready() -> void:
@@ -54,10 +60,11 @@ func _ready() -> void:
 
 
 ## Legt bei Bedarf einen eigenen "Music"-Bus an, der zum Master-Bus
-## sendet — dadurch bleibt master_volume weiterhin die Gesamtlautstärke,
-## während music_volume nur die Musik relativ dazu regelt. Das Stumm-
-## schalten des Master-Busses (GameManager._apply_mute()) schaltet die
-## Musik automatisch mit stumm, da sie letztlich über Master ausgegeben wird.
+## sendet — dadurch bleibt GameManager.master_volume weiterhin die
+## Gesamtlautstärke, während music_volume nur die Musik relativ dazu
+## regelt. Das Stummschalten des Master-Busses (apply_mute() unten)
+## schaltet die Musik automatisch mit stumm, da sie letztlich über
+## Master ausgegeben wird.
 func _ensure_music_bus() -> void:
 	_music_bus_idx = AudioServer.get_bus_index(MUSIC_BUS_NAME)
 	if _music_bus_idx == -1:
@@ -82,6 +89,32 @@ func apply_music_volume() -> void:
 	if _music_bus_idx == -1:
 		_ensure_music_bus()
 	AudioServer.set_bus_volume_db(_music_bus_idx, linear_to_db(maxf(music_volume, 0.0001)))
+
+
+# --- FR-250: Stummschaltung (Master-Bus) --------------------------------
+
+func set_muted(muted: bool) -> void:
+	sound_muted = muted
+	apply_mute()
+	SaveManager.save_settings()
+
+
+func toggle_muted() -> void:
+	set_muted(not sound_muted)
+
+
+func apply_mute() -> void:
+	# Master-Bus stummschalten (Index 0)
+	AudioServer.set_bus_mute(0, sound_muted)
+
+
+## Setzt Stummschaltung und Musik-Lautstärke auf ihre Werkseinstellung
+## zurück. Wird von GameManager.reset_settings_to_default() aufgerufen.
+func reset_to_default() -> void:
+	sound_muted = false
+	music_volume = 0.8
+	apply_mute()
+	apply_music_volume()
 
 
 # --- Musik-Wiedergabe -------------------------------------------------
@@ -328,6 +361,85 @@ func _generate_tone(frequency: float, duration: float, sample_rate: int = 22050)
 		var sample := sin(TAU * frequency * t) * envelope * 0.5
 		var value := int(clampf(sample, -1.0, 1.0) * 32767.0)
 		data.encode_s16(i * 2, value)
+	var stream := AudioStreamWAV.new()
+	stream.data = data
+	stream.format = AudioStreamWAV.FORMAT_16_BITS
+	stream.mix_rate = sample_rate
+	stream.stereo = false
+	return stream
+
+
+## FR-239: Spielt einen kurzen, prozedural erzeugten Klick-Ton für
+## Menü-Interaktionen ab (Button-Hover/-Press, Tab-Wechsel etc.). Nutzt
+## dieselbe Ton-/Stinger-Infrastruktur wie Countdown/Combo (kein separater
+## Cache/Pool nötig).
+func play_ui_click(pitch: float = 1.0) -> void:
+	if sound_muted:
+		return
+	_play_stinger(_get_or_generate_tone("ui_click", 880.0, 0.08), pitch)
+
+
+# --- FR-165: Prozedurale Furz-Sound-Pakete -------------------------------
+
+## FR-165/257: Spielt einen prozedural erzeugten Furz-Sound passend zum
+## ausgerüsteten Sound-Paket ab, moduliert durch die Stoßstärke.
+func play_fart_sound(strength: float = 1.0) -> void:
+	if sound_muted:
+		return
+	duck_for_sfx()  # FR-251: Musik kurz leiser für den Stoß
+	var pack := CosmeticsManager.equipped_fart_sound
+	if not _fart_sound_cache.has(pack):
+		_fart_sound_cache[pack] = _generate_fart_tone(pack)
+	var player := _get_free_fart_player()
+	player.stream = _fart_sound_cache[pack]
+	player.pitch_scale = clampf(0.8 + strength * 0.4, 0.6, 1.8)
+	player.play()
+
+
+func _get_free_fart_player() -> AudioStreamPlayer:
+	for p in _fart_sound_players:
+		if not p.playing:
+			return p
+	if _fart_sound_players.size() < FART_SOUND_POOL_SIZE:
+		var new_player := AudioStreamPlayer.new()
+		add_child(new_player)
+		_fart_sound_players.append(new_player)
+		return new_player
+	return _fart_sound_players[0]
+
+
+## FR-165: Erzeugt einen kurzen, "brummenden" Ton mit paket-abhängiger
+## Grundfrequenz und Modulation — vollständig prozedural, kein Asset.
+func _generate_fart_tone(pack: String) -> AudioStreamWAV:
+	var sample_rate := 22050
+	var duration := 0.35
+	var base_freq := 110.0
+	var wobble := 18.0
+	match pack:
+		"fartsound_deep":
+			base_freq = 65.0
+			wobble = 8.0
+		"fartsound_squeaky":
+			base_freq = 320.0
+			wobble = 60.0
+		"fartsound_robotic":
+			base_freq = 150.0
+			wobble = 0.0  # wird durch Bitcrush-Stufen ersetzt
+
+	var sample_count := int(sample_rate * duration)
+	var data := PackedByteArray()
+	data.resize(sample_count * 2)
+	for i in range(sample_count):
+		var t := float(i) / sample_rate
+		var envelope := 1.0 - (float(i) / sample_count)
+		var freq := base_freq + sin(t * 40.0) * wobble
+		var raw := sin(TAU * freq * t)
+		if pack == "fartsound_robotic":
+			raw = sign(raw) * 0.6 + raw * 0.4  # grobe Rechteck-Beimischung
+		var sample := raw * envelope * 0.6
+		var value := int(clampf(sample, -1.0, 1.0) * 32767.0)
+		data.encode_s16(i * 2, value)
+
 	var stream := AudioStreamWAV.new()
 	stream.data = data
 	stream.format = AudioStreamWAV.FORMAT_16_BITS

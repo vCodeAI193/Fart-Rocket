@@ -69,112 +69,19 @@ const XP_PER_LEVEL := 100
 const FART_LETTERS := ["F", "A", "R", "T"]
 var fart_letters_collected: Array[String] = []
 
-# --- Einstellungen (FR-045 Haptik, FR-249 Stummschaltung) -------
+# --- Einstellungen (FR-045 Haptik) -------
 var haptics_enabled: bool = true
-var sound_muted: bool = false
+# FR-250: sound_muted lebt jetzt in SoundManager.gd (Master-Bus-Stummschaltung)
 
-# --- FR-421-440: Einstellungen & Barrierefreiheit --------------------
-signal accessibility_changed  # löst UI-/Shader-Aktualisierungen aus
-
-enum ColorblindMode { NONE, PROTANOPIA, DEUTERANOPIA, TRITANOPIA }  # FR-421/433
-var colorblind_mode: ColorblindMode = ColorblindMode.NONE
-var high_contrast_enabled: bool = false          # FR-422
-var reduced_motion_enabled: bool = false          # FR-423
-var menu_ui_scale: float = 1.0                    # FR-424 (0.85..1.3)
-var sound_captions_enabled: bool = false          # FR-425
-var one_handed_mode: bool = false                 # FR-426
-var assist_aim_enabled: bool = false              # FR-427
-var screen_brightness: float = 1.0                # FR-429 (0.5..1.0)
-var fps_counter_enabled: bool = false             # FR-431
-var fps_limit: int = 0                            # FR-432 (0 = unbegrenzt)
-var tap_confirmations_enabled: bool = true        # FR-435
-var pause_on_focus_loss: bool = true              # FR-436
-var difficulty_assist_enabled: bool = false       # FR-437
+# --- FR-438: Gesamtlautstärke (Master-Bus) ---------------------------
+# Bleibt bewusst hier statt in AccessibilityManager/SoundManager: steuert
+# denselben Master-Bus (Index 0), den SoundManager.apply_mute() stumm-
+# schaltet — beides zusammen aufzuteilen würde die Kontrolle über einen
+# einzelnen Bus auf zwei Dateien verteilen.
 var master_volume: float = 1.0                    # FR-438 (0.0..1.0)
-const LANGUAGES := ["de", "en", "es", "fr"]        # FR-439
-var language: String = "de"
 
-
-func set_colorblind_mode(mode: ColorblindMode) -> void:
-	colorblind_mode = mode
-	accessibility_changed.emit()
-	SaveManager.save_settings()
-
-
-func set_high_contrast_enabled(enabled: bool) -> void:
-	high_contrast_enabled = enabled
-	accessibility_changed.emit()
-	SaveManager.save_settings()
-
-
-func set_reduced_motion_enabled(enabled: bool) -> void:
-	reduced_motion_enabled = enabled
-	SaveManager.save_settings()
-
-
-func set_menu_ui_scale(value: float) -> void:
-	menu_ui_scale = clampf(value, 0.85, 1.3)
-	accessibility_changed.emit()
-	SaveManager.save_settings()
-
-
-## FR-424: Skaliert eine Menü-CanvasLayer um die Bildschirmmitte (gleiches
-## Prinzip wie die bestehende HUD-Skalierung, FR-216) — wird von den
-## einzelnen Overlay-Bildschirmen (Einstellungen, Shop, Sammlung, ...)
-## aufgerufen, um lesbaren, größer skalierbaren Text/UI zu ermöglichen.
-func apply_menu_ui_scale(layer: CanvasLayer, viewport_size: Vector2) -> void:
-	var s := menu_ui_scale
-	var pivot := viewport_size * 0.5
-	layer.transform = Transform2D(0.0, Vector2.ONE * s, 0.0, pivot * (1.0 - s))
-
-
-func set_sound_captions_enabled(enabled: bool) -> void:
-	sound_captions_enabled = enabled
-	SaveManager.save_settings()
-
-
-func set_one_handed_mode(enabled: bool) -> void:
-	one_handed_mode = enabled
-	accessibility_changed.emit()
-	SaveManager.save_settings()
-
-
-func set_assist_aim_enabled(enabled: bool) -> void:
-	assist_aim_enabled = enabled
-	SaveManager.save_settings()
-
-
-func set_screen_brightness(value: float) -> void:
-	screen_brightness = clampf(value, 0.5, 1.0)
-	accessibility_changed.emit()
-	SaveManager.save_settings()
-
-
-func set_fps_counter_enabled(enabled: bool) -> void:
-	fps_counter_enabled = enabled
-	SaveManager.save_settings()
-
-
-## FR-432: 0 = unbegrenzt, sonst 30/60 als Akkuspar-Obergrenze.
-func set_fps_limit(limit: int) -> void:
-	fps_limit = limit
-	Engine.max_fps = limit
-	SaveManager.save_settings()
-
-
-func set_tap_confirmations_enabled(enabled: bool) -> void:
-	tap_confirmations_enabled = enabled
-	SaveManager.save_settings()
-
-
-func set_pause_on_focus_loss(enabled: bool) -> void:
-	pause_on_focus_loss = enabled
-	SaveManager.save_settings()
-
-
-func set_difficulty_assist_enabled(enabled: bool) -> void:
-	difficulty_assist_enabled = enabled
-	SaveManager.save_settings()
+# FR-421-440: Restliche Einstellungen & Barrierefreiheit (colorblind_mode,
+# high_contrast, sprache, etc.) leben jetzt in AccessibilityManager.gd.
 
 
 func set_master_volume(value: float) -> void:
@@ -183,16 +90,10 @@ func set_master_volume(value: float) -> void:
 	SaveManager.save_settings()
 
 
-## FR-439: Sprache umschalten (Übersetzungs-Anwendung folgt in Batch 17).
-func set_language(lang_code: String) -> void:
-	if lang_code in LANGUAGES:
-		language = lang_code
-		TranslationServer.set_locale(lang_code)
-		SaveManager.save_settings()
-
-
 ## FR-440: Setzt nur die Einstellungen (nicht den Spielfortschritt) auf
-## die Ausgangswerte zurück.
+## die Ausgangswerte zurück. Dünner Orchestrator: eigene Felder direkt,
+## Rest per Delegation an SoundManager/AccessibilityManager (analog zu
+## SaveManager._reset_progress_vars_to_default() für den Spielfortschritt).
 func reset_settings_to_default() -> void:
 	control_scheme = "direct"
 	left_handed_mode = false
@@ -207,108 +108,16 @@ func reset_settings_to_default() -> void:
 	pixel_perfect_mode = false
 	crt_filter_enabled = false
 	haptics_enabled = true
-	sound_muted = false
-	colorblind_mode = ColorblindMode.NONE
-	high_contrast_enabled = false
-	reduced_motion_enabled = false
-	menu_ui_scale = 1.0
-	sound_captions_enabled = false
-	one_handed_mode = false
-	assist_aim_enabled = false
-	screen_brightness = 1.0
-	fps_counter_enabled = false
-	fps_limit = 0
-	tap_confirmations_enabled = true
-	pause_on_focus_loss = true
-	difficulty_assist_enabled = false
 	master_volume = 1.0
-	language = "de"
-	_apply_mute()
-	Engine.max_fps = 0
 	AudioServer.set_bus_volume_db(0, 0.0)
-	SoundManager.music_volume = 0.8  # FR-249
-	SoundManager.apply_music_volume()
-	accessibility_changed.emit()
+	SoundManager.reset_to_default()
+	AccessibilityManager.reset_to_default()
 	SaveManager.save_settings()
 
-# --- FR-341: Zeitrennen-Modus (Time Attack) ----------------------
-var time_attack_mode: bool = false
-var time_attack_best_times := {1: INF, 2: INF, 3: INF}  # Level -> beste Zeit (Sek.)
-
-# --- FR-342-360: Spielmodi -----------------------------------------
-# FR-351/352 (Koop/Versus-Splitscreen) laut Projektplan zurückgestellt —
-# Touch-Single-Screen-Multiplayer birgt hohe UX-Risiken für dieses Spiel.
-enum GameMode {
-	NORMAL, TIME_ATTACK, ENDLESS, SURVIVAL, HARDCORE, ZEN, COIN_HUNT,
-	BOSS_RUSH, MIRROR, MUTATOR, DAILY_SEED, GHOST_RACE, NO_FUEL,
-	PRECISION, MARATHON, DARK, REVERSE_GRAVITY, CHAOS, PRACTICE,
-}
-const GAME_MODE_INFO := {
-	GameMode.NORMAL: {"name": "Normal", "desc": "Der reguläre Spielmodus."},
-	GameMode.TIME_ATTACK: {"name": "Zeitrennen", "desc": "Gegen die eigene Bestzeit antreten."},
-	GameMode.ENDLESS: {"name": "Endlos", "desc": "Das Level wiederholt sich mit steigendem Tempo, bis du stirbst."},
-	GameMode.SURVIVAL: {"name": "Überleben", "desc": "Hindernisse werden mit der Zeit schneller — überlebe so lange wie möglich."},
-	GameMode.HARDCORE: {"name": "Hardcore", "desc": "Nur eine einzige Furz-Ladung für das ganze Level."},
-	GameMode.ZEN: {"name": "Zen", "desc": "Kein Tod möglich — einfach entspannt fliegen."},
-	GameMode.COIN_HUNT: {"name": "Münzjagd", "desc": "Zählt nur: so viele Münzen wie möglich sammeln."},
-	GameMode.BOSS_RUSH: {"name": "Boss-Rush", "desc": "Direkt zum Boss-Level, mit doppelter Boss-Ausdauer."},
-	GameMode.MIRROR: {"name": "Spiegel", "desc": "Das Level ist horizontal gespiegelt."},
-	GameMode.MUTATOR: {"name": "Mutator", "desc": "Ein zufälliger Modifikator verändert die Regeln."},
-	GameMode.DAILY_SEED: {"name": "Tages-Lauf", "desc": "Gleiches Level und gleicher Modifikator für alle, einmal täglich."},
-	GameMode.GHOST_RACE: {"name": "Geister-Rennen", "desc": "Ein Geist deiner Bestzeit fliegt mit."},
-	GameMode.NO_FUEL: {"name": "Kein Treibstoff", "desc": "Keine Ladungs-Regeneration — nur die Start-Ladungen zählen."},
-	GameMode.PRECISION: {"name": "Präzision", "desc": "Nur sehr genaue Winkel geben vollen Schub."},
-	GameMode.MARATHON: {"name": "Marathon", "desc": "Alle Level am Stück, ohne Zwischenstopp im Menü."},
-	GameMode.DARK: {"name": "Dunkel", "desc": "Nur ein enger Lichtkegel um das Männchen ist sichtbar."},
-	GameMode.REVERSE_GRAVITY: {"name": "Umgekehrte Schwerkraft", "desc": "Die Schwerkraft zieht nach oben."},
-	GameMode.CHAOS: {"name": "Chaos", "desc": "Schwerkraft und Hindernisse sind deutlich schneller."},
-	GameMode.PRACTICE: {"name": "Übung", "desc": "Sofortiger Neustart am Levelanfang bei jedem Tod."},
-}
-var active_game_mode: GameMode = GameMode.NORMAL
-var endless_loop_count: int = 0             # FR-342
-var endless_best_loops: int = 0             # FR-342
-var survival_best_time: float = 0.0         # FR-343
-var coin_hunt_best_score: int = 0           # FR-346
-var marathon_level_index: int = 0           # FR-356: Fortschritt im Marathon-Lauf
-var ghost_paths := {}                       # FR-353: level_index -> PackedVector2Array
-var daily_seed_date: String = ""            # FR-350
-var daily_seed_modifier_id: String = "none" # FR-350
-
-
-## FR-342-360: Wechselt den aktiven Spielmodus (wirkt sich beim nächsten
-## Levelstart in Main.gd/Player.gd aus).
-func set_game_mode(mode: GameMode) -> void:
-	active_game_mode = mode
-	time_attack_mode = (mode == GameMode.TIME_ATTACK)  # bestehende Variable synchron halten
-	if mode == GameMode.MARATHON:
-		marathon_level_index = 1
-		current_level = 1  # Marathon startet immer bei Level 1
-	if mode == GameMode.BOSS_RUSH:
-		current_level = TOTAL_LEVELS  # FR-347: direkt zum Boss-Level springen
-	SaveManager.save_now()
-
-
-## FR-350: Liefert einen für alle Spieler an diesem Kalendertag gleichen
-## Seed sowie einen dazu passenden, ebenfalls tages-festen Modifikator.
-func get_daily_seed_params() -> Dictionary:
-	var today := Time.get_date_string_from_system()
-	if today != daily_seed_date:
-		daily_seed_date = today
-		var h := today.hash()
-		daily_seed_modifier_id = AchievementManager.MODIFIERS[h % AchievementManager.MODIFIERS.size()]["id"]
-	return {"seed": daily_seed_date.hash(), "modifier_id": daily_seed_modifier_id}
-
-
-## FR-353: Speichert die Positions-Aufzeichnung des schnellsten Laufs
-## als Geister-Pfad für ein Level (nur überschrieben, wenn tatsächlich
-## eine neue Bestzeit erzielt wurde — siehe record_time_attack()).
-func store_ghost_path(level_index: int, path: PackedVector2Array) -> void:
-	ghost_paths[level_index] = path
-	SaveManager.save_now()
-
-
-func get_ghost_path(level_index: int) -> PackedVector2Array:
-	return ghost_paths.get(level_index, PackedVector2Array())
+# FR-341-360: Spielmodi (GameMode-Enum, aktiver Modus, Bestwerte je Modus,
+# Zeitrennen/Geister-Pfade/Tages-Seed) leben jetzt in GameModeManager.gd —
+# in sich geschlossener Block, wurde beim "God Object"-Refactoring als
+# eigener Autoload ausgelagert (siehe README.md).
 
 # --- FR-117: KI-Schwierigkeitsskalierung --------------------------
 var _level_start_ticks: int = 0
@@ -467,12 +276,6 @@ const STAT_BADGES := [
 ]
 var earned_badges: Array[String] = []
 
-# --- FR-319: Stufenweise Freischaltung neuer Hindernisse -------------------
-const OBSTACLE_UNLOCK_LEVELS := {
-	"electric_fence": 1, "flame_jet": 1, "rotating_wheel": 1,
-	"black_hole": 2, "lava_pool": 2, "proximity_mine": 3,
-}
-
 # --- FR-224: Persistente Währung fürs Menü/Shop --------------------
 # Hinweis: total_coins/total_score sind reine Session-Werte pro Level-
 # Versuch (werden bei jedem start_level() zurückgesetzt). Für den Shop
@@ -533,15 +336,15 @@ func _ready() -> void:
 	# Beim Start einmal den gespeicherten Fortschritt laden (falls vorhanden)
 	SaveManager.load_now()
 	# Gespeicherte Audio-/Grafik-Einstellungen anwenden
-	_apply_mute()
+	SoundManager.apply_mute()
 	get_tree().root.content_scale_factor = render_scale  # FR-291
 	get_tree().root.canvas_item_default_texture_filter = (
 		Viewport.DEFAULT_CANVAS_ITEM_TEXTURE_FILTER_NEAREST if pixel_perfect_mode
 		else Viewport.DEFAULT_CANVAS_ITEM_TEXTURE_FILTER_LINEAR
 	)  # FR-299
 	AudioServer.set_bus_volume_db(0, linear_to_db(maxf(master_volume, 0.0001)))  # FR-438
-	Engine.max_fps = fps_limit  # FR-432
-	TranslationServer.set_locale(language)  # FR-439
+	Engine.max_fps = AccessibilityManager.fps_limit  # FR-432
+	TranslationServer.set_locale(AccessibilityManager.language)  # FR-439
 
 
 func _process(delta: float) -> void:
@@ -568,7 +371,7 @@ func start_level(level_index: int, max_charges: int) -> void:
 	# erhöhen die verfügbaren Furz-Ladungen (die Sternebewertung bleibt am
 	# ursprünglichen Level-Design gemessen, siehe calculate_stars-Aufruf in
 	# Main.gd mit dem unveränderten Wert)
-	var assist_bonus := 1 if difficulty_assist_enabled else 0
+	var assist_bonus := 1 if AccessibilityManager.difficulty_assist_enabled else 0
 	self.max_charges = max_charges + get_skill_effect_level("extra_charge") + assist_bonus
 	charges_remaining = self.max_charges
 	combo_count = 0
@@ -666,7 +469,7 @@ func record_fart() -> void:
 ## FR-226: Erhöht den Tod-Zähler (von Main bei jedem Tod aufgerufen).
 func record_death() -> void:
 	stat_total_deaths += 1
-	show_sound_caption(tr("caption_crash"))  # FR-425
+	AccessibilityManager.show_sound_caption(tr("caption_crash"))  # FR-425
 	_check_milestones()  # FR-308
 	_check_badges()      # FR-318
 	SaveManager.save_now()
@@ -825,7 +628,7 @@ func collect_fart_letter(letter: String) -> void:
 
 ## Eine Münze wurde eingesammelt (mit Combo-Multiplikator, FR-003).
 func add_coin(value: int) -> void:
-	show_sound_caption(tr("caption_coin"))  # FR-425
+	AccessibilityManager.show_sound_caption(tr("caption_coin"))  # FR-425
 	# Combo erhöhen, wenn die letzte Münze im Zeitfenster lag
 	if _combo_elapsed <= COMBO_WINDOW:
 		combo_count += 1
@@ -893,176 +696,25 @@ func set_haptics(enabled: bool) -> void:
 	SaveManager.save_settings()  # FR-414 (vorher fälschlich gar nicht persistiert)
 
 
-# --- FR-249: Stummschaltung -------------------------------------
-func set_muted(muted: bool) -> void:
-	sound_muted = muted
-	_apply_mute()
-	SaveManager.save_settings()  # FR-414 (vorher fälschlich gar nicht persistiert)
+# FR-249/250: Stummschaltung (set_muted/toggle_muted/apply_mute) lebt jetzt
+# in SoundManager.gd.
 
 
-func toggle_muted() -> void:
-	set_muted(not sound_muted)
+# FR-425: show_sound_caption() lebt jetzt in AccessibilityManager.gd
+# (Bildschirm-Einblendung ist eine Barrierefreiheits-Funktion, kein
+# Sound-Playback).
+
+# FR-165: play_fart_sound() lebt jetzt vollständig in SoundManager.gd.
 
 
-func _apply_mute() -> void:
-	# Master-Bus stummschalten (Index 0)
-	AudioServer.set_bus_mute(0, sound_muted)
-
-
-# --- FR-425: Untertitel für Soundeffekte --------------------------
-## Zeigt eine kurze Bildschirm-Einblendung, die einen Soundeffekt in
-## Textform beschreibt (Barrierefreiheit für gehörlose/schwerhörige
-## Spieler), sofern in den Einstellungen aktiviert.
-func show_sound_caption(text: String) -> void:
-	if not sound_captions_enabled:
-		return
-	var tree := get_tree()
-	if tree == null:
-		return
-	var layer := CanvasLayer.new()
-	layer.layer = 96
-	tree.root.add_child(layer)
-	var label := Label.new()
-	label.text = "♪ " + text
-	label.add_theme_font_size_override("font_size", 22)
-	label.add_theme_color_override("font_color", Color(0.85, 0.85, 0.9))
-	label.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
-	label.offset_left = 20
-	label.offset_bottom = -140
-	label.offset_top = -170
-	label.modulate.a = 0.0
-	layer.add_child(label)
-	var tween := tree.create_tween()
-	tween.tween_property(label, "modulate:a", 1.0, 0.15)
-	tween.tween_interval(0.8)
-	tween.tween_property(label, "modulate:a", 0.0, 0.3)
-	tween.tween_callback(layer.queue_free)
-
-
-# --- FR-239: Prozedurales UI-Sound-Feedback (kein externes Audio) -
-var _ui_click_stream: AudioStreamWAV
-var _ui_click_players: Array[AudioStreamPlayer] = []
-const UI_CLICK_POOL_SIZE := 4
-
-
-## FR-239: Spielt einen kurzen, prozedural erzeugten Klick-Ton für
-## Menü-Interaktionen ab (Button-Hover/-Press, Tab-Wechsel etc.).
+## FR-239: Dünner Weiterleitungs-Wrapper — die eigentliche Klick-Ton-
+## Erzeugung/Wiedergabe lebt jetzt in SoundManager.gd. Bleibt hier als
+## Alias erhalten, da über 45 Aufrufstellen in UI-Bildschirmen
+## GameManager.play_ui_click() aufrufen; ein direktes Umbiegen aller
+## Stellen auf SoundManager wäre eine unnötig große, risikoreiche Diff
+## ohne echten Zusatznutzen (siehe SaveManager.save_now()-Alias-Muster).
 func play_ui_click(pitch: float = 1.0) -> void:
-	if sound_muted:
-		return
-	if _ui_click_stream == null:
-		_ui_click_stream = _generate_click_tone()
-	var player := _get_free_ui_player()
-	player.stream = _ui_click_stream
-	player.pitch_scale = pitch
-	player.play()
-
-
-func _get_free_ui_player() -> AudioStreamPlayer:
-	for p in _ui_click_players:
-		if not p.playing:
-			return p
-	if _ui_click_players.size() < UI_CLICK_POOL_SIZE:
-		var new_player := AudioStreamPlayer.new()
-		add_child(new_player)
-		_ui_click_players.append(new_player)
-		return new_player
-	return _ui_click_players[0]  # Pool voll: ältesten wiederverwenden
-
-
-## FR-239: Erzeugt einen kurzen, sich abklingenden Sinuston (kein Asset).
-func _generate_click_tone() -> AudioStreamWAV:
-	var sample_rate := 22050
-	var duration := 0.08
-	var frequency := 880.0
-	var sample_count := int(sample_rate * duration)
-	var data := PackedByteArray()
-	data.resize(sample_count * 2)  # 16-bit mono
-	for i in range(sample_count):
-		var t := float(i) / sample_rate
-		var envelope := 1.0 - (float(i) / sample_count)  # linear ausklingend
-		var sample := sin(TAU * frequency * t) * envelope * 0.5
-		var value := int(clampf(sample, -1.0, 1.0) * 32767.0)
-		data.encode_s16(i * 2, value)
-	var stream := AudioStreamWAV.new()
-	stream.data = data
-	stream.format = AudioStreamWAV.FORMAT_16_BITS
-	stream.mix_rate = sample_rate
-	stream.stereo = false
-	return stream
-
-
-# --- FR-165: Prozedurale Furz-Sound-Pakete -------------------------
-var _fart_sound_cache: Dictionary = {}  # pack_id -> AudioStreamWAV
-var _fart_sound_players: Array[AudioStreamPlayer] = []
-const FART_SOUND_POOL_SIZE := 3
-
-
-## FR-165: Spielt einen prozedural erzeugten Furz-Sound passend zum
-## ausgerüsteten Sound-Paket ab, moduliert durch die Stoßstärke.
-func play_fart_sound(strength: float = 1.0) -> void:
-	if sound_muted:
-		return
-	SoundManager.duck_for_sfx()  # FR-251: Musik kurz leiser für den Stoß
-	var pack := CosmeticsManager.equipped_fart_sound
-	if not _fart_sound_cache.has(pack):
-		_fart_sound_cache[pack] = _generate_fart_tone(pack)
-	var player := _get_free_fart_player()
-	player.stream = _fart_sound_cache[pack]
-	player.pitch_scale = clampf(0.8 + strength * 0.4, 0.6, 1.8)
-	player.play()
-
-
-func _get_free_fart_player() -> AudioStreamPlayer:
-	for p in _fart_sound_players:
-		if not p.playing:
-			return p
-	if _fart_sound_players.size() < FART_SOUND_POOL_SIZE:
-		var new_player := AudioStreamPlayer.new()
-		add_child(new_player)
-		_fart_sound_players.append(new_player)
-		return new_player
-	return _fart_sound_players[0]
-
-
-## FR-165: Erzeugt einen kurzen, "brummenden" Ton mit paket-abhängiger
-## Grundfrequenz und Modulation — vollständig prozedural, kein Asset.
-func _generate_fart_tone(pack: String) -> AudioStreamWAV:
-	var sample_rate := 22050
-	var duration := 0.35
-	var base_freq := 110.0
-	var wobble := 18.0
-	match pack:
-		"fartsound_deep":
-			base_freq = 65.0
-			wobble = 8.0
-		"fartsound_squeaky":
-			base_freq = 320.0
-			wobble = 60.0
-		"fartsound_robotic":
-			base_freq = 150.0
-			wobble = 0.0  # wird durch Bitcrush-Stufen ersetzt
-
-	var sample_count := int(sample_rate * duration)
-	var data := PackedByteArray()
-	data.resize(sample_count * 2)
-	for i in range(sample_count):
-		var t := float(i) / sample_rate
-		var envelope := 1.0 - (float(i) / sample_count)
-		var freq := base_freq + sin(t * 40.0) * wobble
-		var raw := sin(TAU * freq * t)
-		if pack == "fartsound_robotic":
-			raw = sign(raw) * 0.6 + raw * 0.4  # grobe Rechteck-Beimischung
-		var sample := raw * envelope * 0.6
-		var value := int(clampf(sample, -1.0, 1.0) * 32767.0)
-		data.encode_s16(i * 2, value)
-
-	var stream := AudioStreamWAV.new()
-	stream.data = data
-	stream.format = AudioStreamWAV.FORMAT_16_BITS
-	stream.mix_rate = sample_rate
-	stream.stereo = false
-	return stream
+	SoundManager.play_ui_click(pitch)
 
 
 ## Berechnet die Stern-Bewertung (1..3) anhand der übrigen Ladungen.
@@ -1401,10 +1053,10 @@ func get_best_attempt_time(level_index: int) -> float:
 	return times.min()
 
 
-## FR-319: Ob ein Hindernis-Typ anhand des aktuellen Spielerlevels bereits
-## freigeschaltet ist (steigende Vielfalt mit Spielfortschritt).
-func is_obstacle_unlocked(obstacle_id: String) -> bool:
-	return player_level >= int(OBSTACLE_UNLOCK_LEVELS.get(obstacle_id, 1))
+# FR-319: is_obstacle_unlocked()/OBSTACLE_UNLOCK_LEVELS wurden entfernt —
+# tote Infrastruktur ohne einen einzigen Aufrufer im Projekt (Level werden
+# als fertige, statische Szenen ausgeliefert statt zur Laufzeit anhand des
+# Spielerlevels gefiltert zu werden). Siehe BACKLOG.md FR-319.
 
 
 ## Gibt true zurück, wenn ein nächstes Level existiert.
@@ -1412,21 +1064,8 @@ func has_next_level() -> bool:
 	return current_level < TOTAL_LEVELS
 
 
-## FR-341: Prüft und speichert eine neue Bestzeit für den Zeitrennen-Modus.
-## Gibt true zurück, wenn eine neue Bestzeit erreicht wurde.
-func record_time_attack(level_index: int, time_sec: float) -> bool:
-	if not time_attack_best_times.has(level_index):
-		time_attack_best_times[level_index] = INF
-	if time_sec < time_attack_best_times[level_index]:
-		time_attack_best_times[level_index] = time_sec
-		SaveManager.save_now()
-		return true
-	return false
-
-
-## FR-341: Liefert die Bestzeit für ein Level (INF, falls noch keine).
-func get_best_time(level_index: int) -> float:
-	return time_attack_best_times.get(level_index, INF)
+# FR-341: record_time_attack()/get_best_time() leben jetzt in
+# GameModeManager.gd.
 
 
 ## Liefert den Szenenpfad für ein 1-basiertes Level.

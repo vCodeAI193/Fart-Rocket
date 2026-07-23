@@ -23,7 +23,7 @@ func show_screen() -> void:
 	_refresh_stickers()
 	_refresh_stats()
 	visible = true
-	GameManager.apply_menu_ui_scale(self, get_viewport().get_visible_rect().size)  # FR-424
+	AccessibilityManager.apply_menu_ui_scale(self, get_viewport().get_visible_rect().size)  # FR-424
 
 
 func _build_ui() -> void:

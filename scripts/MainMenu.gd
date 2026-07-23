@@ -291,7 +291,7 @@ func _on_level_info_pressed(level_index: int) -> void:
 	stars_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vbox.add_child(stars_label)
 
-	var best_time := GameManager.get_best_time(level_index)
+	var best_time := GameModeManager.get_best_time(level_index)
 	var time_label := Label.new()
 	time_label.text = "Bestzeit: %.1fs" % best_time if best_time != INF else "Bestzeit: —"
 	time_label.add_theme_font_size_override("font_size", 28)

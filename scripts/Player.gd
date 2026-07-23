@@ -171,7 +171,7 @@ func _process(delta: float) -> void:
 		return
 
 	# FR-353: Geister-Rennen — Position periodisch für die Wiedergabe aufzeichnen
-	if GameManager.active_game_mode == GameManager.GameMode.GHOST_RACE:
+	if GameModeManager.active_game_mode == GameModeManager.GameMode.GHOST_RACE:
 		_ghost_record_timer += delta
 		if _ghost_record_timer >= 0.05:
 			_ghost_record_timer = 0.0
@@ -280,7 +280,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			_aim_hold = 0.0  # FR-005: Aufladung neu beginnen
 			_update_aim_visual()
 			# FR-435: Visuelle Tipp-Bestätigung am Berührungspunkt
-			if GameManager.tap_confirmations_enabled:
+			if AccessibilityManager.tap_confirmations_enabled:
 				_show_tap_confirmation(event.position)
 			# FR-052: Beim Zielen leichte Zeitlupe für Feinjustierung
 			if aim_slowmo_enabled and not _aim_slowmo_active:
@@ -323,8 +323,8 @@ func _update_aim_visual() -> void:
 	var dir := _scheme_direction(drag)
 	# FR-053/427: Auto-Aim bzw. globaler Assist-Modus — suche nächstes Ziel
 	# bei kurzen Zügen (Assist-Modus nutzt einen großzügigeren Schwellwert)
-	var auto_aim_active := auto_aim_enabled or GameManager.assist_aim_enabled
-	var auto_aim_threshold := 0.45 if GameManager.assist_aim_enabled else 0.3
+	var auto_aim_active := auto_aim_enabled or AccessibilityManager.assist_aim_enabled
+	var auto_aim_threshold := 0.45 if AccessibilityManager.assist_aim_enabled else 0.3
 	if auto_aim_active and drag.length() < _effective_max_drag() * auto_aim_threshold:
 		var target_dir := _find_nearest_target()
 		if target_dir != Vector2.ZERO:
@@ -400,8 +400,8 @@ func _execute_fart(drag: Vector2) -> void:
 	_cooldown_remaining = fart_cooldown
 	GameManager.vibrate(40)
 	GameManager.record_fart()  # FR-226: Statistik
-	GameManager.play_fart_sound(strength)  # FR-165
-	GameManager.show_sound_caption(tr("caption_fart"))  # FR-425
+	SoundManager.play_fart_sound(strength)  # FR-165
+	AccessibilityManager.show_sound_caption(tr("caption_fart"))  # FR-425
 
 	# FR-012: Überhitzungs-Level erhöhen (Mega-Furz = mehr Hitze)
 	_heat_level += (fart["power"] * 0.25)
@@ -438,7 +438,7 @@ func _calculate_precision_bonus(dir: Vector2) -> float:
 		min_angle_diff = minf(min_angle_diff, diff)
 	# FR-355: Präzisions-Modus verschärft die Toleranz und bestraft
 	# ungenaue Stöße zusätzlich mit einem Malus statt nur den Bonus zu entziehen
-	var precision_mode := GameManager.active_game_mode == GameManager.GameMode.PRECISION
+	var precision_mode := GameModeManager.active_game_mode == GameModeManager.GameMode.PRECISION
 	var tolerance := PI * 0.05 if precision_mode else PI * 0.15
 	var off_angle := clampf(min_angle_diff / tolerance, 0.0, 1.0)
 	var bonus := (1.0 - off_angle) * 0.5
@@ -609,7 +609,7 @@ func _on_body_entered(body: Node) -> void:
 		return
 	if body.is_in_group("obstacles"):
 		# FR-345: Im Zen-Modus ist der Spieler unverwundbar — abprallen statt sterben
-		if GameManager.active_game_mode == GameManager.GameMode.ZEN:
+		if GameModeManager.active_game_mode == GameModeManager.GameMode.ZEN:
 			apply_central_impulse(-linear_velocity.normalized() * 200.0)
 			GameManager.vibrate(20)
 			return
@@ -629,7 +629,7 @@ func activate_shield(duration: float) -> void:
 	# FR-305/437: "Längerer Schild"-Upgrades und Schwierigkeits-Assist
 	# verlängern die Schild-Dauer
 	var skill_bonus := 1.0 + GameManager.get_skill_effect_level("shield_duration") * 0.2
-	if GameManager.difficulty_assist_enabled:
+	if AccessibilityManager.difficulty_assist_enabled:
 		skill_bonus += 0.3
 	_shield_remaining = duration * skill_bonus
 	shield_changed.emit(true)

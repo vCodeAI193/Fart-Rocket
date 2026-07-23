@@ -400,7 +400,7 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 - [x] **FR-316** Hard-Mode-Sterne (Schwierigkeits-Sterne)
 - [x] **FR-317** Sammlung der Bestzeiten
 - [x] **FR-318** Statistik-getriebene Abzeichen
-- [x] **FR-319** Stufenweise Freischaltung neuer Hindernisse
+- [ ] **FR-319** Stufenweise Freischaltung neuer Hindernisse (Infrastruktur war vorhanden, aber nie mit der Level-Generierung verbunden — als toter Code entfernt, siehe Commit-Historie)
 - [x] **FR-320** Belohnungs-Vorschau fuer das naechste Ziel
 
 ## Erfolge & Herausforderungen

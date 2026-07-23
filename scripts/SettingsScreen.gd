@@ -58,15 +58,15 @@ func _ready() -> void:
 	add_child(_confirm_dialog)
 	# FR-424: Live-Aktualisierung, falls die UI-Skalierung während der
 	# Anzeige geändert wird (z.B. über den Skalierungs-Button selbst)
-	GameManager.accessibility_changed.connect(func():
+	AccessibilityManager.accessibility_changed.connect(func():
 		if visible:
-			GameManager.apply_menu_ui_scale(self, get_viewport().get_visible_rect().size)
+			AccessibilityManager.apply_menu_ui_scale(self, get_viewport().get_visible_rect().size)
 	)
 
 
 func show_settings() -> void:
 	visible = true
-	GameManager.apply_menu_ui_scale(self, get_viewport().get_visible_rect().size)  # FR-424
+	AccessibilityManager.apply_menu_ui_scale(self, get_viewport().get_visible_rect().size)  # FR-424
 	_update_buttons()
 
 
@@ -331,7 +331,7 @@ func _update_buttons() -> void:
 	if _haptics_btn == null:
 		return
 	_haptics_btn.text = "Haptik: EIN" if GameManager.haptics_enabled else "Haptik: AUS"
-	_mute_btn.text = "Ton: AN" if not GameManager.sound_muted else "Ton: AUS"
+	_mute_btn.text = "Ton: AN" if not SoundManager.sound_muted else "Ton: AUS"
 	# FR-059
 	var scheme_label := "Direkt" if GameManager.control_scheme == "direct" else "Steinschleuder"
 	_scheme_btn.text = "Steuerschema: %s" % scheme_label
@@ -349,33 +349,33 @@ func _update_buttons() -> void:
 	_hard_mode_btn.text = "Hard-Mode: EIN" if GameManager.hard_mode_enabled else "Hard-Mode: AUS"
 	# FR-421-440: Barrierefreiheit-Buttons
 	var cb_names := {
-		GameManager.ColorblindMode.NONE: "Aus", GameManager.ColorblindMode.PROTANOPIA: "Protanopie",
-		GameManager.ColorblindMode.DEUTERANOPIA: "Deuteranopie", GameManager.ColorblindMode.TRITANOPIA: "Tritanopie",
+		AccessibilityManager.ColorblindMode.NONE: "Aus", AccessibilityManager.ColorblindMode.PROTANOPIA: "Protanopie",
+		AccessibilityManager.ColorblindMode.DEUTERANOPIA: "Deuteranopie", AccessibilityManager.ColorblindMode.TRITANOPIA: "Tritanopie",
 	}
-	_colorblind_btn.text = "Farbenblind-Modus: %s" % cb_names.get(GameManager.colorblind_mode, "Aus")
+	_colorblind_btn.text = "Farbenblind-Modus: %s" % cb_names.get(AccessibilityManager.colorblind_mode, "Aus")
 	# FR-433: Kurzbeschreibung als Tooltip-Vorschau, welche Farbpaare der
 	# jeweilige Modus stärker unterscheidbar macht.
 	_colorblind_btn.tooltip_text = {
-		GameManager.ColorblindMode.NONE: "Kein Filter aktiv.",
-		GameManager.ColorblindMode.PROTANOPIA: "Verstärkt Rot-Grün-Unterschiede im Blaukanal.",
-		GameManager.ColorblindMode.DEUTERANOPIA: "Verstärkt Grün-Rot-Unterschiede im Blaukanal.",
-		GameManager.ColorblindMode.TRITANOPIA: "Verstärkt Blau-Gelb-Unterschiede im Rotkanal.",
-	}.get(GameManager.colorblind_mode, "")
-	_contrast_btn.text = "Hoher Kontrast: EIN" if GameManager.high_contrast_enabled else "Hoher Kontrast: AUS"
-	_motion_btn.text = "Reduzierte Bewegung: EIN" if GameManager.reduced_motion_enabled else "Reduzierte Bewegung: AUS"
-	_ui_scale_btn.text = "Menü-/Textgröße: %.0f%%" % (GameManager.menu_ui_scale * 100)
-	_captions_btn.text = "Sound-Untertitel: EIN" if GameManager.sound_captions_enabled else "Sound-Untertitel: AUS"
-	_one_handed_btn.text = "Einhand-Modus: EIN" if GameManager.one_handed_mode else "Einhand-Modus: AUS"
-	_assist_aim_btn.text = "Ziel-Assistenz: EIN" if GameManager.assist_aim_enabled else "Ziel-Assistenz: AUS"
-	_brightness_btn.text = "Helligkeit: %d%%" % int(GameManager.screen_brightness * 100)
-	_fps_counter_btn.text = "FPS-Anzeige: EIN" if GameManager.fps_counter_enabled else "FPS-Anzeige: AUS"
-	_fps_limit_btn.text = "Bildrate: %s" % ("Unbegrenzt" if GameManager.fps_limit == 0 else "%d FPS" % GameManager.fps_limit)
-	_tap_confirm_btn.text = "Tipp-Bestätigung: EIN" if GameManager.tap_confirmations_enabled else "Tipp-Bestätigung: AUS"
-	_focus_pause_btn.text = "Pause bei Fokusverlust: EIN" if GameManager.pause_on_focus_loss else "Pause bei Fokusverlust: AUS"
-	_difficulty_assist_btn.text = "Schwierigkeits-Assist: EIN" if GameManager.difficulty_assist_enabled else "Schwierigkeits-Assist: AUS"
+		AccessibilityManager.ColorblindMode.NONE: "Kein Filter aktiv.",
+		AccessibilityManager.ColorblindMode.PROTANOPIA: "Verstärkt Rot-Grün-Unterschiede im Blaukanal.",
+		AccessibilityManager.ColorblindMode.DEUTERANOPIA: "Verstärkt Grün-Rot-Unterschiede im Blaukanal.",
+		AccessibilityManager.ColorblindMode.TRITANOPIA: "Verstärkt Blau-Gelb-Unterschiede im Rotkanal.",
+	}.get(AccessibilityManager.colorblind_mode, "")
+	_contrast_btn.text = "Hoher Kontrast: EIN" if AccessibilityManager.high_contrast_enabled else "Hoher Kontrast: AUS"
+	_motion_btn.text = "Reduzierte Bewegung: EIN" if AccessibilityManager.reduced_motion_enabled else "Reduzierte Bewegung: AUS"
+	_ui_scale_btn.text = "Menü-/Textgröße: %.0f%%" % (AccessibilityManager.menu_ui_scale * 100)
+	_captions_btn.text = "Sound-Untertitel: EIN" if AccessibilityManager.sound_captions_enabled else "Sound-Untertitel: AUS"
+	_one_handed_btn.text = "Einhand-Modus: EIN" if AccessibilityManager.one_handed_mode else "Einhand-Modus: AUS"
+	_assist_aim_btn.text = "Ziel-Assistenz: EIN" if AccessibilityManager.assist_aim_enabled else "Ziel-Assistenz: AUS"
+	_brightness_btn.text = "Helligkeit: %d%%" % int(AccessibilityManager.screen_brightness * 100)
+	_fps_counter_btn.text = "FPS-Anzeige: EIN" if AccessibilityManager.fps_counter_enabled else "FPS-Anzeige: AUS"
+	_fps_limit_btn.text = "Bildrate: %s" % ("Unbegrenzt" if AccessibilityManager.fps_limit == 0 else "%d FPS" % AccessibilityManager.fps_limit)
+	_tap_confirm_btn.text = "Tipp-Bestätigung: EIN" if AccessibilityManager.tap_confirmations_enabled else "Tipp-Bestätigung: AUS"
+	_focus_pause_btn.text = "Pause bei Fokusverlust: EIN" if AccessibilityManager.pause_on_focus_loss else "Pause bei Fokusverlust: AUS"
+	_difficulty_assist_btn.text = "Schwierigkeits-Assist: EIN" if AccessibilityManager.difficulty_assist_enabled else "Schwierigkeits-Assist: AUS"
 	_volume_btn.text = "Lautstärke: %d%%" % int(GameManager.master_volume * 100)
 	_music_volume_btn.text = "Musik-Lautstärke: %d%%" % int(SoundManager.music_volume * 100)  # FR-249
-	_language_btn.text = "%s: %s" % [tr("settings_language"), GameManager.language.to_upper()]
+	_language_btn.text = "%s: %s" % [tr("settings_language"), AccessibilityManager.language.to_upper()]
 	# FR-403/418: Speicherplatz-Buttons
 	for i in range(_slot_buttons.size()):
 		var slot := i + 1
@@ -394,7 +394,7 @@ func _on_haptics_pressed() -> void:
 
 
 func _on_mute_pressed() -> void:
-	GameManager.toggle_muted()
+	SoundManager.toggle_muted()
 	_update_buttons()
 
 
@@ -527,42 +527,42 @@ func _make_settings_button(vbox: VBoxContainer, callback: Callable) -> Button:
 ## FR-421: Farbenblind-Modus durchschalten.
 func _on_colorblind_pressed() -> void:
 	var order := [
-		GameManager.ColorblindMode.NONE, GameManager.ColorblindMode.PROTANOPIA,
-		GameManager.ColorblindMode.DEUTERANOPIA, GameManager.ColorblindMode.TRITANOPIA,
+		AccessibilityManager.ColorblindMode.NONE, AccessibilityManager.ColorblindMode.PROTANOPIA,
+		AccessibilityManager.ColorblindMode.DEUTERANOPIA, AccessibilityManager.ColorblindMode.TRITANOPIA,
 	]
-	var next_idx := (order.find(GameManager.colorblind_mode) + 1) % order.size()
-	GameManager.set_colorblind_mode(order[next_idx])
+	var next_idx := (order.find(AccessibilityManager.colorblind_mode) + 1) % order.size()
+	AccessibilityManager.set_colorblind_mode(order[next_idx])
 	GameManager.vibrate(15)
 	_update_buttons()
 
 
 ## FR-422: Hoher-Kontrast-Modus umschalten.
 func _on_contrast_pressed() -> void:
-	GameManager.set_high_contrast_enabled(not GameManager.high_contrast_enabled)
+	AccessibilityManager.set_high_contrast_enabled(not AccessibilityManager.high_contrast_enabled)
 	GameManager.vibrate(15)
 	_update_buttons()
 
 
 ## FR-423: Reduzierte-Bewegung umschalten.
 func _on_motion_pressed() -> void:
-	GameManager.set_reduced_motion_enabled(not GameManager.reduced_motion_enabled)
+	AccessibilityManager.set_reduced_motion_enabled(not AccessibilityManager.reduced_motion_enabled)
 	GameManager.vibrate(15)
 	_update_buttons()
 
 
 ## FR-424: Menü-/Text-Skalierung in Stufen durchschalten.
 func _on_ui_scale_pressed() -> void:
-	var next := GameManager.menu_ui_scale + 0.15
+	var next := AccessibilityManager.menu_ui_scale + 0.15
 	if next > 1.3:
 		next = 0.85
-	GameManager.set_menu_ui_scale(next)
+	AccessibilityManager.set_menu_ui_scale(next)
 	GameManager.vibrate(15)
 	_update_buttons()
 
 
 ## FR-425: Untertitel für Soundeffekte umschalten.
 func _on_captions_pressed() -> void:
-	GameManager.set_sound_captions_enabled(not GameManager.sound_captions_enabled)
+	AccessibilityManager.set_sound_captions_enabled(not AccessibilityManager.sound_captions_enabled)
 	GameManager.play_ui_click()
 	GameManager.vibrate(15)
 	_update_buttons()
@@ -570,31 +570,31 @@ func _on_captions_pressed() -> void:
 
 ## FR-426: Einhand-Modus umschalten.
 func _on_one_handed_pressed() -> void:
-	GameManager.set_one_handed_mode(not GameManager.one_handed_mode)
+	AccessibilityManager.set_one_handed_mode(not AccessibilityManager.one_handed_mode)
 	GameManager.vibrate(15)
 	_update_buttons()
 
 
 ## FR-427: Ziel-Assistenz umschalten.
 func _on_assist_aim_pressed() -> void:
-	GameManager.set_assist_aim_enabled(not GameManager.assist_aim_enabled)
+	AccessibilityManager.set_assist_aim_enabled(not AccessibilityManager.assist_aim_enabled)
 	GameManager.vibrate(15)
 	_update_buttons()
 
 
 ## FR-429: Bildschirm-Helligkeit in Stufen durchschalten.
 func _on_brightness_pressed() -> void:
-	var next := GameManager.screen_brightness - 0.1
+	var next := AccessibilityManager.screen_brightness - 0.1
 	if next < 0.5:
 		next = 1.0
-	GameManager.set_screen_brightness(next)
+	AccessibilityManager.set_screen_brightness(next)
 	GameManager.vibrate(15)
 	_update_buttons()
 
 
 ## FR-431: FPS-Anzeige umschalten.
 func _on_fps_counter_pressed() -> void:
-	GameManager.set_fps_counter_enabled(not GameManager.fps_counter_enabled)
+	AccessibilityManager.set_fps_counter_enabled(not AccessibilityManager.fps_counter_enabled)
 	GameManager.play_ui_click()
 	GameManager.vibrate(15)
 	_update_buttons()
@@ -603,8 +603,8 @@ func _on_fps_counter_pressed() -> void:
 ## FR-432: Bildratenbegrenzung durchschalten (unbegrenzt/30/60).
 func _on_fps_limit_pressed() -> void:
 	var order := [0, 30, 60]
-	var next_idx := (order.find(GameManager.fps_limit) + 1) % order.size()
-	GameManager.set_fps_limit(order[next_idx])
+	var next_idx := (order.find(AccessibilityManager.fps_limit) + 1) % order.size()
+	AccessibilityManager.set_fps_limit(order[next_idx])
 	GameManager.play_ui_click()
 	GameManager.vibrate(15)
 	_update_buttons()
@@ -612,7 +612,7 @@ func _on_fps_limit_pressed() -> void:
 
 ## FR-435: Tipp-Bestätigungen umschalten.
 func _on_tap_confirm_pressed() -> void:
-	GameManager.set_tap_confirmations_enabled(not GameManager.tap_confirmations_enabled)
+	AccessibilityManager.set_tap_confirmations_enabled(not AccessibilityManager.tap_confirmations_enabled)
 	GameManager.play_ui_click()
 	GameManager.vibrate(15)
 	_update_buttons()
@@ -620,7 +620,7 @@ func _on_tap_confirm_pressed() -> void:
 
 ## FR-436: Pause bei Fokusverlust umschalten.
 func _on_focus_pause_pressed() -> void:
-	GameManager.set_pause_on_focus_loss(not GameManager.pause_on_focus_loss)
+	AccessibilityManager.set_pause_on_focus_loss(not AccessibilityManager.pause_on_focus_loss)
 	GameManager.play_ui_click()
 	GameManager.vibrate(15)
 	_update_buttons()
@@ -628,7 +628,7 @@ func _on_focus_pause_pressed() -> void:
 
 ## FR-437: Schwierigkeits-Assist-Paket umschalten.
 func _on_difficulty_assist_pressed() -> void:
-	GameManager.set_difficulty_assist_enabled(not GameManager.difficulty_assist_enabled)
+	AccessibilityManager.set_difficulty_assist_enabled(not AccessibilityManager.difficulty_assist_enabled)
 	GameManager.play_ui_click()
 	GameManager.vibrate(15)
 	_update_buttons()
@@ -659,8 +659,8 @@ func _on_music_volume_pressed() -> void:
 ## Szenen-Reload reicht aus, damit alle tr()-basierten Texte mit der
 ## neuen Sprache neu aufgebaut werden (kein Neustart der App nötig).
 func _on_language_pressed() -> void:
-	var next_idx := (GameManager.LANGUAGES.find(GameManager.language) + 1) % GameManager.LANGUAGES.size()
-	GameManager.set_language(GameManager.LANGUAGES[next_idx])
+	var next_idx := (AccessibilityManager.LANGUAGES.find(AccessibilityManager.language) + 1) % AccessibilityManager.LANGUAGES.size()
+	AccessibilityManager.set_language(AccessibilityManager.LANGUAGES[next_idx])
 	GameManager.vibrate(15)
 	get_tree().reload_current_scene()
 

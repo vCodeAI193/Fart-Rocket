@@ -27,25 +27,34 @@ sind bereits umgesetzt.
 
 ## 🏗️ Architektur: Autoloads
 
-Globaler Zustand ist auf fünf Autoload-Singletons aufgeteilt (siehe
+Globaler Zustand ist auf sieben Autoload-Singletons aufgeteilt (siehe
 `[autoload]` in `project.godot`). Die Ladereihenfolge ist bewusst gewählt:
 Jeder Autoload kann nur auf Autoloads verweisen, die *vorher* geladen wurden
 oder deren Referenz erst zur Laufzeit (nicht in `_ready()`) gebraucht wird.
 
 | Reihenfolge | Autoload             | Zuständigkeit |
 |-------------|-----------------------|---------------|
-| 1 | `GameManager.gd`       | Kern-Spielzustand: aktuelles Level, Furz-Ladungen, Combo, Münzen pro Lauf, dauerhaftes Guthaben (`persistent_coins`), Sterne/XP, Einstellungen & Barrierefreiheit, Spielmodi (`GameMode`-Enum), zentrale Signale. Bindeglied zwischen den anderen Managern. |
+| 1 | `GameManager.gd`       | Kern-Spielzustand: aktuelles Level, Furz-Ladungen, Combo, Münzen pro Lauf, dauerhaftes Guthaben (`persistent_coins`), Sterne/XP, Gesamtlautstärke (`master_volume`), restliche Steuerungs-/Kamera-/HUD-/Grafik-Einstellungen, zentrale Signale. Bindeglied zwischen den anderen Managern. |
 | 2 | `CosmeticsManager.gd`  | Kosmetik-Katalog (`COSMETIC_CATALOG`), Freischaltung, Ausrüstung (Mix&Match: Helm/Anzug/Hut/Pfeil/Tod-Animation/Sieges-Pose/Furz-Farbe/-Sound), Skin-Farben. Bezieht Käufe über `GameManager.persistent_coins`. |
-| 3 | `SaveManager.gd`       | Verschlüsseltes, Prüfsummen-gesichertes Mehrfach-Profil-Speichersystem (3 Speicherplätze), atomare Schreibvorgänge, automatische Backups mit Korruptions-Fallback, separate Einstellungen-Datei. Liest/schreibt Felder aus `GameManager` und `CosmeticsManager` per Cross-Reference. |
-| 4 | `AchievementManager.gd`| Lokales Achievement-/Herausforderungs-Framework. Abonniert Statistik-Signale von `GameManager` (z.B. `persistent_coins_changed`), vergibt Kosmetik-Belohnungen über `CosmeticsManager.grant_cosmetic_free()`. |
-| 5 | `LocalizationManager.gd`| Lokalisierungs-System. Liest `GameManager.language` beim Start. |
+| 3 | `SaveManager.gd`       | Verschlüsseltes, Prüfsummen-gesichertes Mehrfach-Profil-Speichersystem (3 Speicherplätze), atomare Schreibvorgänge, automatische Backups mit Korruptions-Fallback, separate Einstellungen-Datei. Liest/schreibt Felder aus allen anderen Managern per Cross-Reference. |
+| 4 | `SoundManager.gd`      | Prozedurale Musik (Menü/Level/Boss), Sieg-Fanfare/Countdown/Combo-Sounds, UI-Klick- und Furz-Sound-Synthese, Stummschaltung, zweiter Audio-Bus ("Music") für eine von der Gesamtlautstärke getrennte Musik-Lautstärke. |
+| 5 | `AccessibilityManager.gd` | Barrierefreiheits-/Einstellungs-Felder (Farbenblind-Modus, hoher Kontrast, reduzierte Bewegung, Menü-Skalierung, Sound-Untertitel, Einhand-Modus, Ziel-Assistenz, FPS-Anzeige/-Limit, Sprache, ...). |
+| 6 | `GameModeManager.gd`   | Spielmodi (`GameMode`-Enum, `GAME_MODE_INFO`), aktiver Modus, Bestwerte je Modus, Zeitrennen-Bestzeiten, Geister-Pfade, Tages-Seed. |
+| 7 | `AchievementManager.gd`| Lokales Achievement-/Herausforderungs-Framework. Abonniert Statistik-Signale von `GameManager` (z.B. `persistent_coins_changed`), vergibt Kosmetik-Belohnungen über `CosmeticsManager.grant_cosmetic_free()`. |
+| 8 | `LocalizationManager.gd`| Lokalisierungs-System. Liest `AccessibilityManager.language` beim Start. |
 
-**Warum `SaveManager`/`CosmeticsManager` kaum eigenen Zustand besitzen:**
-Beide wurden aus `GameManager.gd` herausgelöst (das war auf über 2100 Zeilen
-angewachsen), lesen/schreiben aber weiterhin viele Felder, die inhaltlich zu
-`GameManager` gehören (z.B. Einstellungen, `persistent_coins`), über
-`GameManager.xxx`-Cross-Referenzen. Das hält den Refactor überschaubar, statt
-alle ~139 Zustandsvariablen physisch zu verschieben.
+**Warum die ausgelagerten Manager kaum eigenen Zustand besitzen, den nicht
+schon ihr Name beschreibt:** Alle wurden aus `GameManager.gd` herausgelöst
+(das war auf über 2100 Zeilen angewachsen), lesen/schreiben aber teils
+weiterhin Felder, die inhaltlich zu einem anderen Manager gehören (z.B.
+`persistent_coins` bleibt in `GameManager`, obwohl `CosmeticsManager` und
+`GameModeManager` es für Käufe/Bestwerte lesen), über `Manager.xxx`-Cross-
+Referenzen statt physischer Verschiebung. Das hält jeden einzelnen
+Refactoring-Schritt überschaubar. `master_volume`/`set_master_volume()`
+bleiben bewusst in `GameManager.gd` (nicht in `SoundManager`/
+`AccessibilityManager`), da sie denselben Master-Bus (Index 0) steuern, den
+`SoundManager.apply_mute()` stummschaltet — beides über zwei Dateien zu
+verteilen hätte die Kontrolle über einen einzelnen Audio-Bus aufgespalten.
 
 ## 💾 Speichersystem (SaveManager.gd)
 
@@ -125,9 +134,12 @@ Fart-Rocket/
 ├── BACKLOG.md             # 500-Feature-Backlog (Fortschritt: 341/500)
 ├── icon.svg               # App-Icon
 ├── scripts/                       # >100 GDScript-Dateien
-│   ├── GameManager.gd             # Autoload: Kern-Zustand, Einstellungen, Spielmodi
-│   ├── SaveManager.gd             # Autoload: Speichersystem
+│   ├── GameManager.gd             # Autoload: Kern-Zustand
 │   ├── CosmeticsManager.gd        # Autoload: Kosmetik/Skins
+│   ├── SaveManager.gd             # Autoload: Speichersystem
+│   ├── SoundManager.gd            # Autoload: Musik/Audio
+│   ├── AccessibilityManager.gd    # Autoload: Barrierefreiheit/Einstellungen
+│   ├── GameModeManager.gd         # Autoload: Spielmodi
 │   ├── AchievementManager.gd      # Autoload: Erfolge/Herausforderungen
 │   ├── LocalizationManager.gd     # Autoload: Übersetzungen
 │   ├── Player.gd                  # Männchen (RigidBody2D), Furz-Antrieb, Kosmetik-Rendering

@@ -71,7 +71,7 @@ const RTL_LOCALES := ["ar", "he", "fa", "ur"]
 
 
 func is_rtl_locale(locale: String = "") -> bool:
-	var loc := locale if locale != "" else GameManager.language
+	var loc := locale if locale != "" else AccessibilityManager.language
 	return loc in RTL_LOCALES
 
 
@@ -88,7 +88,7 @@ func apply_layout_direction(control: Control) -> void:
 
 func _ready() -> void:
 	_build_translations()
-	TranslationServer.set_locale(GameManager.language)
+	TranslationServer.set_locale(AccessibilityManager.language)
 	# FR-460: QA-Prüfung auf fehlende Übersetzungen — nur in Debug-Builds,
 	# damit Release-Builds nicht durch Konsolen-Ausgaben belastet werden.
 	if OS.is_debug_build():
@@ -131,7 +131,7 @@ func format_level_count(n: int) -> String:
 ## FR-454: Lokalisiertes Dezimaltrennzeichen (DE/FR: Komma, EN/ES: Punkt).
 func format_number(value: float, decimals: int = 1) -> String:
 	var s := "%.*f" % [decimals, value]
-	if GameManager.language in ["de", "fr"]:
+	if AccessibilityManager.language in ["de", "fr"]:
 		s = s.replace(".", ",")
 	return s
 

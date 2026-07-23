@@ -84,7 +84,7 @@ const SKY_LIMIT_Y := -1200.0
 ## FR-436: Pausiert automatisch, wenn die App den Fokus verliert
 ## (z.B. Task-Wechsel, eingehender Anruf) — sofern aktiviert.
 func _notification(what: int) -> void:
-	if what == NOTIFICATION_APPLICATION_FOCUS_OUT and GameManager.pause_on_focus_loss:
+	if what == NOTIFICATION_APPLICATION_FOCUS_OUT and AccessibilityManager.pause_on_focus_loss:
 		if is_instance_valid(_hud) and _hud.has_method("force_pause"):
 			_hud.force_pause()
 
@@ -299,11 +299,11 @@ func _build_postfx_stack() -> void:
 	_fps_label.offset_top = 10
 	_fps_label.add_theme_font_size_override("font_size", 22)
 	_fps_label.add_theme_color_override("font_color", Color(0.4, 1.0, 0.4))
-	_fps_label.visible = GameManager.fps_counter_enabled
+	_fps_label.visible = AccessibilityManager.fps_counter_enabled
 	_postfx_layer.add_child(_fps_label)
 
 	_apply_accessibility_settings()  # FR-421/422/429
-	GameManager.accessibility_changed.connect(_apply_accessibility_settings)
+	AccessibilityManager.accessibility_changed.connect(_apply_accessibility_settings)
 	_update_postfx_visibility()
 
 
@@ -324,15 +324,15 @@ func _make_fx_rect(shader_path: String) -> ColorRect:
 func _apply_accessibility_settings() -> void:
 	if _fx_colorblind != null:
 		var cb_mat: ShaderMaterial = _fx_colorblind.material
-		cb_mat.set_shader_parameter("mode", int(GameManager.colorblind_mode))
-		_fx_colorblind.visible = GameManager.colorblind_mode != GameManager.ColorblindMode.NONE
+		cb_mat.set_shader_parameter("mode", int(AccessibilityManager.colorblind_mode))
+		_fx_colorblind.visible = AccessibilityManager.colorblind_mode != AccessibilityManager.ColorblindMode.NONE
 	if _fx_color_grading != null:
 		var cg_mat: ShaderMaterial = _fx_color_grading.material
 		# FR-422: Hoher Kontrast erhöht Kontrast/Sättigung deutlich
-		cg_mat.set_shader_parameter("contrast", 1.5 if GameManager.high_contrast_enabled else 1.0)
-		cg_mat.set_shader_parameter("saturation", 1.3 if GameManager.high_contrast_enabled else 1.0)
+		cg_mat.set_shader_parameter("contrast", 1.5 if AccessibilityManager.high_contrast_enabled else 1.0)
+		cg_mat.set_shader_parameter("saturation", 1.3 if AccessibilityManager.high_contrast_enabled else 1.0)
 		# FR-429: Bildschirm-Helligkeit als RGB-Multiplikator
-		var b := GameManager.screen_brightness
+		var b := AccessibilityManager.screen_brightness
 		cg_mat.set_shader_parameter("color_balance", Vector3(b, b, b))
 
 
@@ -419,7 +419,7 @@ func play_camera_transition(focus_pos: Vector2, focus_zoom: float, duration: flo
 func _process(delta: float) -> void:
 	# FR-431: Umschaltbare FPS-Anzeige
 	if _fps_label != null:
-		_fps_label.visible = GameManager.fps_counter_enabled
+		_fps_label.visible = AccessibilityManager.fps_counter_enabled
 		if _fps_label.visible:
 			_fps_label.text = "%d FPS" % Engine.get_frames_per_second()
 
@@ -442,7 +442,7 @@ func _process(delta: float) -> void:
 		return
 
 	# FR-343: Überleben-Modus — Schwerkraft steigt allmählich mit der Zeit
-	if GameManager.active_game_mode == GameManager.GameMode.SURVIVAL:
+	if GameModeManager.active_game_mode == GameModeManager.GameMode.SURVIVAL:
 		_survival_elapsed += delta
 		_player.gravity_scale = _survival_base_gravity * (1.0 + _survival_elapsed * 0.01)
 
@@ -612,7 +612,7 @@ func _load_current_level() -> void:
 	if GameManager.hard_mode_enabled:
 		start_charges = maxi(1, _max_charges - 2)
 	# FR-344: Hardcore-Modus überschreibt alles auf genau eine Ladung
-	if GameManager.active_game_mode == GameManager.GameMode.HARDCORE:
+	if GameModeManager.active_game_mode == GameModeManager.GameMode.HARDCORE:
 		start_charges = 1
 	GameManager.start_level(GameManager.current_level, start_charges)
 	# FR-099: Gesamtzahl der Münzen im Level für die Fortschrittsanzeige zählen
@@ -671,37 +671,37 @@ func _load_current_level() -> void:
 ## frisch geladene Level an (Schwerkraft, Sichtbarkeit, Modifikatoren, ...).
 ## FR-344 (Hardcore) ist bereits über start_charges oben abgedeckt.
 func _apply_game_mode_setup(level: Node2D) -> void:
-	match GameManager.active_game_mode:
-		GameManager.GameMode.MIRROR:
+	match GameModeManager.active_game_mode:
+		GameModeManager.GameMode.MIRROR:
 			level.scale.x = -1.0  # FR-348
-		GameManager.GameMode.SURVIVAL:
+		GameModeManager.GameMode.SURVIVAL:
 			_survival_elapsed = 0.0
 			_survival_base_gravity = _player.gravity_scale
-		GameManager.GameMode.ENDLESS:
+		GameModeManager.GameMode.ENDLESS:
 			# FR-342: Jede Wiederholung wird etwas schneller/schwerer
-			var loop: int = GameManager.endless_loop_count
+			var loop: int = GameModeManager.endless_loop_count
 			_player.gravity_scale *= (1.0 + loop * 0.06)
 			_player.fart_cooldown = maxf(0.2, _player.fart_cooldown * (1.0 - loop * 0.03))
-		GameManager.GameMode.DARK:
+		GameModeManager.GameMode.DARK:
 			set_vision_cone_active(true)  # FR-357 (nutzt den FR-289-Shader)
-		GameManager.GameMode.REVERSE_GRAVITY:
+		GameModeManager.GameMode.REVERSE_GRAVITY:
 			_player.gravity_scale *= -1.0  # FR-358
-		GameManager.GameMode.CHAOS:
+		GameModeManager.GameMode.CHAOS:
 			_player.gravity_scale *= 1.4       # FR-359
 			_player.fart_cooldown *= 0.6
-		GameManager.GameMode.NO_FUEL:
+		GameModeManager.GameMode.NO_FUEL:
 			_player.charge_regen_enabled = false  # FR-354
-		GameManager.GameMode.PRACTICE:
+		GameModeManager.GameMode.PRACTICE:
 			_checkpoint_pos = _player.global_position  # FR-360: sofortiger Neustart am Levelanfang
-		GameManager.GameMode.MUTATOR:
+		GameModeManager.GameMode.MUTATOR:
 			var modifier_id: String = AchievementManager.MODIFIERS[randi() % AchievementManager.MODIFIERS.size()]["id"]
 			_apply_modifier(modifier_id)  # FR-349
-		GameManager.GameMode.DAILY_SEED:
-			var params := GameManager.get_daily_seed_params()
+		GameModeManager.GameMode.DAILY_SEED:
+			var params := GameModeManager.get_daily_seed_params()
 			_apply_modifier(String(params["modifier_id"]))  # FR-350
-		GameManager.GameMode.GHOST_RACE:
+		GameModeManager.GameMode.GHOST_RACE:
 			_spawn_ghost_runner()  # FR-353
-		GameManager.GameMode.BOSS_RUSH:
+		GameModeManager.GameMode.BOSS_RUSH:
 			for boss in get_tree().get_nodes_in_group("bosses"):
 				if boss.has_method("double_difficulty"):
 					boss.double_difficulty()  # FR-347
@@ -728,7 +728,7 @@ func _apply_modifier(modifier_id: String) -> void:
 ## FR-353: Setzt einen halbtransparenten Geister-Läufer, der die
 ## aufgezeichnete Spur der Bestzeit dieses Levels abspielt (falls vorhanden).
 func _spawn_ghost_runner() -> void:
-	var path := GameManager.get_ghost_path(GameManager.current_level)
+	var path := GameModeManager.get_ghost_path(GameManager.current_level)
 	if path.is_empty():
 		return
 	var ghost := GhostRunner.new()
@@ -740,7 +740,7 @@ func _spawn_ghost_runner() -> void:
 func _camera_shake(strength: float, duration: float) -> void:
 	# FR-189/423: Globale Rüttel-Intensität, komplett unterdrückt im
 	# Reduzierte-Bewegung-Modus
-	if GameManager.reduced_motion_enabled:
+	if AccessibilityManager.reduced_motion_enabled:
 		return
 	var effective_strength := strength * GameManager.camera_shake_intensity
 	if effective_strength <= 0.0:
@@ -758,7 +758,7 @@ func _camera_shake(strength: float, duration: float) -> void:
 
 ## FR-192: Kurzer gerichteter Kamera-Stoß in Furz-Richtung (Impuls-Feedback).
 func _camera_punch(direction: Vector2, strength: float) -> void:
-	if GameManager.reduced_motion_enabled or GameManager.camera_shake_intensity <= 0.0:
+	if AccessibilityManager.reduced_motion_enabled or GameManager.camera_shake_intensity <= 0.0:
 		return
 	var punch_offset := -direction * strength * 18.0 * GameManager.camera_shake_intensity
 	var tween := create_tween()
@@ -835,13 +835,13 @@ func _on_player_died() -> void:
 	GameManager.record_death()  # FR-226: Statistik
 
 	# FR-343: Überleben-Modus endet mit dem Tod — Bestzeit sichern
-	if GameManager.active_game_mode == GameManager.GameMode.SURVIVAL:
-		GameManager.survival_best_time = maxf(GameManager.survival_best_time, _survival_elapsed)
+	if GameModeManager.active_game_mode == GameModeManager.GameMode.SURVIVAL:
+		GameModeManager.survival_best_time = maxf(GameModeManager.survival_best_time, _survival_elapsed)
 	# FR-342/356: Ein Tod beendet den Endlos-/Marathon-Lauf — von vorn beginnen
-	if GameManager.active_game_mode == GameManager.GameMode.ENDLESS:
-		GameManager.endless_loop_count = 0
-	if GameManager.active_game_mode == GameManager.GameMode.MARATHON:
-		GameManager.marathon_level_index = 1
+	if GameModeManager.active_game_mode == GameModeManager.GameMode.ENDLESS:
+		GameModeManager.endless_loop_count = 0
+	if GameModeManager.active_game_mode == GameModeManager.GameMode.MARATHON:
+		GameModeManager.marathon_level_index = 1
 		GameManager.current_level = 1
 
 	# FR-135: Am Checkpoint wiederbeleben, falls einer aktiviert wurde
@@ -868,8 +868,8 @@ func _on_level_reached() -> void:
 	GameManager.record_stars(GameManager.current_level, stars)
 
 	# FR-341: Im Zeitrennen-Modus Bestzeit aktualisieren
-	if GameManager.time_attack_mode:
-		var is_new_best := GameManager.record_time_attack(GameManager.current_level, time_sec)
+	if GameModeManager.time_attack_mode:
+		var is_new_best := GameModeManager.record_time_attack(GameManager.current_level, time_sec)
 		if is_new_best:
 			GameManager.vibrate(80)
 
@@ -886,14 +886,14 @@ func _on_level_reached() -> void:
 	)
 
 	# FR-353: Geister-Pfad speichern, falls dies eine neue Bestzeit ist
-	if GameManager.active_game_mode == GameManager.GameMode.GHOST_RACE:
+	if GameModeManager.active_game_mode == GameModeManager.GameMode.GHOST_RACE:
 		var prev_best := GameManager.get_best_attempt_time(GameManager.current_level)
 		if prev_best < 0.0 or time_sec < prev_best:
-			GameManager.store_ghost_path(GameManager.current_level, _player.ghost_path_recorded)
+			GameModeManager.store_ghost_path(GameManager.current_level, _player.ghost_path_recorded)
 
 	# FR-346: Münzjagd-Bestwert aktualisieren
-	if GameManager.active_game_mode == GameManager.GameMode.COIN_HUNT:
-		GameManager.coin_hunt_best_score = maxi(GameManager.coin_hunt_best_score, GameManager.total_coins)
+	if GameModeManager.active_game_mode == GameModeManager.GameMode.COIN_HUNT:
+		GameModeManager.coin_hunt_best_score = maxi(GameModeManager.coin_hunt_best_score, GameManager.total_coins)
 
 	# FR-246: Sieg-Fanfare
 	SoundManager.play_victory_fanfare()
@@ -903,17 +903,17 @@ func _on_level_reached() -> void:
 
 	# FR-342: Endlos-Modus — Level statt eines Abschlussbildschirms sofort
 	# mit steigendem Tempo wiederholen
-	if GameManager.active_game_mode == GameManager.GameMode.ENDLESS:
-		GameManager.endless_loop_count += 1
-		GameManager.endless_best_loops = maxi(GameManager.endless_best_loops, GameManager.endless_loop_count)
+	if GameModeManager.active_game_mode == GameModeManager.GameMode.ENDLESS:
+		GameModeManager.endless_loop_count += 1
+		GameModeManager.endless_best_loops = maxi(GameModeManager.endless_best_loops, GameModeManager.endless_loop_count)
 		GameManager.reload_scene_with_wipe()
 		return
 
 	# FR-356: Marathon-Modus — direkt zum nächsten Level ohne Zwischenstopp
-	if GameManager.active_game_mode == GameManager.GameMode.MARATHON \
-			and GameManager.marathon_level_index < GameManager.TOTAL_LEVELS:
-		GameManager.marathon_level_index += 1
-		GameManager.current_level = GameManager.marathon_level_index
+	if GameModeManager.active_game_mode == GameModeManager.GameMode.MARATHON \
+			and GameModeManager.marathon_level_index < GameManager.TOTAL_LEVELS:
+		GameModeManager.marathon_level_index += 1
+		GameManager.current_level = GameModeManager.marathon_level_index
 		GameManager.reload_scene_with_wipe()
 		return
 
