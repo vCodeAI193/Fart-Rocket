@@ -61,7 +61,7 @@ func set_game_mode(mode: GameMode) -> void:
 		marathon_level_index = 1
 		GameManager.current_level = 1  # Marathon startet immer bei Level 1
 	if mode == GameMode.BOSS_RUSH:
-		GameManager.current_level = GameManager.TOTAL_LEVELS  # FR-347: direkt zum Boss-Level springen
+		GameManager.current_level = GameManager.BOSS_LEVEL_INDEX  # FR-347: direkt zum Boss-Level springen
 	SaveManager.save_now()
 
 

@@ -43,6 +43,13 @@ const LEVEL_SCENES := [
 	"res://levels/Level7.tscn",
 ]
 
+# FR-347: Level-Index mit dem einzigen aktuellen Boss (MiniBoss in Level6).
+# GameModeManager.set_game_mode() nutzt das für BOSS_RUSH — bewusst NICHT
+# TOTAL_LEVELS, das seit Level4-7 auf das bosslose Bonus-Level (Level7)
+# zeigen würde. Bei zusätzlichen Boss-Leveln hier erweitern (z.B. als
+# Array + zufällige/nächstgelegene Auswahl).
+const BOSS_LEVEL_INDEX := 6
+
 # --- Laufender Spielzustand -------------------------------------
 var current_level: int = 1              # 1-basiert (Level 1, 2, 3)
 var total_coins: int = 0                # gesammelte Münzen im aktuellen Level
