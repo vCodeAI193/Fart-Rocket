@@ -7,9 +7,10 @@ Gegnern aus, nutze Power-ups und erreiche die Zielflagge — mit Dutzenden
 Spielmodi, einem Fortschritts-/Shop-System, Erfolgen und mehr.
 
 Das Projekt ist aus einem kleinen Prototyp (3 Level, ein Skript) zu einem
-umfangreichen Spiel mit über 100 Skripten, ~90 Gameplay-Objekttypen und 7
-Leveln gewachsen. 358 von 500 geplanten Features aus
-[`BACKLOG.md`](BACKLOG.md) sind bereits umgesetzt.
+umfangreichen Spiel mit über 100 Skripten, ~90 Gameplay-Objekttypen und 8
+Leveln gewachsen. 373 von 500 geplanten Features aus
+[`BACKLOG.md`](BACKLOG.md) sind umgesetzt, dazu die 50 Spielgefühl-,
+Grafik- und Design-Verbesserungen aus [`FEATURES50.md`](FEATURES50.md).
 
 ## 🎮 Spielprinzip
 
@@ -78,11 +79,11 @@ verteilen hätte die Kontrolle über einen einzelnen Audio-Bus aufgespalten.
   `save_settings()`, `load_settings()`, `export_save()`, `list_backups()`,
   `restore_backup()`, `reset_all_progress()`, `delete_all_user_data()`.
 
-## 🕹️ Spielmodi (GameManager.GameMode)
+## 🕹️ Spielmodi (GameModeManager.GameMode)
 
-Über `GameModeScreen.gd` wählbar, `GameManager.active_game_mode` steuert das
-Verhalten in `Main.gd`/`Player.gd`. Auszug aus den 19 Modi (vollständige
-Liste + Beschreibungen in `GameManager.GAME_MODE_INFO`):
+Über `GameModeScreen.gd` wählbar, `GameModeManager.active_game_mode` steuert
+das Verhalten in `Main.gd`/`Player.gd`. Auszug aus den 19 Modi (vollständige
+Liste + Beschreibungen in `GameModeManager.GAME_MODE_INFO`):
 
 Normal · Zeitrennen · Endlos · Überleben · Hardcore (1 Ladung) · Zen
 (kein Tod) · Münzjagd · Boss-Rush · Spiegel · Mutator (zufälliger Modifikator)
@@ -95,15 +96,22 @@ Chaos · Übung (Soforts-Neustart).
 1. Neue Szene unter `levels/LevelN.tscn` anlegen (an bestehenden Leveln
    orientieren: `Obstacle`-, `Coin`-, Gegner- und Power-up-Instanzen als
    Kindknoten, `LevelEnd`-Zielflagge, Start-Ladungsanzahl).
-2. Pfad in `GameManager.LEVEL_SCENES` (bzw. der levelbezogenen Konstante in
-   `GameManager.gd`) ergänzen — `get_level_scene_path()` liest daraus.
-3. Falls das Level neue Hindernis-/Gegnertypen einführt: ggf. in
-   `OBSTACLE_UNLOCK_LEVELS` (FR-319, stufenweise Freischaltung) eintragen.
+2. In `GameManager.gd` **alle vier** levelbezogenen Stellen erweitern:
+   `TOTAL_LEVELS`, `LEVEL_SCENES`, `level_stars` und `LEVEL_TITLES`
+   (Beiname für die Start-Einblendung). Dazu
+   `GameModeManager.time_attack_best_times` und — falls das Level einen
+   Boss enthält — `GameManager.BOSS_LEVEL_INDICES`.
+3. In `Main.gd` die `palette`-Liste (Nebel-Farbton je Welt) und
+   `_foreground_theme_for_level()` (Vordergrund-Silhouetten) ergänzen.
 4. Stern-Schwellen ergeben sich automatisch aus den Start-Ladungen über
    `GameManager.calculate_stars()` — keine manuelle Konfiguration nötig.
 5. Die über 90 Gameplay-Objektskripte (`scripts/*.gd`: Hindernisse, Gegner,
    Power-ups, Umgebungszonen wie `WindZone`/`IceZone`/`BuoyancyZone`, …)
    lassen sich als vorgefertigte Szenen in jedes Level einsetzen.
+
+`tests/test_level_config.gd` prüft die Punkte aus Schritt 2 automatisch —
+wird eine Stelle vergessen, schlägt die Testsuite fehl statt dass es erst
+im Spiel auffällt.
 
 ## 🧪 Tests & CI
 
@@ -131,7 +139,8 @@ führt danach `tests/TestMain.tscn` aus.
 Fart-Rocket/
 ├── project.godot          # Projektkonfiguration (Landscape, Touch, 1920x1200, Autoloads)
 ├── export_presets.cfg     # Android-Export (API 21+)
-├── BACKLOG.md             # 500-Feature-Backlog (Fortschritt: 358/500)
+├── BACKLOG.md             # 500-Feature-Backlog (Fortschritt: 373/500)
+├── FEATURES50.md          # 50-Feature-Batch (Spielgefühl/Grafik/Tests), 50/50
 ├── icon.svg               # App-Icon
 ├── scripts/                       # >100 GDScript-Dateien
 │   ├── GameManager.gd             # Autoload: Kern-Zustand
@@ -158,7 +167,8 @@ Fart-Rocket/
 │   ├── Level4.tscn        # Höhlen-Thema, erste Gegner (Patrol/Jumping), 4 Ladungen
 │   ├── Level5.tscn        # Verzweigter Pfad (FR-134): obere/untere Route, 4 Ladungen
 │   ├── Level6.tscn        # Erster Bosskampf (MiniBoss), 3 Ladungen
-│   └── Level7.tscn        # Bonus-/Geheimlevel, münzlastig, 5 Ladungen
+│   ├── Level7.tscn        # Bonus-/Geheimlevel, münzlastig, 5 Ladungen
+│   └── Level8.tscn        # End-Boss (mehrphasig), 4 Ladungen
 └── tests/                 # Eigenes Test-Framework (siehe oben)
 ```
 

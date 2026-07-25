@@ -58,6 +58,12 @@ var _transition_active: bool = false
 # --- FR-198: Erschütterung bei Beinahe-Treffern ------------------
 var _near_miss_cooldown: float = 0.0
 const NEAR_MISS_RADIUS := 55.0
+# FR-477 (F50): über Frames verteilter Hindernis-Scan statt Voll-Scan
+var _obstacle_cache: Array = []
+var _obstacle_cache_age: float = 0.0
+var _near_miss_scan_index: int = 0
+const OBSTACLE_CACHE_REFRESH := 1.0        # Sekunden bis zur Neuerfassung
+const NEAR_MISS_CHECKS_PER_FRAME := 12
 
 # --- FR-281–300: Shader & Rendering (Post-Processing-Stack) --------
 var _postfx_layer: CanvasLayer
@@ -598,14 +604,35 @@ func _process(delta: float) -> void:
 
 ## FR-198: Prüft die Distanz zu nahen Hindernissen; ist der Spieler knapp
 ## vorbeigeflogen (ohne Treffer), gibt es ein kleines Warn-Rütteln.
+## FR-477 (F50): Prüft pro Frame nur einen Ausschnitt der Hindernisliste
+## statt aller Hindernisse. Bei den größeren Leveln (Level5-8 haben
+## deutlich mehr Objekte als die ursprünglichen drei) lief hier sonst
+## jeden Frame ein vollständiger Scan inklusive get_nodes_in_group() —
+## genau die Art Dauerlast, die auf schwachen Geräten Ruckler erzeugt.
+## Die Liste wird zusätzlich zwischengespeichert und nur periodisch
+## erneuert; ein über wenige Frames verteilter Scan ist für einen Effekt
+## mit 0.4s Abklingzeit ohnehin genau genug.
 func _check_near_miss(delta: float) -> void:
 	_near_miss_cooldown = maxf(0.0, _near_miss_cooldown - delta)
 	if _near_miss_cooldown > 0.0:
 		return
-	for obstacle in get_tree().get_nodes_in_group("obstacles"):
-		if not (obstacle is Node2D):
+
+	_obstacle_cache_age += delta
+	if _obstacle_cache_age >= OBSTACLE_CACHE_REFRESH or _obstacle_cache.is_empty():
+		_obstacle_cache_age = 0.0
+		_obstacle_cache = get_tree().get_nodes_in_group("obstacles")
+		_near_miss_scan_index = 0
+
+	var count := _obstacle_cache.size()
+	if count == 0:
+		return
+	var checks := mini(NEAR_MISS_CHECKS_PER_FRAME, count)
+	for i in range(checks):
+		var idx := (_near_miss_scan_index + i) % count
+		var obstacle: Node = _obstacle_cache[idx]
+		if not is_instance_valid(obstacle) or not (obstacle is Node2D):
 			continue
-		var dist := _player.global_position.distance_to(obstacle.global_position)
+		var dist := _player.global_position.distance_to((obstacle as Node2D).global_position)
 		if dist < NEAR_MISS_RADIUS:
 			_camera_shake(0.06, 0.1)
 			_near_miss_cooldown = 0.4
@@ -613,6 +640,7 @@ func _check_near_miss(delta: float) -> void:
 			_do_near_miss_hitstop()        # F08: winziger Freeze-Frame
 			_flash_screen(Color(1, 1, 1, 0.12), 0.12)  # F13: kurzer Weiß-Flash
 			return
+	_near_miss_scan_index = (_near_miss_scan_index + checks) % count
 
 
 ## F08: Sehr kurzer Freeze-Frame beim Beinahe-Treffer — betont den
@@ -783,6 +811,10 @@ func _load_current_level() -> void:
 	# Kamera sofort auf den Player setzen
 	_camera.global_position = _player.global_position
 	_camera.make_current()
+
+	# FR-470 (F48): Das nächste Level im Hintergrund vorladen, während der
+	# Spieler noch im aktuellen unterwegs ist.
+	GameManager.preload_next_level()
 
 	# F17: Level-Titel kurz einblenden
 	_show_level_title()

@@ -401,6 +401,11 @@ func _ready() -> void:
 	AudioServer.set_bus_volume_db(0, linear_to_db(maxf(master_volume, 0.0001)))  # FR-438
 	Engine.max_fps = AccessibilityManager.fps_limit  # FR-432
 	TranslationServer.set_locale(AccessibilityManager.language)  # FR-439
+	# FR-473 (F49): Shader einmalig vorab übersetzen, damit später beim
+	# ersten Sichtbarwerden kein Ruckler entsteht. Verzögert auf den Frame
+	# nach dem Start, damit der Spielstart selbst nicht ausgebremst wird
+	# (FR-477/F50: nichts Teures synchron im _ready()).
+	call_deferred("precompile_shaders")
 
 
 func _process(delta: float) -> void:
@@ -1153,6 +1158,46 @@ func get_level_title(level_index: int) -> String:
 	if idx < 0 or idx >= LEVEL_TITLES.size():
 		return ""
 	return LEVEL_TITLES[idx]
+
+
+## FR-470 (F48): Lädt die Szene des nächsten Levels im Hintergrund vor,
+## während der Spieler noch im aktuellen ist. Der eigentliche Wechsel
+## findet die Ressource dann bereits im Cache und blockiert den
+## Hauptthread nicht mehr mit dem Laden.
+func preload_next_level() -> void:
+	if not has_next_level():
+		return
+	var path := get_level_scene_path(current_level + 1)
+	# Anfrage ist idempotent — ein zweiter Aufruf für denselben Pfad ist
+	# unschädlich, Godot verwaltet die laufende Anfrage selbst.
+	ResourceLoader.load_threaded_request(path)
+
+
+## FR-473 (F49): Erzwingt einmalig das Übersetzen aller Shader beim Start.
+## Ohne das kompiliert Godot jeden Shader erst dann, wenn er zum ersten
+## Mal sichtbar wird — auf Android äußert sich das als kurzer Ruckler
+## genau im falschen Moment (z.B. beim ersten Furz-Stoß). Die erzeugten
+## Materialien werden bewusst gehalten, damit der Cache nicht sofort
+## wieder verworfen wird.
+var _precompiled_shader_materials: Array[ShaderMaterial] = []
+
+func precompile_shaders() -> void:
+	if not _precompiled_shader_materials.is_empty():
+		return  # bereits erledigt
+	var dir := DirAccess.open("res://shaders/")
+	if dir == null:
+		return
+	dir.list_dir_begin()
+	var file_name := dir.get_next()
+	while file_name != "":
+		if not dir.current_is_dir() and file_name.ends_with(".gdshader"):
+			var shader := load("res://shaders/" + file_name)
+			if shader is Shader:
+				var mat := ShaderMaterial.new()
+				mat.shader = shader
+				_precompiled_shader_materials.append(mat)
+		file_name = dir.get_next()
+	dir.list_dir_end()
 
 
 ## FR-118: Registriert einen Gegner-Typ als entdeckt (persistiert).

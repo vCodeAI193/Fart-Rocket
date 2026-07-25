@@ -89,9 +89,9 @@ Drei Autoloads haben aktuell null dedizierte Tests.
 
 - [x] **F46** FR-466 Reduzierte Partikelmenge auf schwachen Geräten
 - [x] **F47** FR-467 Automatische Qualitätserkennung beim Start
-- [ ] **F48** FR-470 Asset-Vorladen für das nächste Level
-- [ ] **F49** FR-473 Shader-Vorkompilierung beim Start
-- [ ] **F50** FR-477 ANR-Vermeidung: teure Schleifen entzerren
+- [x] **F48** FR-470 Asset-Vorladen für das nächste Level
+- [x] **F49** FR-473 Shader-Vorkompilierung beim Start
+- [x] **F50** FR-477 ANR-Vermeidung: teure Schleifen entzerren
 
 ---
 

@@ -52,9 +52,9 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 - [x] **FR-013** Wind-Interaktion — Gegenwind reduziert den Furz-Schub
 - [x] **FR-014** Unterwasser-Furz mit Blasen und Auftriebsverhalten
 - [x] **FR-015** Schwerelosigkeits-Zonen veraendern die Furz-Wirkung
-- [ ] **FR-016** Furz-Sound variiert dynamisch mit der Stoss-Staerke
-- [ ] **FR-017** Verweilende Geruchswolke als optionale Schadenszone
-- [ ] **FR-018** Sticky-Furz — kurzes Haften an Waenden nach Aufprall
+- [x] **FR-016** Furz-Sound variiert dynamisch mit der Stoss-Staerke
+- [x] **FR-017** Verweilende Geruchswolke als optionale Schadenszone
+- [x] **FR-018** Sticky-Furz — kurzes Haften an Waenden nach Aufprall
 - [x] **FR-019** Furz-Boost-Ringe laden beim Durchfliegen sofort eine Ladung
 - [x] **FR-020** Anpassbare Furz-Schubkurven fuer Tuning im Editor
 
@@ -315,12 +315,12 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 
 - [x] **FR-241** Hintergrundmusik pro Welt
 - [x] **FR-242** Dynamische Musik (Intensitaet bei Gefahr)
-- [ ] **FR-243** Muenz-Sammel-Sounds mit steigender Tonleiter
-- [ ] **FR-244** Umfangreiche Furz-Sound-Bibliothek
-- [ ] **FR-245** Treffer- und Tod-Sounds
+- [x] **FR-243** Muenz-Sammel-Sounds mit steigender Tonleiter
+- [x] **FR-244** Umfangreiche Furz-Sound-Bibliothek
+- [x] **FR-245** Treffer- und Tod-Sounds
 - [x] **FR-246** Sieg-Fanfare beim Levelende
 - [x] **FR-247** UI-Klick-Sounds
-- [ ] **FR-248** Ambient-Soundscapes pro Thema
+- [x] **FR-248** Ambient-Soundscapes pro Thema
 - [x] **FR-249** Getrennte Lautstaerkeregler (Musik/SFX)
 - [x] **FR-250** Stumm-Schalter
 - [x] **FR-251** Audio-Ducking (Musik leiser bei SFX)
@@ -330,7 +330,7 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 - [x] **FR-255** Boss-Kampf-Musik
 - [x] **FR-256** Menue-Musik
 - [x] **FR-257** Furz-Sound an Stoss-Staerke koppeln
-- [ ] **FR-258** Audio-Bus-Setup mit Effekten (Reverb)
+- [x] **FR-258** Audio-Bus-Setup mit Effekten (Reverb)
 - [ ] **FR-259** Stille-Modus fuer Hintergrund-Spielen
 - [ ] **FR-260** Freischaltbare Soundpakete
 
@@ -571,18 +571,18 @@ Dieses Backlog sammelt **500 offene Features** fuer Fart Rocket, gruppiert in 25
 - [ ] **FR-463** Level-Streaming fuer grosse Level
 - [x] **FR-464** Bildraten-Profiling-Overlay
 - [ ] **FR-465** Speicher-Leck-Tests
-- [ ] **FR-466** Reduzierte Partikel auf schwachen Geraeten
-- [ ] **FR-467** Automatische Qualitaetserkennung
+- [x] **FR-466** Reduzierte Partikel auf schwachen Geraeten
+- [x] **FR-467** Automatische Qualitaetserkennung
 - [ ] **FR-468** Hintergrund-Pausierung/Akku-Optimierung
 - [ ] **FR-469** Ladezeiten-Optimierung
-- [ ] **FR-470** Asset-Vorladen pro Welt
+- [x] **FR-470** Asset-Vorladen pro Welt
 - [x] **FR-471** Tuning des Physik-Schritts
 - [x] **FR-472** Garbage-Collection-Spitzen vermeiden
-- [ ] **FR-473** Shader-Vorkompilierung
+- [x] **FR-473** Shader-Vorkompilierung
 - [ ] **FR-474** APK-/AAB-Groessen-Optimierung
 - [ ] **FR-475** Stresstest-Szene
 - [ ] **FR-476** Crash-Reporting-Integration
-- [ ] **FR-477** ANR-Vermeidung (Main-Thread nicht blockieren)
+- [x] **FR-477** ANR-Vermeidung (Main-Thread nicht blockieren)
 - [x] **FR-478** Frame-Pacing/VSync-Handhabung
 - [ ] **FR-479** Geraete-Kompatibilitaetsmatrix
 - [ ] **FR-480** Automatisierte Performance-Benchmarks
