@@ -27,14 +27,16 @@ Tod und Ragdoll. Was fehlt, ist Lebendigkeit am Männchen selbst.
 
 ## B. Grafik & Atmosphäre
 
-- [ ] **F11** Vordergrund-Parallax-Ebene (Silhouetten nahe der Kamera)
-- [ ] **F12** Themen-abhängige Vordergrund-Elemente je Level
+- [x] **F11** Vordergrund-Parallax-Ebene (Silhouetten nahe der Kamera)
+- [x] **F12** Themen-abhängige Vordergrund-Elemente je Level
 - [x] **F13** Bildschirm-Flash bei Beinahe-Treffer
-- [ ] **F14** Kamera-Zoom-Punch beim Furz-Stoß
-- [ ] **F15** Münz-Sammel-Funken am Einsammelpunkt
-- [ ] **F16** Boss-Einführungs-Kamerafahrt beim Levelstart
-- [ ] **F17** Level-Start-Einblendung mit Level-Name/Nummer
-- [ ] **F18** Farb-Puls-Effekt beim Levelabschluss
+- [x] **F14** Kamera-Zoom-Punch beim Furz-Stoß
+- [x] **F15** Münz-Sammel-Funken skalieren mit der Combo-Stufe
+      (ein Basis-Burst existierte bereits als FR-261, war aber bei jeder
+      Münze identisch — jetzt Umfang/Farbe je nach Serie)
+- [x] **F16** Boss-Einführungs-Kamerafahrt beim Levelstart
+- [x] **F17** Level-Start-Einblendung mit Level-Name/Nummer
+- [x] **F18** Farb-Puls-Effekt beim Levelabschluss
 
 ## C. Audio (offene BACKLOG-Punkte)
 

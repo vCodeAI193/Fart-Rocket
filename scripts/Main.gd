@@ -18,6 +18,9 @@ var _max_charges: int = 0
 var _level_finished: bool = false
 var _checkpoint_pos: Vector2 = Vector2(INF, INF)  # FR-135
 var _starfield: ParallaxStarfield  # FR-188
+var _foreground_layer: Node2D      # F11/F12: Vordergrund-Parallax
+const FOREGROUND_SHAPE_COUNT := 14
+const FOREGROUND_PARALLAX := 1.25  # >1 = zieht schneller vorbei als die Spielebene
 var _camera_min := Vector2(-100, -100)   # FR-185: Kamera-Grenzen pro Level
 var _camera_max := Vector2(3800, 1400)
 
@@ -117,6 +120,8 @@ func _ready() -> void:
 	set_crt_filter_active(GameManager.crt_filter_enabled)
 	# FR-278: Umgebungspartikel (treibender Staub) für Atmosphäre
 	_build_ambient_particles()
+	# F11/F12: Vordergrund-Silhouetten nahe der Kamera (Tiefenwirkung)
+	_build_foreground_parallax()
 
 	_load_current_level()
 
@@ -139,7 +144,77 @@ func _build_ambient_particles() -> void:
 	dust.color = Color(1.0, 1.0, 1.0, 0.12)
 	dust.emission_shape = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
 	dust.emission_rect_extents = Vector2(760, 480)
+	# FR-466: Partikelmenge an die Qualitätsstufe koppeln
+	dust.amount = GameManager.scaled_particle_amount(36)
 	_camera.add_child(dust)
+
+
+## F11/F12: Vordergrund-Silhouetten, die schneller als die Spielebene
+## vorbeiziehen und dadurch Tiefe erzeugen. Bislang gab es ausschließlich
+## Hintergrund-Ebenen (Sternenfeld, Nebel-Shader, Tag/Nacht-Overlay).
+## Form und Farbe richten sich nach dem Level-Thema (F12) — wie überall im
+## Projekt rein prozedural aus Polygonen, ohne externe Assets.
+func _build_foreground_parallax() -> void:
+	if AccessibilityManager.reduced_motion_enabled:  # FR-423
+		return
+	_foreground_layer = Node2D.new()
+	_foreground_layer.z_index = 50  # vor dem Spielgeschehen
+	add_child(_foreground_layer)
+
+	var theme := _foreground_theme_for_level(GameManager.current_level)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = GameManager.current_level * 7919  # pro Level stabil
+	for i in range(FOREGROUND_SHAPE_COUNT):
+		var shape := Polygon2D.new()
+		shape.color = theme["color"]
+		shape.polygon = _make_foreground_shape(theme["style"], rng)
+		shape.position = Vector2(
+			rng.randf_range(0.0, 3800.0),
+			rng.randf_range(-120.0, 1320.0)
+		)
+		shape.scale = Vector2.ONE * rng.randf_range(0.7, 1.6)
+		_foreground_layer.add_child(shape)
+
+
+## F12: Ordnet jedem Level ein Vordergrund-Thema zu (Form + Farbe).
+func _foreground_theme_for_level(level_index: int) -> Dictionary:
+	match level_index:
+		4:
+			return {"style": "stalactite", "color": Color(0.05, 0.03, 0.08, 0.55)}
+		5:
+			return {"style": "girder", "color": Color(0.06, 0.06, 0.09, 0.5)}
+		6:
+			return {"style": "stalactite", "color": Color(0.10, 0.02, 0.03, 0.55)}
+		7:
+			return {"style": "crystal", "color": Color(0.08, 0.07, 0.02, 0.45)}
+		_:
+			return {"style": "crystal", "color": Color(0.04, 0.04, 0.10, 0.45)}
+
+
+## Erzeugt die Punktliste einer einzelnen Vordergrund-Silhouette.
+func _make_foreground_shape(style: String, rng: RandomNumberGenerator) -> PackedVector2Array:
+	var pts := PackedVector2Array()
+	match style:
+		"stalactite":  # spitzer Zapfen von oben
+			var w := rng.randf_range(40.0, 90.0)
+			var h := rng.randf_range(140.0, 320.0)
+			pts.append(Vector2(-w, 0))
+			pts.append(Vector2(w, 0))
+			pts.append(Vector2(rng.randf_range(-w * 0.3, w * 0.3), h))
+		"girder":  # Industrie-Träger (langes Rechteck)
+			var gw := rng.randf_range(200.0, 420.0)
+			var gh := rng.randf_range(18.0, 34.0)
+			pts.append(Vector2(-gw, -gh))
+			pts.append(Vector2(gw, -gh))
+			pts.append(Vector2(gw, gh))
+			pts.append(Vector2(-gw, gh))
+		_:  # "crystal": unregelmäßiges Sechseck
+			var r := rng.randf_range(50.0, 130.0)
+			for i in range(6):
+				var a := TAU * float(i) / 6.0
+				var rad := r * rng.randf_range(0.6, 1.25)
+				pts.append(Vector2(cos(a), sin(a)) * rad)
+	return pts
 
 
 ## FR-286: Dunkle Vignette an Bildschirmrändern.
@@ -495,6 +570,9 @@ func _process(delta: float) -> void:
 	# FR-188: Sternenhintergrund mit Parallax-Versatz aktualisieren
 	if _starfield != null:
 		_starfield.global_position = _camera.global_position * (1.0 - _starfield.parallax_ratio)
+	# F11: Vordergrund-Ebene zieht schneller vorbei als die Spielebene
+	if _foreground_layer != null:
+		_foreground_layer.global_position = _camera.global_position * (1.0 - FOREGROUND_PARALLAX)
 	# FR-204/205: Geschwindigkeit und Höhe ans HUD melden
 	_hud.set_speed(vel.length())
 	_hud.set_player_height(_player.global_position.y)
@@ -702,6 +780,69 @@ func _load_current_level() -> void:
 	_camera.global_position = _player.global_position
 	_camera.make_current()
 
+	# F17: Level-Titel kurz einblenden
+	_show_level_title()
+	# F16: Bei einem Boss-Level zuerst kurz zum Boss schwenken
+	if _active_boss != null:
+		_play_boss_intro()
+
+
+## F17: Blendet zum Levelstart Nummer und Kurzname des Levels ein — gibt
+## dem Start einen klaren Auftakt statt eines abrupten Beginns.
+func _show_level_title() -> void:
+	var layer := CanvasLayer.new()
+	layer.layer = 97
+	add_child(layer)
+
+	var vbox := VBoxContainer.new()
+	vbox.set_anchors_preset(Control.PRESET_CENTER)
+	vbox.offset_left = -400.0
+	vbox.offset_top = -110.0
+	vbox.offset_right = 400.0
+	vbox.offset_bottom = 30.0
+	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	vbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	layer.add_child(vbox)
+
+	var number := Label.new()
+	number.text = "Level %d" % GameManager.current_level
+	number.add_theme_font_size_override("font_size", 64)
+	number.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vbox.add_child(number)
+
+	var subtitle := Label.new()
+	subtitle.text = GameManager.get_level_title(GameManager.current_level)
+	subtitle.add_theme_font_size_override("font_size", 28)
+	subtitle.add_theme_color_override("font_color", Color(0.8, 0.85, 1.0))
+	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vbox.add_child(subtitle)
+
+	vbox.modulate.a = 0.0
+	var tween := create_tween()
+	tween.tween_property(vbox, "modulate:a", 1.0, 0.3)
+	tween.tween_interval(1.1)
+	tween.tween_property(vbox, "modulate:a", 0.0, 0.5)
+	tween.tween_callback(layer.queue_free)
+
+
+## F16: Kurze Einführungs-Kamerafahrt zum Boss und wieder zurück — macht
+## sichtbar, worauf man zufliegt, bevor es losgeht. Die reguläre
+## Kameraverfolgung in _process() fängt die Kamera danach wieder ein.
+func _play_boss_intro() -> void:
+	if AccessibilityManager.reduced_motion_enabled:  # FR-423
+		return
+	if not is_instance_valid(_active_boss):
+		return
+	_transition_active = true  # blockiert die reguläre Kameraverfolgung
+	var boss_pos := _active_boss.global_position
+	var tween := create_tween()
+	tween.tween_property(_camera, "global_position", boss_pos, 0.7) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	tween.tween_interval(0.5)
+	tween.tween_property(_camera, "global_position", _player.global_position, 0.6) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	tween.tween_callback(func(): _transition_active = false)
+
 
 ## FR-342-360: Wendet die Regeln des aktuell gewählten Spielmodus auf das
 ## frisch geladene Level an (Schwerkraft, Sichtbarkeit, Modifikatoren, ...).
@@ -805,6 +946,10 @@ func _camera_punch(direction: Vector2, strength: float) -> void:
 func _on_fart_fired(impulse: float, direction: Vector2) -> void:
 	_camera_shake(clampf(impulse / 2000.0, 0.04, 0.18), 0.14)
 	_camera_punch(direction, clampf(impulse / 1500.0, 0.2, 1.0))  # FR-192
+	# F14: Kurzer Zoom-Punch — der Zoom springt minimal heraus und wird vom
+	# regulären Geschwindigkeits-Zoom in _process wieder eingefangen.
+	if not AccessibilityManager.reduced_motion_enabled:  # FR-423
+		_dynamic_zoom *= 1.0 - clampf(impulse / 26000.0, 0.01, 0.05)
 
 
 ## FR-186: Zielrichtung für die Zielfokus-Kamera übernehmen.
@@ -933,6 +1078,8 @@ func _on_level_reached() -> void:
 
 	# FR-246: Sieg-Fanfare
 	SoundManager.play_victory_fanfare()
+	# F18: Goldener Farb-Puls als visuelle Entsprechung zur Fanfare
+	_flash_screen(Color(1.0, 0.85, 0.3, 0.28), 0.6)
 
 	# FR-404: Auto-Speichern nach jedem abgeschlossenen Level
 	SaveManager.save_now()

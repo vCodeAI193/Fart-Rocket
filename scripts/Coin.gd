@@ -66,21 +66,28 @@ func _collect() -> void:
 
 
 ## FR-261: Goldener Partikel-Burst, der beim Einsammeln entsteht.
+## F15: Umfang und Farbe wachsen mit der aktuellen Combo-Stufe — der
+## Burst war zuvor bei jeder Münze identisch und damit kein Feedback
+## darüber, wie gut die Sammel-Serie gerade läuft.
 func _spawn_collect_particles() -> void:
+	var combo := clampi(GameManager.combo_count, 1, GameManager.COMBO_MAX_MULTIPLIER)
+	var combo_ratio := float(combo - 1) / float(maxi(1, GameManager.COMBO_MAX_MULTIPLIER - 1))
 	var p := CPUParticles2D.new()
 	get_parent().add_child(p)
 	p.global_position = global_position
 	p.emitting = true
 	p.one_shot = true
 	p.explosiveness = 0.95
-	p.amount = 20
+	# FR-466: Menge folgt der Qualitätsstufe, F15: und der Combo-Stufe
+	p.amount = GameManager.scaled_particle_amount(20 + int(combo_ratio * 24.0))
 	p.lifetime = 0.7
 	p.initial_velocity_min = 90.0
-	p.initial_velocity_max = 200.0
+	p.initial_velocity_max = 200.0 + combo_ratio * 120.0
 	p.gravity = Vector2(0, 300)
 	p.scale_amount_min = 3.0
-	p.scale_amount_max = 7.0
-	p.color = Color(1.0, 0.85, 0.15)
+	p.scale_amount_max = 7.0 + combo_ratio * 4.0
+	# Höhere Combo -> von Gold Richtung Weiß-Glühen
+	p.color = Color(1.0, 0.85, 0.15).lerp(Color(1.0, 1.0, 0.85), combo_ratio)
 	# Partikel nach Lebensdauer entfernen (fire-and-forget)
 	var lifetime := p.lifetime
 	get_tree().create_timer(lifetime + 0.1).timeout.connect(

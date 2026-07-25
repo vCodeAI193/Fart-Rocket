@@ -1127,6 +1127,26 @@ func get_level_scene_path(level_index: int) -> String:
 	return LEVEL_SCENES[idx]
 
 
+# F17: Kurzer Beiname je Level für die Start-Einblendung. Index 0 = Level 1.
+const LEVEL_TITLES := [
+	"Erste Flugversuche",
+	"Enge Gänge",
+	"Alles auf einmal",
+	"Höhlen der Tiefe",
+	"Zwei Wege",
+	"Der Wächter",
+	"Schatzkammer",
+]
+
+
+## F17: Liefert den Beinamen eines 1-basierten Levels (leer, falls keiner).
+func get_level_title(level_index: int) -> String:
+	var idx := level_index - 1
+	if idx < 0 or idx >= LEVEL_TITLES.size():
+		return ""
+	return LEVEL_TITLES[idx]
+
+
 ## FR-118: Registriert einen Gegner-Typ als entdeckt (persistiert).
 func discover_enemy(class_id: String) -> void:
 	if class_id in discovered_enemies:
