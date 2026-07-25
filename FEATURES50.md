@@ -78,12 +78,12 @@ mehrere Anchor-Offsets und passen bewusst nicht in die Fabrik.
 
 Drei Autoloads haben aktuell null dedizierte Tests.
 
-- [ ] **F40** `test_accessibility_manager.gd`
-- [ ] **F41** `test_game_mode_manager.gd`
-- [ ] **F42** `test_localization_manager.gd`
-- [ ] **F43** `test_level_config.gd` (TOTAL_LEVELS/LEVEL_SCENES/level_stars konsistent)
-- [ ] **F44** `test_cosmetics_catalog.gd` (Katalog-Integrität)
-- [ ] **F45** `test_ui_helpers.gd` (UIHelpers-Fabrikfunktionen)
+- [x] **F40** `test_accessibility_manager.gd`
+- [x] **F41** `test_game_mode_manager.gd`
+- [x] **F42** `test_localization_manager.gd`
+- [x] **F43** `test_level_config.gd` (TOTAL_LEVELS/LEVEL_SCENES/level_stars konsistent)
+- [x] **F44** `test_cosmetics_catalog.gd` (Katalog-Integrität)
+- [x] **F45** `test_ui_helpers.gd` (UIHelpers-Fabrikfunktionen)
 
 ## G. Performance & Technik (offene BACKLOG-Punkte)
 
