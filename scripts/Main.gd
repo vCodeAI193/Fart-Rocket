@@ -130,7 +130,6 @@ func _ready() -> void:
 ## als Kind der Kamera, damit sie stets im sichtbaren Bereich entstehen.
 func _build_ambient_particles() -> void:
 	var dust := CPUParticles2D.new()
-	dust.amount = 36
 	dust.lifetime = 7.0
 	dust.preprocess = 7.0
 	dust.emitting = true
@@ -187,6 +186,8 @@ func _foreground_theme_for_level(level_index: int) -> Dictionary:
 			return {"style": "stalactite", "color": Color(0.10, 0.02, 0.03, 0.55)}
 		7:
 			return {"style": "crystal", "color": Color(0.08, 0.07, 0.02, 0.45)}
+		8:
+			return {"style": "girder", "color": Color(0.10, 0.02, 0.09, 0.55)}
 		_:
 			return {"style": "crystal", "color": Color(0.04, 0.04, 0.10, 0.45)}
 
@@ -322,6 +323,7 @@ func _apply_background_shader() -> void:
 		[Color(0.05, 0.2, 0.3), Color(0.01, 0.06, 0.1)],
 		[Color(0.4, 0.05, 0.05), Color(0.15, 0.01, 0.01)],
 		[Color(0.35, 0.28, 0.05), Color(0.12, 0.09, 0.01)],
+		[Color(0.30, 0.05, 0.25), Color(0.10, 0.01, 0.09)],
 	]
 	var idx := clampi(GameManager.current_level - 1, 0, palette.size() - 1)
 	mat.set_shader_parameter("nebula_color_a", palette[idx][0])
@@ -1105,6 +1107,13 @@ func _on_level_reached() -> void:
 			and GameModeManager.marathon_level_index < GameManager.TOTAL_LEVELS:
 		GameModeManager.marathon_level_index += 1
 		GameManager.current_level = GameModeManager.marathon_level_index
+		GameManager.reload_scene_with_wipe()
+		return
+
+	# FR-347 (F31): Boss-Rush — direkt zum nächsten Boss-Level weiterziehen,
+	# solange noch eines übrig ist. Danach regulärer Abschlussbildschirm.
+	if GameModeManager.active_game_mode == GameModeManager.GameMode.BOSS_RUSH \
+			and GameModeManager.advance_boss_rush():
 		GameManager.reload_scene_with_wipe()
 		return
 

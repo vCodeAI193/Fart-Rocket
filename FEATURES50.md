@@ -50,14 +50,14 @@ Tod und Ragdoll. Was fehlt, ist Lebendigkeit am Männchen selbst.
 
 ## D. Gameplay & Mechanik
 
-- [ ] **F26** FR-017 Nachziehende Geruchswolke (verzögerte Rest-Wolke)
-- [ ] **F27** FR-018 Klebriger Furz: kurzes Haften an Wänden
-- [ ] **F28** Risiko/Belohnung auf dem verzweigten Pfad (Level5)
-- [ ] **F29** Zweites Boss-Level (Level8 mit EndBoss)
-- [ ] **F30** Tutorial-Hinweis beim ersten Gegner-Kontakt
-- [ ] **F31** Mehrere Boss-Level unterstützen (BOSS_LEVEL_INDEX → Liste)
-- [ ] **F32** Combo-Verlust-Warnung kurz vor Ablauf des Zeitfensters
-- [ ] **F33** Münz-Magnet: sichtbarer Wirkradius beim Aufsammeln
+- [x] **F26** FR-017 Nachziehende Geruchswolke (verzögerte Rest-Wolke)
+- [x] **F27** FR-018 Klebriger Furz: kurzes Haften an Wänden
+- [x] **F28** Risiko/Belohnung auf dem verzweigten Pfad (Level5)
+- [x] **F29** Zweites Boss-Level (Level8 mit EndBoss)
+- [x] **F30** Tutorial-Hinweis beim ersten Gegner-Kontakt
+- [x] **F31** Mehrere Boss-Level unterstützen (BOSS_LEVEL_INDEX → Liste)
+- [x] **F32** Combo-Verlust-Warnung kurz vor Ablauf des Zeitfensters
+- [x] **F33** Münz-Magnet: sichtbarer Wirkradius beim Aufsammeln
 
 ## E. UI-Deduplizierung fertigstellen
 

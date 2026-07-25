@@ -98,6 +98,10 @@ const FART_TYPES := [
 		"color": Color(0.4, 0.7, 1.0)},
 	{"id": "double", "name": "Doppel", "power": 0.85, "cost": 2, "bursts": 2,
 		"color": Color(1.0, 0.7, 0.3)},
+	# FR-018 (F27): Klebriger Furz — schwächerer Schub, dafür haftet das
+	# Männchen bei Wandkontakt kurz fest und kann in Ruhe neu zielen.
+	{"id": "sticky", "name": "Klebrig", "power": 0.7, "cost": 1, "bursts": 1,
+		"color": Color(0.85, 0.75, 0.25), "sticky": true},
 ]
 
 # --- interner Zustand -------------------------------------------
@@ -162,6 +166,14 @@ const FEAR_SPEED := 1300.0         # ab dieser Geschwindigkeit: Angst-Gesicht
 # --- F09: Blinzeln im Ruhezustand ---------------------------------------
 var _blink_timer: float = 0.0
 var _blink_active: bool = false
+
+# --- FR-018 (F27): Klebriger Furz ---------------------------------------
+# Nach einem klebrigen Furz haftet das Männchen beim nächsten Wandkontakt
+# innerhalb dieses Zeitfensters kurz fest, statt abzuprallen.
+var _sticky_window: float = 0.0
+var _stick_remaining: float = 0.0
+const STICKY_WINDOW := 1.2   # wie lange der klebrige Furz "scharf" bleibt
+const STICK_DURATION := 1.0  # wie lange das Haften selbst dauert
 
 # --- F10: Arm-Rudern beim freien Fall -----------------------------------
 var _arm_flail_phase: float = 0.0
@@ -264,6 +276,30 @@ func _process(delta: float) -> void:
 	_update_expression(delta)
 	_update_arm_flail(delta)
 	_impact_fx_cooldown = maxf(0.0, _impact_fx_cooldown - delta)
+	_update_sticky(delta)
+
+
+## FR-018 (F27): Verwaltet Haft-Fenster und laufendes Haften. Solange das
+## Männchen klebt, wird es von der Schwerkraft ausgenommen; ein neuer
+## Furz-Stoß löst es sofort wieder ab.
+func _update_sticky(delta: float) -> void:
+	_sticky_window = maxf(0.0, _sticky_window - delta)
+	if _stick_remaining <= 0.0:
+		return
+	_stick_remaining = maxf(0.0, _stick_remaining - delta)
+	if _stick_remaining > 0.0:
+		# Festhalten: keine Schwerkraft, keine Restbewegung
+		linear_velocity = Vector2.ZERO
+		angular_velocity = 0.0
+		gravity_scale = 0.0
+	else:
+		_release_stick()
+
+
+## Löst das Haften wieder und stellt die normale Schwerkraft her.
+func _release_stick() -> void:
+	_stick_remaining = 0.0
+	gravity_scale = level_gravity_scale
 
 
 ## F10: Beim freien Fall (ohne aktiven Schub, deutlich nach unten fallend)
@@ -522,6 +558,9 @@ func _execute_fart(drag: Vector2) -> void:
 	var bursts: int = fart["bursts"]
 	var tint: Color = fart["color"]
 
+	# FR-018 (F27): Klebriger Furz aktiviert ein kurzes Haft-Fenster
+	_sticky_window = STICKY_WINDOW if fart.get("sticky", false) else 0.0
+
 	# FR-008: Abklingzeit starten, FR-045: kurze Vibration
 	_cooldown_remaining = fart_cooldown
 	GameManager.vibrate(40)
@@ -604,6 +643,7 @@ func _apply_continuous_thrust() -> void:
 
 ## Wendet einen einzelnen Schub an und erzeugt die passende Furz-Wolke.
 func _do_thrust(dir: Vector2, impulse: float, tint: Color) -> void:
+	_release_stick()  # FR-018 (F27): ein neuer Stoß löst das Haften sofort
 	apply_central_impulse(dir * impulse)
 	# FR-006: Seitlicher Drall — Schub senkrecht zur Bewegungsrichtung dreht das Männchen
 	var current_vel := linear_velocity
@@ -614,6 +654,7 @@ func _do_thrust(dir: Vector2, impulse: float, tint: Color) -> void:
 	fart_fired.emit(impulse, dir)  # FR-265/192: Kamera-Wackeln/-Stoß signalisieren
 	_squash = 1.0  # F01: Stauchung im Moment des Stoßes auslösen
 	_spawn_fart_burst(-dir, _apply_fart_color_style(tint))
+	_spawn_lingering_smell(-dir, _apply_fart_color_style(tint))  # FR-017 (F26)
 	# FR-115: Nahe Gegner in der Gruppe "blowable" werden vom Furz weggeblasen
 	_blow_away_nearby_enemies(-dir, impulse)
 
@@ -737,6 +778,11 @@ func _on_body_entered(body: Node) -> void:
 	# F06/F07: Aufprall-Partikel bei jeder harten Berührung (Boden, Wände,
 	# Plattformen) — bislang gab es Partikel nur beim Tod.
 	_spawn_impact_fx()
+	# FR-018 (F27): Nach einem klebrigen Furz an der Wand haften bleiben.
+	# Nur an ungefährlichen Flächen — an "obstacles" stirbt man ohnehin.
+	if _sticky_window > 0.0 and not body.is_in_group("obstacles"):
+		_sticky_window = 0.0
+		_stick_remaining = STICK_DURATION
 	if body.is_in_group("obstacles"):
 		# FR-345: Im Zen-Modus ist der Spieler unverwundbar — abprallen statt sterben
 		if GameModeManager.active_game_mode == GameModeManager.GameMode.ZEN:
@@ -964,6 +1010,37 @@ func _spawn_crash_particles() -> void:
 	p.scale_amount_max = 9.0
 	p.color = Color(1.0, 0.5, 0.15)
 	get_tree().create_timer(1.1).timeout.connect(
+		func() -> void:
+			if is_instance_valid(p):
+				p.queue_free()
+	)
+
+
+## FR-017 (F26): Langsam verwehende Rest-Wolke, die an der Abschussstelle
+## zurückbleibt — der eigentliche Furz-Stoß (FartBurst) ist nach ~1s weg,
+## der "Geruch" hängt deutlich länger in der Luft und macht die geflogene
+## Route für einen Moment nachvollziehbar.
+func _spawn_lingering_smell(back_dir: Vector2, tint: Color) -> void:
+	if AccessibilityManager.reduced_motion_enabled:  # FR-423
+		return
+	if GameManager.shader_quality == "low":  # FR-466: auf schwachen Geräten sparen
+		return
+	var p := CPUParticles2D.new()
+	get_parent().add_child(p)
+	p.global_position = global_position + back_dir * 30.0
+	p.emitting = true
+	p.one_shot = true
+	p.explosiveness = 0.4
+	p.amount = GameManager.scaled_particle_amount(8)
+	p.lifetime = 2.4          # deutlich länger als die Kernwolke
+	p.initial_velocity_min = 4.0
+	p.initial_velocity_max = 18.0
+	p.spread = 180.0
+	p.gravity = Vector2(0, -12)   # steigt leicht auf
+	p.scale_amount_min = 6.0
+	p.scale_amount_max = 14.0
+	p.color = Color(tint.r, tint.g, tint.b, 0.16)
+	get_tree().create_timer(p.lifetime + 0.3).timeout.connect(
 		func() -> void:
 			if is_instance_valid(p):
 				p.queue_free()

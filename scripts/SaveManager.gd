@@ -315,7 +315,7 @@ func reset_all_progress() -> void:
 ## reset_all_progress(), einem leeren Speicherplatz-Wechsel und als
 ## Fallback, wenn weder Primärdatei noch Backup lesbar sind.
 func _reset_progress_vars_to_default() -> void:
-	GameManager.level_stars = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0}
+	GameManager.level_stars = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0}
 	GameManager.total_xp = 0
 	GameManager.player_level = 1
 	GameManager.discovered_enemies.clear()

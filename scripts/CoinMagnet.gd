@@ -41,6 +41,9 @@ func _activate_magnet(player: Player) -> void:
 	# FR-277: Orangene Power-up-Aura während der Magnet-Wirkung
 	if player.has_method("show_powerup_aura"):
 		player.show_powerup_aura(Color(1.0, 0.55, 0.15, 0.6), duration)
+	# F33: Wirkradius sichtbar machen — bislang war nur die generische
+	# Aura zu sehen, ohne Hinweis darauf, wie weit der Magnet reicht.
+	_show_magnet_radius(player)
 	var start_time := Time.get_ticks_msec() / 1000.0
 	var elapsed := 0.0
 	while elapsed < duration:
@@ -53,6 +56,34 @@ func _activate_magnet(player: Player) -> void:
 						var dir := (player.global_position - coin.global_position).normalized()
 						coin.apply_central_force(dir * pull_force)
 		await get_tree().create_timer(0.05).timeout
+
+
+## F33: Zeichnet einen pulsierenden Ring in Magnet-Reichweite um den
+## Spieler, der nach Ablauf der Wirkdauer wieder verschwindet.
+func _show_magnet_radius(player: Player) -> void:
+	if not is_instance_valid(player):
+		return
+	var ring := Line2D.new()
+	ring.width = 3.0
+	ring.default_color = Color(1.0, 0.6, 0.2, 0.45)
+	var pts := PackedVector2Array()
+	for i in range(33):
+		var a := TAU * float(i) / 32.0
+		pts.append(Vector2(cos(a), sin(a)) * magnet_radius)
+	ring.points = pts
+	player.add_child(ring)
+
+	# Sanftes Pulsieren, bis die Wirkung endet
+	var tween := player.create_tween()
+	tween.set_loops(int(maxf(1.0, duration / 0.8)))
+	tween.tween_property(ring, "modulate:a", 0.35, 0.4)
+	tween.tween_property(ring, "modulate:a", 1.0, 0.4)
+
+	player.get_tree().create_timer(duration).timeout.connect(
+		func() -> void:
+			if is_instance_valid(ring):
+				ring.queue_free()
+	)
 
 
 func _build_visual() -> void:

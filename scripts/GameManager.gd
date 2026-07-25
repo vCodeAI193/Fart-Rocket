@@ -23,14 +23,18 @@ signal prestige_changed(new_level)          # FR-306: Prestige-Stufe geändert
 signal milestone_reached(milestone_id)      # FR-308: Meilenstein erreicht
 signal weekly_goal_progress(goal_id, progress, target)  # FR-310: Wochenziel-Fortschritt
 signal piggy_bank_changed(amount)           # FR-313: Sparschwein-Stand geändert
+signal enemy_discovered(class_id)           # F30: erster Kontakt mit einem Gegner-Typ
+signal combo_about_to_expire                # F32: Combo-Fenster läuft gleich ab
 
 # --- Konstanten -------------------------------------------------
-const TOTAL_LEVELS := 7
+const TOTAL_LEVELS := 8
 
 # FR-003: Zeitfenster (Sekunden), in dem Folge-Münzen die Combo erhöhen
 const COMBO_WINDOW := 2.0
 # FR-003: höchster Combo-Multiplikator
 const COMBO_MAX_MULTIPLIER := 5
+# F32: Ab dieser verstrichenen Zeit im Combo-Fenster wird gewarnt
+const COMBO_WARN_AT := 1.4
 
 # Pfade zu den Level-Szenen (Index 0 = Level 1)
 const LEVEL_SCENES := [
@@ -41,14 +45,13 @@ const LEVEL_SCENES := [
 	"res://levels/Level5.tscn",
 	"res://levels/Level6.tscn",
 	"res://levels/Level7.tscn",
+	"res://levels/Level8.tscn",
 ]
 
-# FR-347: Level-Index mit dem einzigen aktuellen Boss (MiniBoss in Level6).
-# GameModeManager.set_game_mode() nutzt das für BOSS_RUSH — bewusst NICHT
-# TOTAL_LEVELS, das seit Level4-7 auf das bosslose Bonus-Level (Level7)
-# zeigen würde. Bei zusätzlichen Boss-Leveln hier erweitern (z.B. als
-# Array + zufällige/nächstgelegene Auswahl).
-const BOSS_LEVEL_INDEX := 6
+# FR-347 (F31): Alle Level mit einem Boss, in Reihenfolge. Bewusst NICHT
+# TOTAL_LEVELS, das seit Level4-7 auf ein bossloses Bonus-Level zeigen
+# würde. Boss-Rush arbeitet diese Liste der Reihe nach ab.
+const BOSS_LEVEL_INDICES := [6, 8]
 
 # --- Laufender Spielzustand -------------------------------------
 var current_level: int = 1              # 1-basiert (Level 1, 2, 3)
@@ -59,7 +62,7 @@ var max_charges: int = 0                 # maximale Furz-Ladungen im aktuellen L
 var level_farts_used: int = 0            # FR-327: Furz-Stöße im aktuellen Level
 
 # Bestwertung (Sterne 0..3) je Level, persistent während der Sitzung
-var level_stars := {1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0}
+var level_stars := {1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0}
 
 # --- FR-003: Combo-Zustand --------------------------------------
 var combo_count: int = 0
@@ -403,7 +406,11 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	# FR-003: Combo läuft nach dem Zeitfenster ab
 	if combo_count > 0:
+		var was_before_warning := _combo_elapsed < COMBO_WARN_AT
 		_combo_elapsed += delta
+		# F32: Einmalige Warnung, kurz bevor die Serie verfällt
+		if combo_count >= 2 and was_before_warning and _combo_elapsed >= COMBO_WARN_AT:
+			combo_about_to_expire.emit()
 		if _combo_elapsed >= COMBO_WINDOW:
 			combo_count = 0
 			combo_changed.emit(0, 1)
@@ -1136,6 +1143,7 @@ const LEVEL_TITLES := [
 	"Zwei Wege",
 	"Der Wächter",
 	"Schatzkammer",
+	"Der End-Boss",
 ]
 
 
@@ -1152,4 +1160,5 @@ func discover_enemy(class_id: String) -> void:
 	if class_id in discovered_enemies:
 		return
 	discovered_enemies.append(class_id)
+	enemy_discovered.emit(class_id)  # F30: HUD zeigt einen einmaligen Hinweis
 	SaveManager.save_now()

@@ -46,10 +46,11 @@ var marathon_level_index: int = 0           # FR-356: Fortschritt im Marathon-La
 var ghost_paths := {}                       # FR-353: level_index -> PackedVector2Array
 var daily_seed_date: String = ""            # FR-350
 var daily_seed_modifier_id: String = "none" # FR-350
+var boss_rush_index: int = 0                # F31: Position in BOSS_LEVEL_INDICES
 
 # --- FR-341: Zeitrennen-Modus (Time Attack) ----------------------
 var time_attack_mode: bool = false
-var time_attack_best_times := {1: INF, 2: INF, 3: INF, 4: INF, 5: INF, 6: INF, 7: INF}  # Level -> beste Zeit (Sek.)
+var time_attack_best_times := {1: INF, 2: INF, 3: INF, 4: INF, 5: INF, 6: INF, 7: INF, 8: INF}  # Level -> beste Zeit (Sek.)
 
 
 ## FR-342-360: Wechselt den aktiven Spielmodus (wirkt sich beim nächsten
@@ -61,8 +62,21 @@ func set_game_mode(mode: GameMode) -> void:
 		marathon_level_index = 1
 		GameManager.current_level = 1  # Marathon startet immer bei Level 1
 	if mode == GameMode.BOSS_RUSH:
-		GameManager.current_level = GameManager.BOSS_LEVEL_INDEX  # FR-347: direkt zum Boss-Level springen
+		# FR-347 (F31): Boss-Rush startet beim ersten Boss-Level und
+		# arbeitet sich über advance_boss_rush() durch die weiteren.
+		boss_rush_index = 0
+		GameManager.current_level = GameManager.BOSS_LEVEL_INDICES[0]
 	SaveManager.save_now()
+
+
+## F31: Schaltet im Boss-Rush auf das nächste Boss-Level weiter. Gibt
+## false zurück, wenn alle Boss-Level durchgespielt sind (Modus zu Ende).
+func advance_boss_rush() -> bool:
+	boss_rush_index += 1
+	if boss_rush_index >= GameManager.BOSS_LEVEL_INDICES.size():
+		return false
+	GameManager.current_level = GameManager.BOSS_LEVEL_INDICES[boss_rush_index]
+	return true
 
 
 ## FR-350: Liefert einen für alle Spieler an diesem Kalendertag gleichen
@@ -145,4 +159,4 @@ func reset_to_default() -> void:
 	ghost_paths.clear()                   # FR-353
 	daily_seed_date = ""                  # FR-350
 	daily_seed_modifier_id = "none"       # FR-350
-	time_attack_best_times = {1: INF, 2: INF, 3: INF, 4: INF, 5: INF, 6: INF, 7: INF}
+	time_attack_best_times = {1: INF, 2: INF, 3: INF, 4: INF, 5: INF, 6: INF, 7: INF, 8: INF}

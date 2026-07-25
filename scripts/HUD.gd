@@ -75,6 +75,8 @@ func _ready() -> void:
 	GameManager.charges_changed.connect(_on_charges_changed)
 	GameManager.charge_regen_progress.connect(_on_regen_progress)
 	GameManager.combo_changed.connect(_on_combo_changed)   # FR-003
+	GameManager.enemy_discovered.connect(_on_enemy_discovered)  # F30
+	GameManager.combo_about_to_expire.connect(show_combo_warning)  # F32
 	_pause_btn.pressed.connect(_on_pause_pressed)          # FR-201
 	_on_coins_changed(GameManager.total_coins)
 	_build_height_label()
@@ -207,6 +209,29 @@ func dismiss_tutorial_hint() -> void:
 	tween.tween_property(_tutorial_hint_label, "modulate:a", 0.0, 0.4)
 	tween.tween_callback(func(): _tutorial_hint_label.visible = false)
 	GameManager.mark_tutorial_hint_seen()
+
+
+## F30: Zeigt einen einmaligen, selbst-ausblendenden Hinweis — genutzt für
+## den ersten Kontakt mit einem neuen Gegner-Typ. Nutzt einen eigenen
+## Label, damit der dauerhafte Steuerungs-Hinweis (FR-210) unberührt bleibt.
+func show_transient_hint(text: String) -> void:
+	var label := Label.new()
+	label.text = text
+	label.add_theme_font_size_override("font_size", 30)
+	label.add_theme_color_override("font_color", Color(1.0, 0.85, 0.4))
+	label.set_anchors_preset(Control.PRESET_CENTER_TOP)
+	label.offset_left = -420.0
+	label.offset_right = 420.0
+	label.offset_top = 300.0
+	label.offset_bottom = 350.0
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.modulate.a = 0.0
+	add_child(label)
+	var tween := create_tween()
+	tween.tween_property(label, "modulate:a", 1.0, 0.3)
+	tween.tween_interval(2.2)
+	tween.tween_property(label, "modulate:a", 0.0, 0.5)
+	tween.tween_callback(label.queue_free)
 
 
 ## FR-211: Fortschrittsbalken zum Münz-Sammelziel, unter dem x/y-Text.
@@ -684,6 +709,25 @@ func _on_combo_changed(count: int, multiplier: int) -> void:
 	# FR-280: Feuerwerk bei hohen Combos (ab x10)
 	if count >= 10:
 		_spawn_combo_fireworks()
+
+
+## F30: Einmaliger Hinweis beim ersten Kontakt mit einem neuen Gegner-Typ.
+## Fängt den Schwierigkeitssprung ab, den Level4 mit den ersten Gegnern
+## überhaupt einführt (Level1-3 sind komplett gegnerfrei).
+func _on_enemy_discovered(class_id: String) -> void:
+	var name_de: String = GameManager.ENEMY_BESTIARY.get(class_id, class_id)
+	show_transient_hint("Neuer Gegner: %s — ausweichen!" % name_de)
+
+
+## F32: Warnt kurz vor Ablauf des Combo-Zeitfensters, damit man die Serie
+## bewusst retten kann statt sie unbemerkt zu verlieren.
+func show_combo_warning() -> void:
+	if _combo_label == null:
+		return
+	var tween := create_tween()
+	tween.set_loops(3)
+	tween.tween_property(_combo_label, "modulate:a", 0.35, 0.12)
+	tween.tween_property(_combo_label, "modulate:a", 1.0, 0.12)
 
 
 ## FR-280: Feuerwerk-Effekt für hohe Combos.
