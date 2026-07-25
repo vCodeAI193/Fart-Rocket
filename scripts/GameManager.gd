@@ -167,6 +167,45 @@ func set_shader_quality(quality: String) -> void:
 	SaveManager.save_settings()  # FR-414
 
 
+## FR-466 (F46): Skaliert eine gewünschte Partikelmenge anhand der
+## eingestellten Qualitätsstufe herunter. Alle Partikel-Erzeuger im Spiel
+## sollten ihre `amount` hierdurch leiten, damit schwache Geräte mit einer
+## einzigen Einstellung spürbar entlastet werden.
+func scaled_particle_amount(base_amount: int) -> int:
+	match shader_quality:
+		"low":
+			return maxi(1, int(base_amount * 0.4))
+		"medium":
+			return maxi(1, int(base_amount * 0.7))
+		_:
+			return base_amount
+
+
+## FR-467 (F47): Rät beim ersten Start eine passende Qualitätsstufe anhand
+## von Prozessorkernen und Videospeicher. Wird nur angewendet, wenn der
+## Spieler noch nie selbst eine Qualitätsstufe gewählt hat (dann steht
+## quality_auto_detected auf false) — eine bewusste Nutzerwahl wird nie
+## überschrieben.
+var quality_auto_detected: bool = false
+
+func auto_detect_quality() -> void:
+	if quality_auto_detected:
+		return
+	quality_auto_detected = true
+	# Prozessorkerne sind das plattformübergreifend verlässlichste Signal —
+	# GPU-Infos sind auf Android über Godot nur lückenhaft abfragbar.
+	var cores := OS.get_processor_count()
+	if cores <= 4:
+		shader_quality = "low"
+		render_scale = 0.75
+	elif cores <= 6:
+		shader_quality = "medium"
+	else:
+		shader_quality = "high"
+	render_settings_changed.emit()
+	SaveManager.save_settings()
+
+
 ## FR-282: Schaltet den optionalen CRT-/Retro-Filter um.
 func set_crt_filter_enabled(enabled: bool) -> void:
 	crt_filter_enabled = enabled
@@ -346,6 +385,9 @@ func _ready() -> void:
 	SaveManager.load_settings()
 	# Beim Start einmal den gespeicherten Fortschritt laden (falls vorhanden)
 	SaveManager.load_now()
+	# FR-467 (F47): Beim allerersten Start eine Qualitätsstufe schätzen
+	# (überschreibt nie eine bereits geladene Nutzer-Einstellung)
+	auto_detect_quality()
 	# Gespeicherte Audio-/Grafik-Einstellungen anwenden
 	SoundManager.apply_mute()
 	get_tree().root.content_scale_factor = render_scale  # FR-291

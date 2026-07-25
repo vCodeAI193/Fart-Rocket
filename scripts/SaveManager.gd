@@ -127,6 +127,7 @@ func _save_settings() -> void:
 	cfg.set_value("render", "render_scale", GameManager.render_scale)  # FR-291
 	cfg.set_value("render", "pixel_perfect", GameManager.pixel_perfect_mode)  # FR-299
 	cfg.set_value("render", "crt_filter", GameManager.crt_filter_enabled)  # FR-282
+	cfg.set_value("render", "quality_auto_detected", GameManager.quality_auto_detected)  # FR-467
 	cfg.set_value("audio", "haptics_enabled", GameManager.haptics_enabled)
 	cfg.set_value("audio", "sound_muted", SoundManager.sound_muted)                 # FR-250
 	cfg.set_value("audio", "master_volume", GameManager.master_volume)              # FR-438
@@ -152,6 +153,7 @@ func _load_settings() -> void:
 	GameManager.render_scale = cfg.get_value("render", "render_scale", 1.0)
 	GameManager.pixel_perfect_mode = cfg.get_value("render", "pixel_perfect", false)
 	GameManager.crt_filter_enabled = cfg.get_value("render", "crt_filter", false)
+	GameManager.quality_auto_detected = cfg.get_value("render", "quality_auto_detected", false)  # FR-467
 	GameManager.haptics_enabled = cfg.get_value("audio", "haptics_enabled", true)
 	SoundManager.sound_muted = cfg.get_value("audio", "sound_muted", false)                     # FR-250
 	GameManager.master_volume = cfg.get_value("audio", "master_volume", 1.0)                    # FR-438

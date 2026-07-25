@@ -139,6 +139,40 @@ var _buffered_charge_mult: float = 1.0
 var _buffer_timer: float = 0.0
 var _aim_slowmo_active: bool = false   # FR-052
 
+# --- F01/F02: Squash & Stretch ------------------------------------------
+# Das Männchen war bislang völlig starr (nur Rotation folgte der Flugrichtung).
+# _squash läuft nach jedem Furz-Stoß von 1.0 gegen 0.0 aus und staucht die
+# Figur kurz; zusätzlich streckt sie sich dauerhaft leicht in Flugrichtung,
+# je schneller sie fliegt.
+var _squash: float = 0.0
+const SQUASH_DECAY := 6.0          # wie schnell die Stauchung ausläuft
+const SQUASH_STRENGTH := 0.28      # maximale Stauchung beim Stoß
+const STRETCH_MAX := 0.22          # maximale geschwindigkeitsabhängige Streckung
+const STRETCH_FULL_SPEED := 1600.0 # Geschwindigkeit für volle Streckung
+var _visual_root: Node2D = null    # Träger aller Körperteile (wird skaliert)
+
+# --- F03/F04/F05: Dynamische Mimik --------------------------------------
+# _render_face() existierte, wurde aber nur einmal beim Aufbau mit der im
+# Shop gekauften Miene aufgerufen. Jetzt wechselt der Ausdruck situativ.
+var _current_expression: String = ""
+var _shock_timer: float = 0.0      # F05: Schreck nach Beinahe-Treffer
+const SHOCK_DURATION := 0.6
+const FEAR_SPEED := 1300.0         # ab dieser Geschwindigkeit: Angst-Gesicht
+
+# --- F09: Blinzeln im Ruhezustand ---------------------------------------
+var _blink_timer: float = 0.0
+var _blink_active: bool = false
+
+# --- F10: Arm-Rudern beim freien Fall -----------------------------------
+var _arm_flail_phase: float = 0.0
+# Sperrt das Rudern, solange die Sieges-Pose (FR-177) die Arme animiert
+var _victory_pose_active: bool = false
+
+# --- F06/F07: Landungs-/Aufprall-Partikel -------------------------------
+var _impact_fx_cooldown: float = 0.0
+const IMPACT_FX_COOLDOWN := 0.25
+const IMPACT_MIN_SPEED := 260.0    # unterhalb davon kein sichtbarer Aufprall
+
 
 func _ready() -> void:
 	contact_monitor = true
@@ -147,6 +181,12 @@ func _ready() -> void:
 	angular_damp = rotation_damping      # FR-033
 	body_entered.connect(_on_body_entered)
 	_apply_shop_skin()  # FR-224: im Shop gekaufte/ausgerüstete Skin-Farbe übernehmen
+	# F01/F02: Alle Körperteile hängen an einem eigenen Node2D, damit sie
+	# gestaucht/gestreckt werden können, ohne die Kollisionsform des
+	# RigidBody2D mitzuskalieren.
+	_visual_root = Node2D.new()
+	_visual_root.name = "VisualRoot"
+	add_child(_visual_root)
 	_build_stick_figure()
 	_build_aim_arrow()
 	# FR-020: Standard-Kurve initialisieren (linear, falls nicht gesetzt)
@@ -219,6 +259,92 @@ func _process(delta: float) -> void:
 	_update_trail()
 	# FR-264: Geschwindigkeitslinien aktualisieren
 	_update_speed_lines()
+	# F01/F02: Stauchung/Streckung, F03-F05/F09: Mimik, F06/F07: Aufprall-FX
+	_update_squash_stretch(delta)
+	_update_expression(delta)
+	_update_arm_flail(delta)
+	_impact_fx_cooldown = maxf(0.0, _impact_fx_cooldown - delta)
+
+
+## F10: Beim freien Fall (ohne aktiven Schub, deutlich nach unten fallend)
+## rudert das Männchen panisch mit den Armen. Nutzt den bereits für die
+## Sieges-Pose vorhandenen _arms-Line2D.
+func _update_arm_flail(delta: float) -> void:
+	if _arms == null or _is_aiming or _victory_pose_active:
+		return
+	if AccessibilityManager.reduced_motion_enabled:  # FR-423
+		return
+	var falling_fast: bool = linear_velocity.y > 450.0
+	if not falling_fast:
+		# Ruhehaltung wiederherstellen (nur wenn nötig, spart Zuweisungen)
+		if _arm_flail_phase != 0.0:
+			_arm_flail_phase = 0.0
+			_set_arm_points(0.0)
+		return
+	_arm_flail_phase += delta * 18.0
+	_set_arm_points(sin(_arm_flail_phase) * 7.0)
+
+
+## Setzt die Arm-Punkte mit einem vertikalen Versatz (0 = Ruhehaltung).
+func _set_arm_points(offset: float) -> void:
+	_arms.clear_points()
+	_arms.add_point(Vector2(-16, 6 - offset))
+	_arms.add_point(Vector2(0, -10))
+	_arms.add_point(Vector2(16, 6 + offset))
+
+
+## F01/F02: Staucht die Figur direkt nach einem Furz-Stoß und streckt sie
+## geschwindigkeitsabhängig in Flugrichtung. Da _visual_root mit dem Körper
+## rotiert, entspricht die lokale Y-Achse der Flugrichtung.
+func _update_squash_stretch(delta: float) -> void:
+	if _visual_root == null:
+		return
+	_squash = maxf(0.0, _squash - delta * SQUASH_DECAY)
+	# FR-423: Bei "reduzierte Bewegung" auf die Verformung verzichten
+	if AccessibilityManager.reduced_motion_enabled:
+		_visual_root.scale = Vector2.ONE
+		return
+	var speed_ratio := clampf(linear_velocity.length() / STRETCH_FULL_SPEED, 0.0, 1.0)
+	var stretch := speed_ratio * STRETCH_MAX
+	var squash_now := _squash * SQUASH_STRENGTH
+	# Stauchen: breiter + flacher; Strecken: schmaler + länger
+	_visual_root.scale = Vector2(
+		1.0 + squash_now - stretch,
+		1.0 - squash_now + stretch
+	)
+
+
+## F03/F04/F05/F09: Wählt den Gesichtsausdruck situativ statt nur anhand
+## der im Shop gekauften Miene. Reihenfolge = Priorität.
+func _update_expression(delta: float) -> void:
+	_shock_timer = maxf(0.0, _shock_timer - delta)
+
+	# F09: Blinzeln — nur im ruhigen Zustand, damit es nicht mit den
+	# situativen Ausdrücken kollidiert.
+	_blink_timer -= delta
+	if _blink_timer <= 0.0:
+		_blink_active = not _blink_active
+		_blink_timer = 0.12 if _blink_active else randf_range(2.5, 5.0)
+
+	var wanted := CosmeticsManager.equipped_face  # Standard: Shop-Auswahl
+	if _shock_timer > 0.0:
+		wanted = "scared"                              # F05: Beinahe-Treffer
+	elif linear_velocity.length() > FEAR_SPEED:
+		wanted = "scared"                              # F03: Angst bei Tempo
+	elif _is_aiming:
+		wanted = "focused"                             # F04: Konzentration
+	elif _blink_active:
+		wanted = "blink"                               # F09
+
+	if wanted != _current_expression:
+		_current_expression = wanted
+		_render_face(wanted)
+
+
+## F05: Wird von Main.gd bei einem Beinahe-Treffer aufgerufen — das
+## Männchen erschrickt kurz sichtbar.
+func react_to_near_miss() -> void:
+	_shock_timer = SHOCK_DURATION
 
 
 ## FR-001: Regenerations-Logik (aus _process ausgelagert).
@@ -486,6 +612,7 @@ func _do_thrust(dir: Vector2, impulse: float, tint: Color) -> void:
 		if side_component.length() > 0.1:
 			apply_torque_impulse(side_component.x * impulse * 0.008)
 	fart_fired.emit(impulse, dir)  # FR-265/192: Kamera-Wackeln/-Stoß signalisieren
+	_squash = 1.0  # F01: Stauchung im Moment des Stoßes auslösen
 	_spawn_fart_burst(-dir, _apply_fart_color_style(tint))
 	# FR-115: Nahe Gegner in der Gruppe "blowable" werden vom Furz weggeblasen
 	_blow_away_nearby_enemies(-dir, impulse)
@@ -607,6 +734,9 @@ func _integrate_forces(state: PhysicsDirectBodyState2D) -> void:
 func _on_body_entered(body: Node) -> void:
 	if _is_dead:
 		return
+	# F06/F07: Aufprall-Partikel bei jeder harten Berührung (Boden, Wände,
+	# Plattformen) — bislang gab es Partikel nur beim Tod.
+	_spawn_impact_fx()
 	if body.is_in_group("obstacles"):
 		# FR-345: Im Zen-Modus ist der Spieler unverwundbar — abprallen statt sterben
 		if GameModeManager.active_game_mode == GameModeManager.GameMode.ZEN:
@@ -838,6 +968,43 @@ func _spawn_crash_particles() -> void:
 	)
 
 
+## F06/F07: Kurze Staub-/Funken-Wolke am Aufprallpunkt. Nur bei spürbarem
+## Tempo und mit Abklingzeit, damit rollende Dauerkontakte keine
+## Partikel-Flut auslösen.
+func _spawn_impact_fx() -> void:
+	if _impact_fx_cooldown > 0.0:
+		return
+	var speed := linear_velocity.length()
+	if speed < IMPACT_MIN_SPEED:
+		return
+	if AccessibilityManager.reduced_motion_enabled:  # FR-423
+		return
+	_impact_fx_cooldown = IMPACT_FX_COOLDOWN
+	var p := CPUParticles2D.new()
+	get_parent().add_child(p)
+	p.global_position = global_position
+	p.emitting = true
+	p.one_shot = true
+	p.explosiveness = 0.9
+	# FR-466: Partikelmenge folgt der eingestellten Grafikqualität
+	p.amount = GameManager.scaled_particle_amount(12)
+	p.lifetime = 0.45
+	p.initial_velocity_min = 40.0
+	p.initial_velocity_max = 60.0 + minf(speed * 0.15, 160.0)
+	p.spread = 70.0
+	# Partikel weg von der Aufprallrichtung streuen
+	p.direction = -linear_velocity.normalized() if speed > 0.0 else Vector2.UP
+	p.gravity = Vector2(0, 220)
+	p.scale_amount_min = 2.0
+	p.scale_amount_max = 5.0
+	p.color = Color(0.75, 0.72, 0.65, 0.7)  # staubiges Grau-Beige
+	get_tree().create_timer(0.7).timeout.connect(
+		func() -> void:
+			if is_instance_valid(p):
+				p.queue_free()
+	)
+
+
 ## FR-224/180: Übernimmt die im Shop ausgerüstete Skin-Farbe (falls nicht
 ## Standard) oder die frei gewählte Farbe aus dem Farb-Editor.
 func _apply_shop_skin() -> void:
@@ -870,7 +1037,7 @@ func _build_stick_figure() -> void:
 	torso.default_color = col
 	torso.add_point(Vector2(0, -18))
 	torso.add_point(Vector2(0, 18))
-	add_child(torso)
+	_add_visual(torso)
 
 	# Arme
 	_arms = Line2D.new()
@@ -880,7 +1047,7 @@ func _build_stick_figure() -> void:
 	_arms.add_point(Vector2(-16, 6))
 	_arms.add_point(Vector2(0, -10))
 	_arms.add_point(Vector2(16, 6))
-	add_child(_arms)
+	_add_visual(_arms)
 
 	# Beine
 	var legs := Line2D.new()
@@ -890,7 +1057,7 @@ func _build_stick_figure() -> void:
 	legs.add_point(Vector2(-14, 40))
 	legs.add_point(Vector2(0, 18))
 	legs.add_point(Vector2(14, 40))
-	add_child(legs)
+	_add_visual(legs)
 
 	# FR-163: Kostüm-Overlay (Astronaut/Superheld/Tier)
 	_build_outfit(head_center, head_radius)
@@ -944,33 +1111,33 @@ func _build_helmet(head_center: Vector2, radius: float) -> void:
 			for i in range(segments):
 				var a := TAU * float(i) / float(segments)
 				helmet.add_point(head_center + Vector2(cos(a), sin(a)) * radius)
-			add_child(helmet)
+			_add_visual(helmet)
 			for side in [-1, 1]:
 				var horn := Line2D.new()
 				horn.width = 3.0
 				horn.default_color = Color(0.9, 0.85, 0.7)
 				horn.add_point(head_center + Vector2(side * radius * 0.6, -radius * 0.3))
 				horn.add_point(head_center + Vector2(side * radius * 1.6, -radius * 1.4))
-				add_child(horn)
+				_add_visual(horn)
 		"helmet_mohawk":
 			helmet.default_color = Color(0.5, 0.5, 0.55)
 			for i in range(segments):
 				var a := TAU * float(i) / float(segments)
 				helmet.add_point(head_center + Vector2(cos(a), sin(a)) * radius)
-			add_child(helmet)
+			_add_visual(helmet)
 			var mohawk := Polygon2D.new()
 			mohawk.color = Color(0.9, 0.2, 0.5)
 			mohawk.polygon = PackedVector2Array([
 				head_center + Vector2(-4, -radius), head_center + Vector2(4, -radius),
 				head_center + Vector2(0, -radius * 2.2),
 			])
-			add_child(mohawk)
+			_add_visual(mohawk)
 		"helmet_crown":
 			helmet.default_color = Color(1.0, 0.85, 0.2)
 			for i in range(segments):
 				var a := TAU * float(i) / float(segments)
 				helmet.add_point(head_center + Vector2(cos(a), sin(a)) * radius)
-			add_child(helmet)
+			_add_visual(helmet)
 			var crown := Polygon2D.new()
 			crown.color = Color(1.0, 0.85, 0.2)
 			var pts := PackedVector2Array()
@@ -980,19 +1147,19 @@ func _build_helmet(head_center: Vector2, radius: float) -> void:
 			pts.append(head_center + Vector2(radius, -radius))
 			pts.append(head_center + Vector2(-radius, -radius))
 			crown.polygon = pts
-			add_child(crown)
+			_add_visual(crown)
 		_:  # "helmet_visor" und Fallback
 			helmet.default_color = Color(0.55, 0.85, 1.0)
 			for i in range(segments):
 				var a := TAU * float(i) / float(segments)
 				helmet.add_point(head_center + Vector2(cos(a), sin(a)) * radius)
-			add_child(helmet)
+			_add_visual(helmet)
 			var visor := Line2D.new()
 			visor.width = 3.0
 			visor.default_color = Color(0.2, 0.5, 0.8, 0.8)
 			visor.add_point(head_center + Vector2(-radius * 0.7, 0))
 			visor.add_point(head_center + Vector2(radius * 0.7, 0))
-			add_child(visor)
+			_add_visual(visor)
 
 
 ## FR-163: Zeichnet das gewählte Kostüm-Overlay.
@@ -1004,12 +1171,12 @@ func _build_outfit(head_center: Vector2, head_radius: float) -> void:
 			suit.polygon = PackedVector2Array([
 				Vector2(-10, -18), Vector2(10, -18), Vector2(12, 18), Vector2(-12, 18),
 			])
-			add_child(suit)
+			_add_visual(suit)
 			var backpack := ColorRect.new()
 			backpack.size = Vector2(10, 20)
 			backpack.position = Vector2(-5, -8)
 			backpack.color = Color(0.7, 0.7, 0.75)
-			add_child(backpack)
+			_add_visual(backpack)
 		"outfit_hero":
 			var cape := Polygon2D.new()
 			cape.color = Color(0.8, 0.1, 0.1, 0.85)
@@ -1017,13 +1184,13 @@ func _build_outfit(head_center: Vector2, head_radius: float) -> void:
 			cape.polygon = PackedVector2Array([
 				Vector2(-8, -14), Vector2(8, -14), Vector2(14, 30), Vector2(-14, 30),
 			])
-			add_child(cape)
+			_add_visual(cape)
 			var emblem := Polygon2D.new()
 			emblem.color = Color(1.0, 0.85, 0.2)
 			emblem.polygon = PackedVector2Array([
 				Vector2(0, -6), Vector2(5, 0), Vector2(0, 6), Vector2(-5, 0),
 			])
-			add_child(emblem)
+			_add_visual(emblem)
 		"outfit_animal":
 			for side in [-1, 1]:
 				var ear := Polygon2D.new()
@@ -1033,14 +1200,14 @@ func _build_outfit(head_center: Vector2, head_radius: float) -> void:
 					head_center + Vector2(side * head_radius * 1.1, -head_radius * 1.8),
 					head_center + Vector2(side * head_radius * 0.1, -head_radius * 1.3),
 				])
-				add_child(ear)
+				_add_visual(ear)
 			var tail := Line2D.new()
 			tail.width = 4.0
 			tail.default_color = skin_color.darkened(0.2)
 			tail.add_point(Vector2(-4, 30))
 			tail.add_point(Vector2(-16, 20))
 			tail.add_point(Vector2(-14, 34))
-			add_child(tail)
+			_add_visual(tail)
 
 
 ## FR-166: Zeichnet ein Hut-Accessoire über dem Helm.
@@ -1051,12 +1218,12 @@ func _build_hat(head_center: Vector2, head_radius: float) -> void:
 			brim.size = Vector2(head_radius * 2.2, 4)
 			brim.position = head_center + Vector2(-head_radius * 1.1, -head_radius * 1.3)
 			brim.color = Color(0.1, 0.1, 0.12)
-			add_child(brim)
+			_add_visual(brim)
 			var top := ColorRect.new()
 			top.size = Vector2(head_radius * 1.1, head_radius * 1.2)
 			top.position = head_center + Vector2(-head_radius * 0.55, -head_radius * 2.5)
 			top.color = Color(0.1, 0.1, 0.12)
-			add_child(top)
+			_add_visual(top)
 		"hat_cap":
 			var cap := Polygon2D.new()
 			cap.color = Color(0.2, 0.5, 0.8)
@@ -1065,7 +1232,7 @@ func _build_hat(head_center: Vector2, head_radius: float) -> void:
 				var a := PI + TAU * 0.5 * float(i) / 9.0
 				pts.append(head_center + Vector2(cos(a), sin(a)) * head_radius * 1.05)
 			cap.polygon = pts
-			add_child(cap)
+			_add_visual(cap)
 			var brim := Polygon2D.new()
 			brim.color = Color(0.15, 0.4, 0.65)
 			brim.polygon = PackedVector2Array([
@@ -1073,13 +1240,13 @@ func _build_hat(head_center: Vector2, head_radius: float) -> void:
 				head_center + Vector2(head_radius * 1.4, -head_radius * 0.1),
 				head_center + Vector2(head_radius * 1.2, head_radius * 0.15),
 			])
-			add_child(brim)
+			_add_visual(brim)
 		"hat_shades":
 			var shades := ColorRect.new()
 			shades.size = Vector2(head_radius * 1.6, 6)
 			shades.position = head_center + Vector2(-head_radius * 0.8, -3)
 			shades.color = Color(0.05, 0.05, 0.05, 0.9)
-			add_child(shades)
+			_add_visual(shades)
 		"hat_crown":
 			# FR-334: Erfolgs-Belohnung für "Sternensammler" (alle Level 3 Sterne)
 			var crown := Polygon2D.new()
@@ -1095,7 +1262,7 @@ func _build_hat(head_center: Vector2, head_radius: float) -> void:
 				head_center + Vector2(cw, base_offset - head_radius * 0.5),
 				head_center + Vector2(cw, base_offset),
 			])
-			add_child(crown)
+			_add_visual(crown)
 			var jewel := Polygon2D.new()
 			jewel.color = Color(0.9, 0.15, 0.2)
 			var jewel_center := head_center + Vector2(0, base_offset - head_radius * 0.35)
@@ -1104,37 +1271,106 @@ func _build_hat(head_center: Vector2, head_radius: float) -> void:
 				var a := TAU * float(i) / 8.0
 				jpts.append(jewel_center + Vector2(cos(a), sin(a)) * head_radius * 0.12)
 			jewel.polygon = jpts
-			add_child(jewel)
+			_add_visual(jewel)
 
 
 ## FR-167: Zeichnet einen Gesichtsausdruck (aktualisierbar via set_face_expression).
 func _build_face(head_center: Vector2) -> void:
 	_face_node = Node2D.new()
 	_face_node.position = head_center
-	add_child(_face_node)
+	_add_visual(_face_node)
 	_render_face(CosmeticsManager.equipped_face)
 
 
+## FR-167 + F03/F04/F05/F09: Zeichnet Augen und Mund für einen Ausdruck.
+## "focused"/"blink" ergänzen die bisherigen Shop-Mienen und werden
+## situativ von _update_expression() gesetzt.
 func _render_face(expression: String) -> void:
 	if _face_node == null:
 		return
 	for child in _face_node.get_children():
 		child.queue_free()
+
+	var ink := Color(0.2, 0.1, 0.1)
+
+	# --- Augen ---
+	match expression:
+		"blink":
+			# Geschlossene Augen: zwei kurze waagerechte Striche
+			for side in [-1.0, 1.0]:
+				var lid := Line2D.new()
+				lid.width = 2.0
+				lid.default_color = ink
+				lid.add_point(Vector2(side * 6.0 - 3.0, -4))
+				lid.add_point(Vector2(side * 6.0 + 3.0, -4))
+				_face_node.add_child(lid)
+		"scared":
+			# Weit aufgerissene Augen
+			for side in [-1.0, 1.0]:
+				var eye := _make_eye(Vector2(side * 6.0, -4), 3.5, ink)
+				_face_node.add_child(eye)
+		"focused":
+			# Zusammengekniffene Augen + Konzentrations-Brauen
+			for side in [-1.0, 1.0]:
+				var eye := _make_eye(Vector2(side * 6.0, -4), 1.8, ink)
+				_face_node.add_child(eye)
+				var brow := Line2D.new()
+				brow.width = 2.0
+				brow.default_color = ink
+				brow.add_point(Vector2(side * 6.0 - 3.5, -9))
+				brow.add_point(Vector2(side * 6.0 + 3.5, -7))
+				_face_node.add_child(brow)
+		_:
+			for side in [-1.0, 1.0]:
+				var eye := _make_eye(Vector2(side * 6.0, -4), 2.4, ink)
+				_face_node.add_child(eye)
+
+	# --- Mund ---
 	var mouth := Line2D.new()
 	mouth.width = 2.0
-	mouth.default_color = Color(0.2, 0.1, 0.1)
+	mouth.default_color = ink
 	match expression:
 		"happy":
 			mouth.add_point(Vector2(-5, 6))
 			mouth.add_point(Vector2(0, 9))
 			mouth.add_point(Vector2(5, 6))
 		"scared":
-			mouth.add_point(Vector2(-3, 8))
-			mouth.add_point(Vector2(3, 8))
+			# Offener Schreck-Mund (kleines O)
+			mouth.add_point(Vector2(-3, 6))
+			mouth.add_point(Vector2(0, 10))
+			mouth.add_point(Vector2(3, 6))
+			mouth.add_point(Vector2(0, 4))
+			mouth.add_point(Vector2(-3, 6))
+		"focused":
+			# Entschlossene, leicht schiefe Linie
+			mouth.add_point(Vector2(-4, 8))
+			mouth.add_point(Vector2(4, 6))
 		_:
 			mouth.add_point(Vector2(-4, 7))
 			mouth.add_point(Vector2(4, 7))
 	_face_node.add_child(mouth)
+
+
+## Kleiner runder Augapfel als Polygon2D (kein externes Asset).
+func _make_eye(center: Vector2, radius: float, color: Color) -> Polygon2D:
+	var eye := Polygon2D.new()
+	eye.color = color
+	var pts := PackedVector2Array()
+	for i in range(8):
+		var a := TAU * float(i) / 8.0
+		pts.append(center + Vector2(cos(a), sin(a)) * radius)
+	eye.polygon = pts
+	return eye
+
+
+## F01/F02: Hängt einen Sichtbarkeits-Knoten an den skalierbaren
+## Visual-Root statt direkt an den RigidBody2D — so verformt Squash &
+## Stretch nur die Optik, nie die Kollisionsform.
+func _add_visual(node: Node) -> void:
+	if _visual_root != null:
+		_visual_root.add_child(node)
+	else:
+		add_child(node)  # Sicherheitsnetz, falls vor _ready() aufgerufen
 
 
 ## Bereitet den Zielpfeil (Line2D) vor – wird beim Zielen sichtbar.
@@ -1252,6 +1488,7 @@ func _set_arm_point(index: int, value: Vector2) -> void:
 func play_victory_pose() -> void:
 	if _arms == null:
 		return
+	_victory_pose_active = true  # F10: Arm-Rudern währenddessen aussetzen
 	var tween := create_tween()
 	match CosmeticsManager.equipped_victory_pose:
 		"pose_flex":

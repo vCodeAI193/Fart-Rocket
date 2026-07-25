@@ -529,7 +529,39 @@ func _check_near_miss(delta: float) -> void:
 		if dist < NEAR_MISS_RADIUS:
 			_camera_shake(0.06, 0.1)
 			_near_miss_cooldown = 0.4
+			_player.react_to_near_miss()   # F05: Schreck-Gesicht
+			_do_near_miss_hitstop()        # F08: winziger Freeze-Frame
+			_flash_screen(Color(1, 1, 1, 0.12), 0.12)  # F13: kurzer Weiß-Flash
 			return
+
+
+## F08: Sehr kurzer Freeze-Frame beim Beinahe-Treffer — betont den
+## "gerade noch mal gut gegangen"-Moment. Deutlich kürzer als der
+## Todes-Hit-Stop in Player._die() (0.08s), damit der Flug nicht stockt.
+func _do_near_miss_hitstop() -> void:
+	if AccessibilityManager.reduced_motion_enabled:  # FR-423
+		return
+	Engine.time_scale = 0.0
+	await get_tree().create_timer(0.035, true, false, true).timeout
+	Engine.time_scale = 1.0
+
+
+## F13/F18: Kurzer, ganzflächiger Farb-Flash über dem Spielgeschehen.
+## Wird für Beinahe-Treffer (weiß) und den Levelabschluss (golden) genutzt.
+func _flash_screen(color: Color, duration: float) -> void:
+	if AccessibilityManager.reduced_motion_enabled:  # FR-423
+		return
+	var layer := CanvasLayer.new()
+	layer.layer = 98
+	add_child(layer)
+	var rect := ColorRect.new()
+	rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+	rect.color = color
+	rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	layer.add_child(rect)
+	var tween := create_tween()
+	tween.tween_property(rect, "modulate:a", 0.0, duration)
+	tween.tween_callback(layer.queue_free)
 
 
 ## FR-190: Aktualisiert die Positions-Punkte auf der Mini-Karte.
