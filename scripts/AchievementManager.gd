@@ -117,7 +117,11 @@ func _show_unlock_toast(data: Dictionary) -> void:
 		return
 	var layer := CanvasLayer.new()
 	layer.layer = 110
-	tree.root.add_child(layer)
+	# Verzögert eingehängt: wird diese Einblendung ausgelöst, während der
+	# Baum gerade Knoten aufbaut (z.B. aus einem _ready() heraus), lehnt
+	# root.add_child() den direkten Aufruf ab und die Einblendung ginge
+	# still verloren.
+	tree.root.add_child.call_deferred(layer)
 
 	var panel := PanelContainer.new()
 	panel.set_anchors_preset(Control.PRESET_CENTER_TOP)

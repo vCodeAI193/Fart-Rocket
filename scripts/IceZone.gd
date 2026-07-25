@@ -15,8 +15,9 @@ var _players_in_zone: int = 0
 
 func _ready() -> void:
 	add_to_group("hazards")
-	area_entered.connect(_on_area_entered)
-	area_exited.connect(_on_area_exited)
+	# Der Spieler ist ein RigidBody2D — area_* feuert für ihn nie.
+	body_entered.connect(_on_body_entered)
+	body_exited.connect(_on_body_exited)
 	_build_visual()
 
 
@@ -74,23 +75,21 @@ func _draw_ice_crystal(cx: float, cy: float, size: float) -> Line2D:
 	return crystal
 
 
-func _on_area_entered(area: Area2D) -> void:
-	if area is Player or area.owner is Player:
-		if _players_in_zone == 0:
-			_original_damp = area.linear_damp if area is RigidBody2D else area.owner.linear_damp
-			if area is RigidBody2D:
-				area.linear_damp = ice_friction
-			else:
-				area.owner.linear_damp = ice_friction
-		_players_in_zone += 1
+func _on_body_entered(body: Node2D) -> void:
+	var player := body as Player
+	if player == null:
+		return
+	if _players_in_zone == 0:
+		_original_damp = player.linear_damp
+		player.linear_damp = ice_friction
+	_players_in_zone += 1
 
 
-func _on_area_exited(area: Area2D) -> void:
-	if area is Player or area.owner is Player:
-		_players_in_zone -= 1
-		if _players_in_zone <= 0:
-			_players_in_zone = 0
-			if area is RigidBody2D:
-				area.linear_damp = _original_damp
-			else:
-				area.owner.linear_damp = _original_damp
+func _on_body_exited(body: Node2D) -> void:
+	var player := body as Player
+	if player == null:
+		return
+	_players_in_zone -= 1
+	if _players_in_zone <= 0:
+		_players_in_zone = 0
+		player.linear_damp = _original_damp

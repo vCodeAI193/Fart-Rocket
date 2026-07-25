@@ -25,9 +25,10 @@ func _process(delta: float) -> void:
 func _on_body_entered(body: Node) -> void:
 	if _collected:
 		return
-	if body is Player:
+	var player_body := body as Player
+	if player_body != null:
 		_collected = true
-		_activate_magnet(body)
+		_activate_magnet(player_body)
 		GameManager.vibrate(50)
 		var tween := create_tween()
 		tween.set_parallel(true)
@@ -51,9 +52,9 @@ func _activate_magnet(player: Player) -> void:
 		if is_instance_valid(player):
 			for coin in get_tree().get_nodes_in_group("coins"):
 				if not coin._collected:
-					var dist := coin.global_position.distance_to(player.global_position)
+					var dist: float = coin.global_position.distance_to(player.global_position)
 					if dist < magnet_radius and dist > 1.0:
-						var dir := (player.global_position - coin.global_position).normalized()
+						var dir: Vector2 = (player.global_position - coin.global_position).normalized()
 						coin.apply_central_force(dir * pull_force)
 		await get_tree().create_timer(0.05).timeout
 

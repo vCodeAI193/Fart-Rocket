@@ -20,12 +20,14 @@ func _ready() -> void:
 	_build_visual()
 
 
-func _on_area_entered(area: Area2D) -> void:
+func _on_body_entered(body: Node2D) -> void:
 	if _triggered:
 		return
-	if area is Player or area.owner is Player:
-		_triggered = true
-		_start_crumble()
+	var player := body as Player
+	if player == null:
+		return
+	_triggered = true
+	_start_crumble()
 
 
 func _start_crumble() -> void:
@@ -107,5 +109,6 @@ func _build_visual() -> void:
 	var area_shape := CollisionShape2D.new()
 	area_shape.shape = rect_shape.duplicate()
 	area.add_child(area_shape)
-	area.area_entered.connect(_on_area_entered)
+	# Der Spieler ist ein RigidBody2D — area_entered feuert für ihn nie.
+	area.body_entered.connect(_on_body_entered)
 	add_child(area)

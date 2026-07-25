@@ -13,20 +13,22 @@ void fragment() {
 	centered *= 1.0 + curvature * dot(centered, centered);
 	uv = centered * 0.5 + 0.5;
 
+	// Kein "return" im fragment()-Prozessor — das ist in Godot-Shadern
+	// verboten und ließ den Shader komplett fehlschlagen.
 	if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) {
+		// Außerhalb der gekrümmten Bildfläche: schwarzer Rand
 		COLOR = vec4(0.0, 0.0, 0.0, 1.0);
-		return;
+	} else {
+		vec4 col = texture(screen_texture, uv);
+
+		// Scanlines
+		float scanline = sin(uv.y * 800.0) * 0.5 + 0.5;
+		col.rgb -= scanline * scanline_intensity * 0.15;
+
+		// Vignette
+		float vig = 1.0 - vignette_strength * dot(centered, centered) * 0.5;
+		col.rgb *= vig;
+
+		COLOR = col;
 	}
-
-	vec4 col = texture(screen_texture, uv);
-
-	// Scanlines
-	float scanline = sin(uv.y * 800.0) * 0.5 + 0.5;
-	col.rgb -= scanline * scanline_intensity * 0.15;
-
-	// Vignette
-	float vig = 1.0 - vignette_strength * dot(centered, centered) * 0.5;
-	col.rgb *= vig;
-
-	COLOR = col;
 }

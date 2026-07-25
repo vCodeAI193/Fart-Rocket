@@ -15,8 +15,9 @@ var _players_in_zone: int = 0
 
 func _ready() -> void:
 	add_to_group("hazards")
-	area_entered.connect(_on_area_entered)
-	area_exited.connect(_on_area_exited)
+	# Der Spieler ist ein RigidBody2D — area_* feuert für ihn nie.
+	body_entered.connect(_on_body_entered)
+	body_exited.connect(_on_body_exited)
 	_build_visual()
 
 
@@ -72,17 +73,21 @@ func _build_visual() -> void:
 	add_child(cshape)
 
 
-func _on_area_entered(area: Area2D) -> void:
-	if area is Player or area.owner is Player:
-		if _players_in_zone == 0:
-			_original_time_scale = Engine.time_scale
-			Engine.time_scale = time_scale
-		_players_in_zone += 1
+func _on_body_entered(body: Node2D) -> void:
+	var player := body as Player
+	if player == null:
+		return
+	if _players_in_zone == 0:
+		_original_time_scale = Engine.time_scale
+		Engine.time_scale = time_scale
+	_players_in_zone += 1
 
 
-func _on_area_exited(area: Area2D) -> void:
-	if area is Player or area.owner is Player:
-		_players_in_zone -= 1
-		if _players_in_zone <= 0:
-			_players_in_zone = 0
-			Engine.time_scale = _original_time_scale
+func _on_body_exited(body: Node2D) -> void:
+	var player := body as Player
+	if player == null:
+		return
+	_players_in_zone -= 1
+	if _players_in_zone <= 0:
+		_players_in_zone = 0
+		Engine.time_scale = _original_time_scale

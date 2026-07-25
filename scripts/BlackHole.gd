@@ -10,13 +10,15 @@ class_name BlackHole
 @export var color: Color = Color(0.2, 0.0, 0.3, 0.4)
 @export var zone_size: Vector2 = Vector2(100, 100)
 
-var _affected_bodies: Array[Node2D] = []
+var _affected_bodies: Array[Player] = []
 
 
 func _ready() -> void:
 	add_to_group("hazards")
-	area_entered.connect(_on_area_entered)
-	area_exited.connect(_on_area_exited)
+	# Der Spieler ist ein RigidBody2D, kein Area2D — deshalb body_entered
+	# statt area_entered (area_* feuert für ihn nie).
+	body_entered.connect(_on_body_entered)
+	body_exited.connect(_on_body_exited)
 	_build_visual()
 
 
@@ -24,24 +26,27 @@ func _physics_process(delta: float) -> void:
 	for body in _affected_bodies:
 		if not is_instance_valid(body):
 			continue
-		if body is RigidBody2D:
-			var dist := global_position.distance_to(body.global_position)
-			if dist < effect_radius and dist > 1.0:
-				var direction := (global_position - body.global_position).normalized()
-				var force := pull_force * (1.0 - (dist / effect_radius))
-				body.apply_central_force(direction * force)
+		var dist := global_position.distance_to(body.global_position)
+		if dist < effect_radius and dist > 1.0:
+			var direction := (global_position - body.global_position).normalized()
+			var force := pull_force * (1.0 - (dist / effect_radius))
+			body.apply_central_force(direction * force)
 
 
-func _on_area_entered(area: Area2D) -> void:
-	if area is Player or (area.owner is Player):
-		if not area in _affected_bodies:
-			_affected_bodies.append(area)
-		GameManager.vibrate(10)
+func _on_body_entered(body: Node2D) -> void:
+	var player := body as Player
+	if player == null:
+		return
+	if not player in _affected_bodies:
+		_affected_bodies.append(player)
+	GameManager.vibrate(10)
 
 
-func _on_area_exited(area: Area2D) -> void:
-	if area is Player or (area.owner is Player):
-		_affected_bodies.erase(area)
+func _on_body_exited(body: Node2D) -> void:
+	var player := body as Player
+	if player == null:
+		return
+	_affected_bodies.erase(player)
 
 
 func _build_visual() -> void:

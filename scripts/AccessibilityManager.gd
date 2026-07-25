@@ -137,7 +137,11 @@ func show_sound_caption(text: String) -> void:
 		return
 	var layer := CanvasLayer.new()
 	layer.layer = 96
-	tree.root.add_child(layer)
+	# Verzögert eingehängt: wird diese Einblendung ausgelöst, während der
+	# Baum gerade Knoten aufbaut (z.B. aus einem _ready() heraus), lehnt
+	# root.add_child() den direkten Aufruf ab und die Einblendung ginge
+	# still verloren.
+	tree.root.add_child.call_deferred(layer)
 	var label := Label.new()
 	label.text = "♪ " + text
 	label.add_theme_font_size_override("font_size", 22)

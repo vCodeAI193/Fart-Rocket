@@ -976,7 +976,11 @@ func _show_tap_confirmation(screen_pos: Vector2) -> void:
 		return
 	var layer := CanvasLayer.new()
 	layer.layer = 95
-	tree.root.add_child(layer)
+	# Verzögert eingehängt: wird diese Einblendung ausgelöst, während der
+	# Baum gerade Knoten aufbaut (z.B. aus einem _ready() heraus), lehnt
+	# root.add_child() den direkten Aufruf ab und die Einblendung ginge
+	# still verloren.
+	tree.root.add_child.call_deferred(layer)
 	var ring := Line2D.new()
 	ring.width = 4.0
 	ring.default_color = Color(1.0, 1.0, 1.0, 0.8)

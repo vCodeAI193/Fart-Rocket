@@ -12,13 +12,14 @@ class_name BuoyancyZone
 @export var zone_size: Vector2 = Vector2(500, 400)
 @export var color: Color = Color(0.1, 0.5, 0.9, 0.2)
 
-var _bodies_in_zone: Array[Node2D] = []
+var _bodies_in_zone: Array[Player] = []
 
 
 func _ready() -> void:
 	add_to_group("hazards")
-	area_entered.connect(_on_area_entered)
-	area_exited.connect(_on_area_exited)
+	# Der Spieler ist ein RigidBody2D — area_* feuert für ihn nie.
+	body_entered.connect(_on_body_entered)
+	body_exited.connect(_on_body_exited)
 	_build_visual()
 
 
@@ -26,32 +27,35 @@ func _physics_process(delta: float) -> void:
 	for body in _bodies_in_zone:
 		if not is_instance_valid(body):
 			continue
-		if body is RigidBody2D:
-			# Auftrieb nach oben
-			body.apply_central_force(Vector2.UP * buoyancy_force)
+		# Auftrieb nach oben
+		body.apply_central_force(Vector2.UP * buoyancy_force)
 
-			# Strömungs-Kraft
-			body.apply_central_force(current_direction * current_strength)
+		# Strömungs-Kraft
+		body.apply_central_force(current_direction * current_strength)
 
-			# Widerstand (proportional zur Geschwindigkeit)
-			var vel := body.linear_velocity
-			var drag := -vel * drag_coefficient
-			body.apply_central_force(drag)
+		# Widerstand (proportional zur Geschwindigkeit)
+		var vel: Vector2 = body.linear_velocity
+		var drag: Vector2 = -vel * drag_coefficient
+		body.apply_central_force(drag)
 
-			# Wirbel-Effekt (Rotation erzeugen)
-			var torque := vel.x * 0.5
-			body.apply_torque_impulse(torque)
-
-
-func _on_area_entered(area: Area2D) -> void:
-	if area is Player or (area.owner is Player):
-		if not area in _bodies_in_zone:
-			_bodies_in_zone.append(area if area is RigidBody2D else area.owner)
+		# Wirbel-Effekt (Rotation erzeugen)
+		var torque: float = vel.x * 0.5
+		body.apply_torque_impulse(torque)
 
 
-func _on_area_exited(area: Area2D) -> void:
-	if area is Player or (area.owner is Player):
-		_bodies_in_zone.erase(area if area is RigidBody2D else area.owner)
+func _on_body_entered(body: Node2D) -> void:
+	var player := body as Player
+	if player == null:
+		return
+	if not player in _bodies_in_zone:
+		_bodies_in_zone.append(player)
+
+
+func _on_body_exited(body: Node2D) -> void:
+	var player := body as Player
+	if player == null:
+		return
+	_bodies_in_zone.erase(player)
 
 
 func _build_visual() -> void:

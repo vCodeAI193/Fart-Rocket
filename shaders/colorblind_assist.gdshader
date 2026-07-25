@@ -8,11 +8,9 @@ uniform int mode : hint_range(0, 3) = 0;  // 0=aus, 1=Protanopia, 2=Deuteranopia
 
 void fragment() {
 	vec4 col = texture(screen_texture, SCREEN_UV);
-	if (mode == 0) {
-		COLOR = col;
-		return;
-	}
 	vec3 c = col.rgb;
+	// mode == 0 (aus) lässt "result" unverändert — kein "return", das ist
+	// im fragment()-Prozessor verboten und ließ den Shader fehlschlagen.
 	vec3 result = c;
 	if (mode == 1) {
 		// Protanopia-Hilfe: Rot-Grün-Unterschiede in den Blaukanal spreizen

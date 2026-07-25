@@ -16,15 +16,18 @@ var _triggered: bool = false
 
 
 func _ready() -> void:
-	area_entered.connect(_on_area_entered)
+	# Der Spieler ist ein RigidBody2D — area_entered feuert für ihn nie.
+	body_entered.connect(_on_body_entered)
 
 
-func _on_area_entered(area: Area2D) -> void:
+func _on_body_entered(body: Node2D) -> void:
 	if _triggered and one_shot:
 		return
-	if area is Player or area.owner is Player:
-		_triggered = true
-		# Variant statt statischem Typ, da "main" nur per Duck-Typing angesprochen wird
-		var main = get_tree().get_first_node_in_group("main_controller")
-		if main != null and main.has_method("play_camera_transition"):
-			main.play_camera_transition(global_position + focus_point, focus_zoom, transition_duration, hold_duration)
+	var player := body as Player
+	if player == null:
+		return
+	_triggered = true
+	# Variant statt statischem Typ, da "main" nur per Duck-Typing angesprochen wird
+	var main = get_tree().get_first_node_in_group("main_controller")
+	if main != null and main.has_method("play_camera_transition"):
+		main.play_camera_transition(global_position + focus_point, focus_zoom, transition_duration, hold_duration)

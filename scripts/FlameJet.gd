@@ -61,8 +61,9 @@ func _update_state() -> void:
 
 
 func _on_body_entered(body: Node) -> void:
-	if body is Player and _is_active:
-		body._on_body_entered(self)
+	var player := body as Player
+	if player != null and _is_active:
+		player._on_body_entered(self)
 
 
 func _build_visual() -> void:
@@ -74,7 +75,7 @@ func _build_visual() -> void:
 		var flame := Polygon2D.new()
 		var offset := (i - 1) * 0.15
 		var perp := Vector2(-direction.y, direction.x)
-		var len_scale := 1.0 - abs(offset) * 0.5
+		var len_scale := 1.0 - absf(offset) * 0.5
 		flame.polygon = PackedVector2Array([
 			perp * flame_width * 0.3 * (1.0 - offset),
 			-perp * flame_width * 0.3 * (1.0 + offset),

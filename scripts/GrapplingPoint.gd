@@ -17,8 +17,9 @@ var _rope_speed: float = 0.0
 
 func _ready() -> void:
 	add_to_group("hazards")
-	area_entered.connect(_on_area_entered)
-	area_exited.connect(_on_area_exited)
+	# Der Spieler ist ein RigidBody2D — area_* feuert für ihn nie.
+	body_entered.connect(_on_body_entered)
+	body_exited.connect(_on_body_exited)
 	_build_visual()
 
 
@@ -62,19 +63,24 @@ func _physics_process(delta: float) -> void:
 		_player.linear_velocity += correction
 
 
-func _on_area_entered(area: Area2D) -> void:
-	if area is Player and not _grappled:
-		_player = area
-		_grappled = true
-		GameManager.vibrate(20)
+func _on_body_entered(body: Node2D) -> void:
+	var player := body as Player
+	if player == null or _grappled:
+		return
+	_player = player
+	_grappled = true
+	GameManager.vibrate(20)
 
 
-func _on_area_exited(area: Area2D) -> void:
-	if area is Player and _grappled:
-		_grappled = false
-		# Wiederherstellen der Original-Schwerkraft
+func _on_body_exited(body: Node2D) -> void:
+	var player := body as Player
+	if player == null or not _grappled:
+		return
+	_grappled = false
+	# Wiederherstellen der Original-Schwerkraft
+	if _player != null and is_instance_valid(_player):
 		_player.gravity_scale = _player.level_gravity_scale
-		_player = null
+	_player = null
 
 
 func _build_visual() -> void:

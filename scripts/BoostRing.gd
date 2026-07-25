@@ -24,15 +24,16 @@ func _process(delta: float) -> void:
 func _on_body_entered(body: Node) -> void:
 	if _triggered:
 		return
-	if body is Player:
+	var player := body as Player
+	if player != null:
 		_triggered = true
 		# Ladung nachladen
 		GameManager.add_charge()
 		GameManager.vibrate(25)
 		# Schub in Flugrichtung
-		var vel := body.linear_velocity
+		var vel: Vector2 = player.linear_velocity
 		if vel.length() > 10.0:
-			body.apply_central_impulse(vel.normalized() * boost_speed * body.mass)
+			player.apply_central_impulse(vel.normalized() * boost_speed * player.mass)
 		# Aufleuchten und verschwinden
 		var tween := create_tween()
 		tween.set_parallel(true)

@@ -62,7 +62,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		_finger_positions[event.index] = event.position
 		# Merken, falls sich die Finger nennenswert bewegt haben (kein Tipp mehr)
 		if _two_finger_start_positions.has(event.index):
-			var moved := _two_finger_start_positions[event.index].distance_to(event.position)
+			var moved: float = _two_finger_start_positions[event.index].distance_to(event.position)
 			if moved > 24.0:
 				_two_finger_moved = true
 		_update_zoom()
@@ -78,7 +78,7 @@ func _handle_photo_pan(event: InputEvent) -> void:
 		elif not event.pressed and event.index == _photo_pan_touch_index:
 			_photo_pan_touch_index = -1
 	elif event is InputEventScreenDrag and event.index == _photo_pan_touch_index:
-		var delta_pos := event.position - _photo_pan_last_pos
+		var delta_pos: Vector2 = event.position - _photo_pan_last_pos
 		global_position -= delta_pos / zoom
 		_photo_pan_last_pos = event.position
 
@@ -101,16 +101,16 @@ func _update_zoom() -> void:
 		return
 
 	var positions := _finger_positions.values()
-	var finger1 := positions[0]
-	var finger2 := positions[1]
-	var current_distance := finger1.distance_to(finger2)
+	var finger1: Vector2 = positions[0]
+	var finger2: Vector2 = positions[1]
+	var current_distance: float = finger1.distance_to(finger2)
 
 	if _last_distance <= 0.0:
 		_last_distance = current_distance
 		return
 
 	# Zoom-Multiplikator basierend auf Finger-Abstand-Änderung
-	var distance_ratio := current_distance / _last_distance
+	var distance_ratio: float = current_distance / _last_distance
 	user_zoom_scale = clampf(user_zoom_scale * distance_ratio, min_zoom, max_zoom)
 
 	_last_distance = current_distance

@@ -310,7 +310,7 @@ func _on_inventory_changed(stored_type: String) -> void:
 		_inventory_btn.disabled = true
 		_inventory_btn.modulate.a = 0.35
 	else:
-		var label := {"shield": "Schild", "slowmo": "Zeitlupe", "double_coins": "x2"}.get(stored_type, stored_type)
+		var label: String = {"shield": "Schild", "slowmo": "Zeitlupe", "double_coins": "x2"}.get(stored_type, stored_type)
 		_inventory_btn.text = label
 		_inventory_btn.disabled = false
 		_inventory_btn.modulate.a = 1.0
@@ -635,12 +635,12 @@ func _check_swipe_pause_gesture() -> bool:
 	for idx in _swipe_start.keys():
 		var start_data: Dictionary = _swipe_start[idx]
 		var last_pos: Vector2 = _swipe_last.get(idx, start_data["pos"])
-		var delta_y := last_pos.y - start_data["pos"].y
+		var delta_y: float = last_pos.y - start_data["pos"].y
 		var delta_x := absf(last_pos.x - start_data["pos"].x)
 		# Nur werten, wenn die Bewegung überwiegend vertikal nach unten ging
 		if delta_y > 0 and delta_y > delta_x:
 			total_down_movement += delta_y
-		var elapsed := Time.get_ticks_msec() / 1000.0 - start_data["time"]
+		var elapsed: float = Time.get_ticks_msec() / 1000.0 - start_data["time"]
 		max_elapsed = maxf(max_elapsed, elapsed)
 
 	if total_down_movement / 2.0 > 120.0 and max_elapsed < 0.5:
@@ -734,7 +734,7 @@ func show_combo_warning() -> void:
 func _spawn_combo_fireworks() -> void:
 	for i in range(4):
 		var p := CPUParticles2D.new()
-		p.global_position = get_viewport_rect().get_center()
+		p.global_position = get_viewport().get_visible_rect().get_center()
 		p.emitting = true
 		p.one_shot = true
 		p.explosiveness = 0.95

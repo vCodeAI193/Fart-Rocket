@@ -18,33 +18,33 @@ func _ready() -> void:
 	_build_visual()
 
 
-func _on_body_entered(body: Node) -> void:
-	if not (body is Player or (body.owner is Player)):
+func _on_body_entered(body: Node2D) -> void:
+	var player := body as Player
+	if player == null:
 		return
 
 	# Nur wenn nicht gerade geprellt
-	if _last_bounce_body == body and Time.get_ticks_msec() / 1000.0 - _last_bounce_time < 0.1:
+	if _last_bounce_body == player and Time.get_ticks_msec() / 1000.0 - _last_bounce_time < 0.1:
 		return
 
-	if body is RigidBody2D:
-		var vel := body.linear_velocity
-		var normal := _get_bounce_normal(body.global_position)
+	var vel: Vector2 = player.linear_velocity
+	var normal := _get_bounce_normal(player.global_position)
 
-		# Elastischer Rückprall
-		var reflected := vel.reflect(normal) * bounce_elasticity
-		body.linear_velocity = reflected
+	# Elastischer Rückprall
+	var reflected: Vector2 = vel.reflect(normal) * bounce_elasticity
+	player.linear_velocity = reflected
 
-		_last_bounce_body = body
-		_last_bounce_time = Time.get_ticks_msec() / 1000.0
+	_last_bounce_body = player
+	_last_bounce_time = Time.get_ticks_msec() / 1000.0
 
-		GameManager.vibrate(30)
+	GameManager.vibrate(30)
 
 
 func _get_bounce_normal(body_pos: Vector2) -> Vector2:
 	# Bestimme welche Seite der Wand getroffen wurde
 	var local_pos := body_pos - global_position
-	var abs_x := abs(local_pos.x)
-	var abs_y := abs(local_pos.y)
+	var abs_x := absf(local_pos.x)
+	var abs_y := absf(local_pos.y)
 
 	if abs_x > abs_y:
 		return Vector2(1.0 if local_pos.x > 0 else -1.0, 0)
@@ -93,10 +93,6 @@ func _build_visual() -> void:
 	var area_shape := CollisionShape2D.new()
 	area_shape.shape = rect_shape.duplicate()
 	area.add_child(area_shape)
-	area.area_entered.connect(_on_area_entered)
+	# Der Spieler ist ein RigidBody2D — area_entered würde für ihn nie feuern.
+	area.body_entered.connect(_on_body_entered)
 	add_child(area)
-
-
-func _on_area_entered(area: Area2D) -> void:
-	if area is Player or (area.owner is Player):
-		_on_body_entered(area if area is RigidBody2D else area.owner)

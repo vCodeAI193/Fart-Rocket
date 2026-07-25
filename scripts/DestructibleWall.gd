@@ -22,13 +22,13 @@ func _on_body_entered(body: Node) -> void:
 	if _destroyed:
 		return
 
-	if not (body is Player or (body.owner is Player)):
+	var player := body as Player
+	if player == null:
 		return
 
-	if body is RigidBody2D:
-		var speed := body.linear_velocity.length()
-		if speed >= break_speed:
-			_destroy()
+	var speed: float = player.linear_velocity.length()
+	if speed >= break_speed:
+		_destroy()
 
 
 func _destroy() -> void:
