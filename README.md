@@ -115,9 +115,9 @@ im Spiel auffällt.
 
 ## 🧪 Tests & CI
 
-Da in dieser Entwicklungsumgebung kein Godot-Editor/-Binary verfügbar ist,
-gibt es ein schlankes, selbstgeschriebenes GDScript-Test-Framework unter
-`tests/` (kein Drittanbieter-Addon):
+Ein schlankes, selbstgeschriebenes GDScript-Test-Framework unter `tests/`
+(kein Drittanbieter-Addon, da der Netzwerkzugriff dieses Projekts auf sein
+eigenes Repository beschränkt ist):
 
 - `tests/TestCase.gd` — Basisklasse mit `assert_eq`/`assert_true`/
   `assert_false`/`assert_almost_eq`/`assert_gt`.
@@ -127,11 +127,33 @@ gibt es ein schlankes, selbstgeschriebenes GDScript-Test-Framework unter
   (alle bestanden) oder `1` (mindestens ein Fehlschlag) — für CI.
 - Kern-Tests: Sternebewertung, Erfolgs-Freischaltung, Speichern/Laden inkl.
   Backup-Wiederherstellung bei korrupter Datei, Kosmetik-Kauf-/Freischalt-Logik.
+- `tests/test_scenes_and_shaders.gd` — lädt und instanziiert **jede** Szene
+  des Projekts (und damit transitiv jedes daran hängende Skript) und prüft
+  jeden Shader. Dieser Test existiert, weil die Suite zeitweise vollständig
+  grün war, während das Spiel selbst wegen Parse-Fehlern in Objekt-Skripten
+  gar nicht startete — Autoload-Tests allein decken das nicht ab.
 
 `.github/workflows/tests.yml` lädt bei jedem Push/PR ein Godot-4.3-Headless-
 Build herunter, führt zunächst einen reinen Import-/Parse-Durchlauf als
-Compile-Smoke-Test aus (fängt z.B. doppelt deklarierte Funktionen ab) und
-führt danach `tests/TestMain.tscn` aus.
+Compile-Smoke-Test aus (fängt z.B. doppelt deklarierte Funktionen und
+Typfehler ab) und führt danach `tests/TestMain.tscn` aus.
+
+### Lokal ausführen
+
+Beides lässt sich identisch lokal reproduzieren — dafür genügt das
+Headless-Binary, ein Editor wird nicht gebraucht:
+
+```bash
+curl -sSLO https://github.com/godotengine/godot/releases/download/4.3-stable/Godot_v4.3-stable_linux.x86_64.zip
+unzip -q Godot_v4.3-stable_linux.x86_64.zip && chmod +x Godot_v4.3-stable_linux.x86_64
+
+# 1. Compile-Check (muss "0" ausgeben)
+./Godot_v4.3-stable_linux.x86_64 --headless --path . --import --quit 2>&1 \
+  | grep -cE "SCRIPT ERROR|Parse Error|Compile Error"
+
+# 2. Testsuite (Exit-Code 0 = grün)
+./Godot_v4.3-stable_linux.x86_64 --headless --path . res://tests/TestMain.tscn
+```
 
 ## 📁 Projektstruktur
 
