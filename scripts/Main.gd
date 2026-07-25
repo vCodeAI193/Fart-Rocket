@@ -708,7 +708,7 @@ func _update_edge_indicators() -> void:
 		var center := viewport_rect.size * 0.5
 		var dir := (screen_pos - center).normalized()
 		var margin := 60.0
-		var clamped := center + dir * (min(viewport_rect.size.x, viewport_rect.size.y) * 0.5 - margin)
+		var clamped: Vector2 = center + dir * (minf(viewport_rect.size.x, viewport_rect.size.y) * 0.5 - margin)
 		var indicator := _make_edge_arrow(dir)
 		indicator.position = clamped
 		_edge_indicator.add_child(indicator)

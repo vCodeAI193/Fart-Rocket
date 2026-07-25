@@ -14,8 +14,8 @@ var _bodies_in_fall: Array[Node2D] = []
 
 func _ready() -> void:
 	add_to_group("hazards")
-	area_entered.connect(_on_area_entered)
-	area_exited.connect(_on_area_exited)
+	body_entered.connect(_on_body_entered)
+	body_exited.connect(_on_body_exited)
 	_build_visual()
 
 
@@ -44,17 +44,19 @@ func _spawn_droplet() -> void:
 	tween.tween_callback(drop.queue_free)
 
 
-func _on_area_entered(area: Area2D) -> void:
-	if area is Player or area.owner is Player:
-		var body = area if area is RigidBody2D else area.owner
-		if not body in _bodies_in_fall:
-			_bodies_in_fall.append(body)
+func _on_body_entered(body: Node2D) -> void:
+	var player := body as Player
+	if player == null:
+		return
+	if not player in _bodies_in_fall:
+		_bodies_in_fall.append(player)
 
 
-func _on_area_exited(area: Area2D) -> void:
-	if area is Player or area.owner is Player:
-		var body = area if area is RigidBody2D else area.owner
-		_bodies_in_fall.erase(body)
+func _on_body_exited(body: Node2D) -> void:
+	var player := body as Player
+	if player == null:
+		return
+	_bodies_in_fall.erase(player)
 
 
 func _build_visual() -> void:

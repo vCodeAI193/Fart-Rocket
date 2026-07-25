@@ -344,7 +344,7 @@ func _generate_fanfare(sample_rate: int = 22050) -> AudioStreamWAV:
 		var freq: float = notes[note_idx]
 		var local_i := i - note_idx * samples_per_note
 		var t := float(i) / sample_rate
-		var raw := sign(sin(TAU * freq * t))
+		var raw: float = signf(sin(TAU * freq * t))
 		var envelope := 1.0
 		if local_i < fade_samples:
 			envelope = float(local_i) / fade_samples

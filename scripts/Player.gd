@@ -535,7 +535,7 @@ func _execute_fart(drag: Vector2) -> void:
 
 	# FR-004: Im Treibstoff-Modus Energie verbrauchen statt Ladungen
 	if fuel_mode:
-		var fuel_cost := fart["cost"] * 20.0  # Ein "Punkt" = 20 Treibstoff
+		var fuel_cost: float = fart["cost"] * 20.0  # Ein "Punkt" = 20 Treibstoff
 		if _current_fuel < fuel_cost:
 			return
 		_current_fuel -= fuel_cost
@@ -597,7 +597,7 @@ func _calculate_precision_bonus(dir: Vector2) -> float:
 	var perfect_angles := [0.0, PI * 0.5, PI, PI * 1.5]
 	var min_angle_diff := PI
 	for perfect in perfect_angles:
-		var diff := abs(angle - perfect)
+		var diff: float = absf(angle - float(perfect))
 		if diff > PI:
 			diff = TAU - diff
 		min_angle_diff = minf(min_angle_diff, diff)
@@ -1465,10 +1465,10 @@ func _build_aim_arrow() -> void:
 ## FR-048: Simuliert die Flugbahn und zeichnet Vorschau-Punkte.
 func _update_traj_preview(dir: Vector2, strength: float, charge: float) -> void:
 	var fart: Dictionary = FART_TYPES[_fart_type_index]
-	var impulse := fart_power * strength * fart["power"] * (1.0 + charge * charge_hold_bonus)
+	var impulse: float = fart_power * strength * fart["power"] * (1.0 + charge * charge_hold_bonus)
 	var grav := Vector2(0, ProjectSettings.get_setting("physics/2d/default_gravity", 980.0))
 	grav *= gravity_scale
-	var sim_vel := linear_velocity + dir * impulse / mass
+	var sim_vel: Vector2 = linear_velocity + dir * impulse / mass
 	var sim_pos := global_position
 	var dt := 0.06
 	const DOTS := 10

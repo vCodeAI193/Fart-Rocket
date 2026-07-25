@@ -37,9 +37,9 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	for data in _insects:
 		data["angle"] += (insect_speed / swarm_radius) * data["speed_variance"] * delta
-		var r := swarm_radius * data["radius_offset"]
+		var r: float = swarm_radius * data["radius_offset"]
 		var wobble := sin(Time.get_ticks_msec() * 0.005 + data["phase"]) * 10.0
-		var pos := Vector2(cos(data["angle"]), sin(data["angle"])) * (r + wobble)
+		var pos: Vector2 = Vector2(cos(data["angle"]), sin(data["angle"])) * (r + wobble)
 		data["node"].position = pos
 
 

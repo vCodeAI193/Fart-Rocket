@@ -19,8 +19,8 @@ var _original_damp: float = 0.0
 
 func _ready() -> void:
 	add_to_group("hazards")
-	area_entered.connect(_on_area_entered)
-	area_exited.connect(_on_area_exited)
+	body_entered.connect(_on_body_entered)
+	body_exited.connect(_on_body_exited)
 	_build_visual()
 
 
@@ -33,19 +33,23 @@ func _process(delta: float) -> void:
 		_stuck_time = 0.0
 
 
-func _on_area_entered(area: Area2D) -> void:
-	if area is Player:
-		_player_stuck = area
-		_original_damp = area.linear_damp
-		area.linear_damp = 1.0 / maxf(slow_factor, 0.01)
-		GameManager.vibrate(15)
+func _on_body_entered(body: Node2D) -> void:
+	var player := body as Player
+	if player == null:
+		return
+	_player_stuck = player
+	_original_damp = player.linear_damp
+	player.linear_damp = 1.0 / maxf(slow_factor, 0.01)
+	GameManager.vibrate(15)
 
 
-func _on_area_exited(area: Area2D) -> void:
-	if area is Player and area == _player_stuck:
-		area.linear_damp = _original_damp
-		_player_stuck = null
-		_stuck_time = 0.0
+func _on_body_exited(body: Node2D) -> void:
+	var player := body as Player
+	if player == null or player != _player_stuck:
+		return
+	player.linear_damp = _original_damp
+	_player_stuck = null
+	_stuck_time = 0.0
 
 
 func _build_visual() -> void:

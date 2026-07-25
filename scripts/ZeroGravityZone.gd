@@ -16,8 +16,8 @@ var _player_ref: Player = null
 
 func _ready() -> void:
 	add_to_group("hazards")
-	area_entered.connect(_on_area_entered)
-	area_exited.connect(_on_area_exited)
+	body_entered.connect(_on_body_entered)
+	body_exited.connect(_on_body_exited)
 	_build_visual()
 
 
@@ -44,32 +44,25 @@ func _spawn_float_particle() -> void:
 	tween.tween_callback(particle.queue_free)
 
 
-func _on_area_entered(area: Area2D) -> void:
-	if area is Player:
-		_player_ref = area
-		if _players_in_zone == 0:
-			_original_gravity = area.gravity_scale
-			area.gravity_scale = 0.0  # Schwerelosigkeit
-		_players_in_zone += 1
-	elif area.owner is Player:
-		_player_ref = area.owner
-		if _players_in_zone == 0:
-			_original_gravity = area.owner.gravity_scale
-			area.owner.gravity_scale = 0.0
-		_players_in_zone += 1
+func _on_body_entered(body: Node2D) -> void:
+	var player := body as Player
+	if player == null:
+		return
+	_player_ref = player
+	if _players_in_zone == 0:
+		_original_gravity = player.gravity_scale
+		player.gravity_scale = 0.0  # Schwerelosigkeit
+	_players_in_zone += 1
 
 
-func _on_area_exited(area: Area2D) -> void:
-	if area is Player:
-		_players_in_zone -= 1
-		if _players_in_zone <= 0:
-			_players_in_zone = 0
-			area.gravity_scale = _original_gravity
-	elif area.owner is Player:
-		_players_in_zone -= 1
-		if _players_in_zone <= 0:
-			_players_in_zone = 0
-			area.owner.gravity_scale = _original_gravity
+func _on_body_exited(body: Node2D) -> void:
+	var player := body as Player
+	if player == null:
+		return
+	_players_in_zone -= 1
+	if _players_in_zone <= 0:
+		_players_in_zone = 0
+		player.gravity_scale = _original_gravity
 
 
 func _build_visual() -> void:

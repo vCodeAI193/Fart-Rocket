@@ -59,7 +59,7 @@ func test_time_attack_mode_flag_follows_active_mode() -> void:
 
 func test_record_time_attack_only_accepts_improvements() -> void:
 	var test_level := GameManager.TOTAL_LEVELS
-	var original := GameModeManager.time_attack_best_times.get(test_level, INF)
+	var original: float = GameModeManager.time_attack_best_times.get(test_level, INF)
 
 	GameModeManager.time_attack_best_times[test_level] = INF
 	assert_true(GameModeManager.record_time_attack(test_level, 10.0),

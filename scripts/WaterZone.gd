@@ -19,8 +19,8 @@ var _original_drag: float = 0.0
 
 func _ready() -> void:
 	add_to_group("hazards")
-	area_entered.connect(_on_area_entered)
-	area_exited.connect(_on_area_exited)
+	body_entered.connect(_on_body_entered)
+	body_exited.connect(_on_body_exited)
 	_water_surface_y = global_position.y - zone_size.y * 0.5
 	_build_visual()
 
@@ -47,27 +47,29 @@ func _spawn_bubble() -> void:
 	tween.tween_callback(bubble.queue_free)
 
 
-func _on_area_entered(area: Area2D) -> void:
-	if area is Player or area.owner is Player:
-		var player = area if area is Player else area.owner
-		if _players_in_water == 0:
-			_original_gravity = player.gravity_scale
-			_original_drag = player.linear_damp
-			player.gravity_scale = 0.1  # Schwerkraft reduzieren (Auftrieb)
-			player.linear_damp = _original_drag * drag_multiplier
-		_players_in_water += 1
-		_spawn_splash(player.global_position)  # FR-272: Eintauch-Spritzer
+func _on_body_entered(body: Node2D) -> void:
+	var player := body as Player
+	if player == null:
+		return
+	if _players_in_water == 0:
+		_original_gravity = player.gravity_scale
+		_original_drag = player.linear_damp
+		player.gravity_scale = 0.1  # Schwerkraft reduzieren (Auftrieb)
+		player.linear_damp = _original_drag * drag_multiplier
+	_players_in_water += 1
+	_spawn_splash(player.global_position)  # FR-272: Eintauch-Spritzer
 
 
-func _on_area_exited(area: Area2D) -> void:
-	if area is Player or area.owner is Player:
-		var player = area if area is Player else area.owner
-		_players_in_water -= 1
-		if _players_in_water <= 0:
-			_players_in_water = 0
-			player.gravity_scale = _original_gravity
-			player.linear_damp = _original_drag
-			_spawn_splash(player.global_position)  # FR-272: Auftauch-Spritzer
+func _on_body_exited(body: Node2D) -> void:
+	var player := body as Player
+	if player == null:
+		return
+	_players_in_water -= 1
+	if _players_in_water <= 0:
+		_players_in_water = 0
+		player.gravity_scale = _original_gravity
+		player.linear_damp = _original_drag
+		_spawn_splash(player.global_position)  # FR-272: Auftauch-Spritzer
 
 
 ## FR-272: Kurzer Partikel-Spritzer beim Ein-/Austauchen an der Wasseroberfläche.

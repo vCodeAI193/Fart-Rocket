@@ -1,4 +1,5 @@
 extends StaticBody2D
+class_name Obstacle
 ## Obstacle – Hindernisse
 ## ======================
 ## Ein konfigurierbares Hindernis mit drei Formen:

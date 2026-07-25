@@ -151,7 +151,7 @@ func equip_cosmetic(id: String) -> void:
 func is_cosmetic_seasonally_available(id: String) -> bool:
 	if not SEASONAL_COSMETICS.has(id):
 		return true
-	var current_month := Time.get_date_dict_from_system()["month"]
+	var current_month: int = Time.get_date_dict_from_system()["month"]
 	return current_month in SEASONAL_COSMETICS[id]
 
 

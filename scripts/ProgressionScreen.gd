@@ -168,7 +168,9 @@ func _refresh_goals() -> void:
 	for child in _goals_list.get_children():
 		child.queue_free()
 
-	var preview := UIHelpers.make_label(_goals_list, "Nächstes Ziel: %s" % GameManager.get_next_goal_preview()  # FR-320, 26, Color(1.0, 0.85, 0.3))
+	# FR-320: Vorschau auf das nächste Ziel
+	var preview := UIHelpers.make_label(_goals_list,
+		"Nächstes Ziel: %s" % GameManager.get_next_goal_preview(), 26, Color(1.0, 0.85, 0.3))
 
 	# FR-311/312: Saison-Leiste
 	var season_header := UIHelpers.make_label(_goals_list, "\nSaison-Fortschritt (Stufe %d / %d)" % [GameManager.get_season_tier(), GameManager.SEASON_TIER_REWARDS.size()], 28)
