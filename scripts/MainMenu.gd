@@ -277,33 +277,20 @@ func _on_level_info_pressed(level_index: int) -> void:
 	for child in vbox.get_children():
 		child.queue_free()
 
-	var title := Label.new()
-	title.text = "Level %d" % level_index
-	title.add_theme_font_size_override("font_size", 40)
+	var title := UIHelpers.make_label(vbox, "Level %d" % level_index, 40)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	vbox.add_child(title)
 
 	var stars: int = GameManager.level_stars.get(level_index, 0)
-	var stars_label := Label.new()
-	stars_label.text = "★".repeat(stars) + "☆".repeat(3 - stars)
-	stars_label.add_theme_font_size_override("font_size", 40)
-	stars_label.add_theme_color_override("font_color", Color(1, 0.82, 0.15))
+	var stars_label := UIHelpers.make_label(vbox, "★".repeat(stars) + "☆".repeat(3 - stars), 40, Color(1, 0.82, 0.15))
 	stars_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	vbox.add_child(stars_label)
 
 	var best_time := GameModeManager.get_best_time(level_index)
-	var time_label := Label.new()
-	time_label.text = "Bestzeit: %.1fs" % best_time if best_time != INF else "Bestzeit: —"
-	time_label.add_theme_font_size_override("font_size", 28)
+	var time_label := UIHelpers.make_label(vbox, "Bestzeit: %.1fs" % best_time if best_time != INF else "Bestzeit: —", 28)
 	time_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	vbox.add_child(time_label)
 
 	var attempts: int = GameManager.level_attempt_times.get(level_index, []).size()
-	var attempts_label := Label.new()
-	attempts_label.text = "Versuche: %d" % attempts
-	attempts_label.add_theme_font_size_override("font_size", 28)
+	var attempts_label := UIHelpers.make_label(vbox, "Versuche: %d" % attempts, 28)
 	attempts_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	vbox.add_child(attempts_label)
 
 	var close_btn := Button.new()
 	close_btn.text = "Schließen"

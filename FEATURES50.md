@@ -61,15 +61,18 @@ Tod und Ragdoll. Was fehlt, ist Lebendigkeit am Männchen selbst.
 
 ## E. UI-Deduplizierung fertigstellen
 
-`UIHelpers.gd` existiert, aber bislang wurde nur `make_close_button()`
-migriert — 45 rohe `Label.new()` und 25 rohe `Button.new()` verbleiben.
+`UIHelpers.gd` existierte, aber bislang war nur `make_close_button()`
+migriert — 45 rohe `Label.new()` und 25 rohe `Button.new()` verblieben.
+Ergebnis: 36 der 45 Label-Blöcke laufen jetzt über `make_label()`; die
+9 verbleibenden setzen Text/Farbe erst über if/elif-Ketten oder brauchen
+mehrere Anchor-Offsets und passen bewusst nicht in die Fabrik.
 
-- [ ] **F34** `UIHelpers.make_label()` ergänzen
-- [ ] **F35** `UIHelpers.make_title_label()` ergänzen
-- [ ] **F36** ShopScreen.gd auf UIHelpers migrieren
-- [ ] **F37** ProgressionScreen.gd migrieren
-- [ ] **F38** CollectionScreen.gd migrieren
-- [ ] **F39** MainMenu.gd + GameModeScreen.gd migrieren
+- [x] **F34** `UIHelpers.make_label()` ergänzen
+- [x] **F35** `UIHelpers.make_title_label()` ergänzen
+- [x] **F36** ShopScreen.gd auf UIHelpers migrieren
+- [x] **F37** ProgressionScreen.gd migrieren
+- [x] **F38** CollectionScreen.gd migrieren
+- [x] **F39** MainMenu.gd + GameModeScreen.gd migrieren
 
 ## F. Tests (Abdeckungslücken schließen)
 

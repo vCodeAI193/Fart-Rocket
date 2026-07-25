@@ -27,13 +27,50 @@ extends RefCounted
 ## VBoxContainer-Liste). Größe/Schriftgröße sind für Einstellungs-Listen
 ## voreingestellt, aber überschreibbar.
 static func make_button(parent: Node, callback: Callable,
-		size: Vector2 = Vector2(400, 76), font_size: int = 26) -> Button:
+		size: Vector2 = Vector2(400, 76), font_size: int = 26,
+		text: String = "") -> Button:
 	var btn := Button.new()
+	if text != "":
+		btn.text = text
 	btn.custom_minimum_size = size
 	btn.add_theme_font_size_override("font_size", font_size)
 	btn.pressed.connect(callback)
 	parent.add_child(btn)
 	return btn
+
+
+## Wendet nur die übliche Größen-/Schriftgröße auf einen bereits erzeugten
+## Button an. Für die zahlreichen Fälle, in denen Text und `disabled` erst
+## über eine if/elif-Kette bestimmt werden und make_button() deshalb nicht
+## passt — spart trotzdem die beiden immer gleichen Styling-Zeilen.
+static func style_button(btn: Button, size: Vector2, font_size: int) -> Button:
+	btn.custom_minimum_size = size
+	btn.add_theme_font_size_override("font_size", font_size)
+	return btn
+
+
+## F34: Gestyltes Label, an ein Elternelement gehängt. Deckt den mit
+## Abstand häufigsten Fall in den Bildschirm-Skripten ab: Label.new() +
+## Schriftgröße + optionale Schriftfarbe + add_child().
+static func make_label(parent: Node, text: String, font_size: int = 24,
+		color: Color = Color.WHITE) -> Label:
+	var label := Label.new()
+	label.text = text
+	label.add_theme_font_size_override("font_size", font_size)
+	if color != Color.WHITE:
+		label.add_theme_color_override("font_color", color)
+	parent.add_child(label)
+	return label
+
+
+## F35: Zentrierte Bildschirm-Überschrift (z.B. "Shop", "Einstellungen").
+static func make_title_label(parent: Node, text: String, font_size: int = 48) -> Label:
+	var label := Label.new()
+	label.text = text
+	label.add_theme_font_size_override("font_size", font_size)
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	parent.add_child(label)
+	return label
 
 
 ## Standard-"Schließen"-Button unten rechts (spielt einen UI-Klick und

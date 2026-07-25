@@ -28,21 +28,15 @@ func _build_ui() -> void:
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(bg)
 
-	var title := Label.new()
-	title.text = "Spielmodus wählen"
+	var title := UIHelpers.make_label(bg, "Spielmodus wählen", 34)
 	title.set_anchors_preset(Control.PRESET_TOP_LEFT)
 	title.offset_left = 40
 	title.offset_top = 24
-	title.add_theme_font_size_override("font_size", 34)
-	bg.add_child(title)
 
-	_active_label = Label.new()
+	_active_label = UIHelpers.make_label(bg, "", 24, Color(1.0, 0.85, 0.3))
 	_active_label.set_anchors_preset(Control.PRESET_TOP_LEFT)
 	_active_label.offset_left = 40
 	_active_label.offset_top = 70
-	_active_label.add_theme_font_size_override("font_size", 24)
-	_active_label.add_theme_color_override("font_color", Color(1.0, 0.85, 0.3))
-	bg.add_child(_active_label)
 
 	var scroll := ScrollContainer.new()
 	scroll.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -83,11 +77,8 @@ func _refresh() -> void:
 		if mode == GameModeManager.active_game_mode:
 			name_label.add_theme_color_override("font_color", Color(0.4, 1.0, 0.5))
 		text_box.add_child(name_label)
-		var desc_label := Label.new()
-		desc_label.text = String(info["desc"]) + _best_score_suffix(mode)
-		desc_label.add_theme_font_size_override("font_size", 20)
+		var desc_label := UIHelpers.make_label(text_box, String(info["desc"]) + _best_score_suffix(mode), 20)
 		desc_label.autowrap_mode = TextServer.AUTOWRAP_WORD
-		text_box.add_child(desc_label)
 
 		var select_btn := Button.new()
 		select_btn.text = "Aktiv" if mode == GameModeManager.active_game_mode else "Wählen"

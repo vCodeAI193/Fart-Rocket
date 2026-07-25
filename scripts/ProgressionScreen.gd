@@ -55,13 +55,10 @@ func _build_ui() -> void:
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(bg)
 
-	_balance_label = Label.new()
+	_balance_label = UIHelpers.make_label(bg, "", 30, Color(1.0, 0.85, 0.3))
 	_balance_label.set_anchors_preset(Control.PRESET_TOP_LEFT)
 	_balance_label.offset_left = 40
 	_balance_label.offset_top = 24
-	_balance_label.add_theme_font_size_override("font_size", 30)
-	_balance_label.add_theme_color_override("font_color", Color(1.0, 0.85, 0.3))
-	bg.add_child(_balance_label)
 
 	_tab_container = TabContainer.new()
 	_tab_container.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -149,8 +146,7 @@ func _refresh_skills() -> void:
 		hbox.add_child(name_label)
 
 		var btn := Button.new()
-		btn.custom_minimum_size = Vector2(220, 60)
-		btn.add_theme_font_size_override("font_size", 24)
+		UIHelpers.style_button(btn, Vector2(220, 60), 24)
 		if owned:
 			btn.text = "Freigeschaltet"
 			btn.disabled = true
@@ -172,20 +168,12 @@ func _refresh_goals() -> void:
 	for child in _goals_list.get_children():
 		child.queue_free()
 
-	var preview := Label.new()
-	preview.text = "Nächstes Ziel: %s" % GameManager.get_next_goal_preview()  # FR-320
-	preview.add_theme_font_size_override("font_size", 26)
-	preview.add_theme_color_override("font_color", Color(1.0, 0.85, 0.3))
-	_goals_list.add_child(preview)
+	var preview := UIHelpers.make_label(_goals_list, "Nächstes Ziel: %s" % GameManager.get_next_goal_preview()  # FR-320, 26, Color(1.0, 0.85, 0.3))
 
 	# FR-311/312: Saison-Leiste
-	var season_header := Label.new()
-	season_header.text = "\nSaison-Fortschritt (Stufe %d / %d)" % [GameManager.get_season_tier(), GameManager.SEASON_TIER_REWARDS.size()]
-	season_header.add_theme_font_size_override("font_size", 28)
-	_goals_list.add_child(season_header)
+	var season_header := UIHelpers.make_label(_goals_list, "\nSaison-Fortschritt (Stufe %d / %d)" % [GameManager.get_season_tier(), GameManager.SEASON_TIER_REWARDS.size()], 28)
 	var season_claim_btn := Button.new()
-	season_claim_btn.custom_minimum_size = Vector2(320, 64)
-	season_claim_btn.add_theme_font_size_override("font_size", 24)
+	UIHelpers.style_button(season_claim_btn, Vector2(320, 64), 24)
 	season_claim_btn.text = "Saison-Belohnung abholen"
 	season_claim_btn.pressed.connect(func():
 		var reward := GameManager.claim_season_tier_reward()
@@ -197,37 +185,21 @@ func _refresh_goals() -> void:
 	_goals_list.add_child(season_claim_btn)
 
 	# FR-310: Wöchentliche Ziele
-	var weekly_header := Label.new()
-	weekly_header.text = "\nWöchentliche Ziele"
-	weekly_header.add_theme_font_size_override("font_size", 28)
-	_goals_list.add_child(weekly_header)
+	var weekly_header := UIHelpers.make_label(_goals_list, "\nWöchentliche Ziele", 28)
 	for goal in GameManager.WEEKLY_GOALS:
 		var progress: int = int(GameManager.weekly_progress.get(goal["id"], 0))
 		var claimed: bool = GameManager.weekly_claimed.get(goal["id"], false)
 		var row := HBoxContainer.new()
-		var key_label := Label.new()
-		key_label.text = str(goal["name"])
+		var key_label := UIHelpers.make_label(row, str(goal["name"]), 24)
 		key_label.custom_minimum_size = Vector2(360, 0)
-		key_label.add_theme_font_size_override("font_size", 24)
-		row.add_child(key_label)
-		var value_label := Label.new()
-		value_label.text = "✓ eingelöst" if claimed else "%d / %d" % [progress, int(goal["target"])]
-		value_label.add_theme_font_size_override("font_size", 24)
-		value_label.add_theme_color_override("font_color", Color(0.4, 1.0, 0.5) if claimed else Color.WHITE)
-		row.add_child(value_label)
+		var value_label := UIHelpers.make_label(row, "✓ eingelöst" if claimed else "%d / %d" % [progress, int(goal["target"])], 24, Color(0.4, 1.0, 0.5) if claimed else Color.WHITE)
 		_goals_list.add_child(row)
 
 	# FR-313: Sparschwein
-	var piggy_header := Label.new()
-	piggy_header.text = "\nSparschwein"
-	piggy_header.add_theme_font_size_override("font_size", 28)
-	_goals_list.add_child(piggy_header)
+	var piggy_header := UIHelpers.make_label(_goals_list, "\nSparschwein", 28)
 	var piggy_row := HBoxContainer.new()
-	var piggy_label := Label.new()
-	piggy_label.text = "%d / %d Münzen" % [GameManager.piggy_bank_amount, GameManager.PIGGY_BANK_CAP]
+	var piggy_label := UIHelpers.make_label(piggy_row, "%d / %d Münzen" % [GameManager.piggy_bank_amount, GameManager.PIGGY_BANK_CAP], 24)
 	piggy_label.custom_minimum_size = Vector2(360, 0)
-	piggy_label.add_theme_font_size_override("font_size", 24)
-	piggy_row.add_child(piggy_label)
 	var piggy_btn := Button.new()
 	piggy_btn.text = "Aufbrechen"
 	piggy_btn.custom_minimum_size = Vector2(200, 56)
@@ -256,11 +228,8 @@ func _refresh_prestige() -> void:
 	info.add_theme_font_size_override("font_size", 28)
 	_prestige_list.add_child(info)
 
-	var explain := Label.new()
-	explain.text = "Setzt Level-Sterne zurück, erhöht dauerhaft die Münz-Belohnung.\nSkills, Kosmetik und Guthaben bleiben erhalten.\nBenötigt: %d Sterne insgesamt." % GameManager.PRESTIGE_STAR_REQUIREMENT
-	explain.add_theme_font_size_override("font_size", 22)
+	var explain := UIHelpers.make_label(_prestige_list, "Setzt Level-Sterne zurück, erhöht dauerhaft die Münz-Belohnung.\nSkills, Kosmetik und Guthaben bleiben erhalten.\nBenötigt: %d Sterne insgesamt." % GameManager.PRESTIGE_STAR_REQUIREMENT, 22)
 	explain.autowrap_mode = TextServer.AUTOWRAP_WORD
-	_prestige_list.add_child(explain)
 
 	var prestige_btn := Button.new()
 	prestige_btn.text = "Prestige starten"
@@ -329,18 +298,11 @@ func _refresh_achievements() -> void:
 		var hbox := HBoxContainer.new()
 		row.add_child(hbox)
 
-		var name_label := Label.new()
-		name_label.text = "???" if is_hidden else String(data["name"])
+		var name_label := UIHelpers.make_label(hbox, "???" if is_hidden else String(data["name"]), 24, Color(0.4, 1.0, 0.5) if owned else Color(0.7, 0.7, 0.7))
 		name_label.custom_minimum_size = Vector2(280, 0)
-		name_label.add_theme_font_size_override("font_size", 24)
-		name_label.add_theme_color_override("font_color", Color(0.4, 1.0, 0.5) if owned else Color(0.7, 0.7, 0.7))
-		hbox.add_child(name_label)
 
-		var desc_label := Label.new()
-		desc_label.text = "???" if is_hidden else String(data["desc"])
+		var desc_label := UIHelpers.make_label(hbox, "???" if is_hidden else String(data["desc"]), 20)
 		desc_label.custom_minimum_size = Vector2(360, 0)
-		desc_label.add_theme_font_size_override("font_size", 20)
-		hbox.add_child(desc_label)
 
 		var status_label := Label.new()
 		var cat_name: String = _category_names.get(int(data["category"]), "")
@@ -362,14 +324,10 @@ func _build_challenge_row(text: String, progress: int, target: int, claimed: boo
 	var row := PanelContainer.new()
 	var hbox := HBoxContainer.new()
 	row.add_child(hbox)
-	var label := Label.new()
-	label.text = "%s (%d / %d)" % [text, mini(progress, target), target]
+	var label := UIHelpers.make_label(hbox, "%s (%d / %d)" % [text, mini(progress, target), target], 22)
 	label.custom_minimum_size = Vector2(600, 0)
-	label.add_theme_font_size_override("font_size", 22)
-	hbox.add_child(label)
 	var btn := Button.new()
-	btn.custom_minimum_size = Vector2(160, 56)
-	btn.add_theme_font_size_override("font_size", 22)
+	UIHelpers.style_button(btn, Vector2(160, 56), 22)
 	if claimed:
 		btn.text = "Eingelöst"
 		btn.disabled = true

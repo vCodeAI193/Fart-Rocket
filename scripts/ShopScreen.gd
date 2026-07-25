@@ -112,16 +112,12 @@ func _refresh_color_tab() -> void:
 		swatch.custom_minimum_size = Vector2(50, 50)
 		swatch.color = offer["color"]
 		row.add_child(swatch)
-		var name_label := Label.new()
-		name_label.text = offer["name"]
+		var name_label := UIHelpers.make_label(row, offer["name"], 30)
 		name_label.custom_minimum_size = Vector2(220, 0)
-		name_label.add_theme_font_size_override("font_size", 30)
-		row.add_child(name_label)
 		var owned: bool = offer["id"] in CosmeticsManager.unlocked_skin_colors
 		var active: bool = CosmeticsManager.active_skin_color == offer["id"]
 		var btn := Button.new()
-		btn.custom_minimum_size = Vector2(220, 64)
-		btn.add_theme_font_size_override("font_size", 26)
+		UIHelpers.style_button(btn, Vector2(220, 64), 26)
 		if active:
 			btn.text = "Aktiv"
 			btn.disabled = true
@@ -138,11 +134,8 @@ func _refresh_color_tab() -> void:
 	# FR-180: Eigener Farb-Editor (freies RGB) für den Standard-Skin
 	var custom_row := HBoxContainer.new()
 	custom_row.add_theme_constant_override("separation", 20)
-	var custom_label := Label.new()
-	custom_label.text = "Eigene Farbe"
+	var custom_label := UIHelpers.make_label(custom_row, "Eigene Farbe", 30)
 	custom_label.custom_minimum_size = Vector2(220, 0)
-	custom_label.add_theme_font_size_override("font_size", 30)
-	custom_row.add_child(custom_label)
 	_custom_color_picker = ColorPickerButton.new()
 	_custom_color_picker.custom_minimum_size = Vector2(220, 64)
 	_custom_color_picker.color = CosmeticsManager.custom_skin_color
@@ -194,19 +187,15 @@ func _refresh_slot_tab(slot: String) -> void:
 		rarity_bar.color = RARITY_COLORS.get(info["rarity"], Color.WHITE)
 		row.add_child(rarity_bar)
 
-		var name_label := Label.new()
-		name_label.text = info["name"]
+		var name_label := UIHelpers.make_label(row, info["name"], 28)
 		name_label.custom_minimum_size = Vector2(280, 0)
-		name_label.add_theme_font_size_override("font_size", 28)
-		row.add_child(name_label)
 
 		var seasonal_ok := CosmeticsManager.is_cosmetic_seasonally_available(id)  # FR-172
 		var owned: bool = id in CosmeticsManager.unlocked_cosmetics
 		var active: bool = _is_equipped(id, slot)
 
 		var btn := Button.new()
-		btn.custom_minimum_size = Vector2(220, 60)
-		btn.add_theme_font_size_override("font_size", 24)
+		UIHelpers.style_button(btn, Vector2(220, 60), 24)
 		if not seasonal_ok and not owned:
 			btn.text = "Saisonal nicht verfügbar"
 			btn.disabled = true
@@ -258,22 +247,16 @@ func _build_ui() -> void:
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(bg)
 
-	var title := Label.new()
-	title.text = "Shop"
-	title.add_theme_font_size_override("font_size", 48)
+	var title := UIHelpers.make_label(bg, "Shop", 48)
 	title.position = Vector2(60, 30)
-	bg.add_child(title)
 
-	_balance_label = Label.new()
-	_balance_label.add_theme_font_size_override("font_size", 28)
-	_balance_label.add_theme_color_override("font_color", Color(1.0, 0.85, 0.2))
+	_balance_label = UIHelpers.make_label(bg, "", 28, Color(1.0, 0.85, 0.2))
 	_balance_label.set_anchors_preset(Control.PRESET_TOP_RIGHT)
 	_balance_label.offset_left = -420.0
 	_balance_label.offset_top = 30.0
 	_balance_label.offset_right = -40.0
 	_balance_label.offset_bottom = 65.0
 	_balance_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	bg.add_child(_balance_label)
 
 	_progress_label = Label.new()  # FR-178
 	_progress_label.add_theme_font_size_override("font_size", 22)
@@ -298,8 +281,7 @@ func _build_ui() -> void:
 	bg.add_child(_preview_label)
 
 	_daily_skin_btn = Button.new()  # FR-174
-	_daily_skin_btn.custom_minimum_size = Vector2(480, 56)
-	_daily_skin_btn.add_theme_font_size_override("font_size", 24)
+	UIHelpers.style_button(_daily_skin_btn, Vector2(480, 56), 24)
 	_daily_skin_btn.set_anchors_preset(Control.PRESET_TOP_LEFT)
 	_daily_skin_btn.offset_left = 60.0
 	_daily_skin_btn.offset_top = 95.0

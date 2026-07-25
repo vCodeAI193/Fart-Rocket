@@ -48,10 +48,7 @@ func _build_ui() -> void:
 	sticker_vbox.add_theme_constant_override("separation", 16)
 	sticker_scroll.add_child(sticker_vbox)
 	# FR-307: Sammel-Album-Fortschritt als Prozent-Anzeige über dem Raster
-	_album_progress_label = Label.new()
-	_album_progress_label.add_theme_font_size_override("font_size", 28)
-	_album_progress_label.add_theme_color_override("font_color", Color(1.0, 0.85, 0.3))
-	sticker_vbox.add_child(_album_progress_label)
+	_album_progress_label = UIHelpers.make_label(sticker_vbox, "", 28, Color(1.0, 0.85, 0.3))
 	_sticker_grid = GridContainer.new()
 	_sticker_grid.columns = 4
 	_sticker_grid.add_theme_constant_override("h_separation", 16)
@@ -70,11 +67,8 @@ func _build_ui() -> void:
 	var credits_scroll := ScrollContainer.new()
 	credits_scroll.name = "Credits"
 	_tab_container.add_child(credits_scroll)
-	var credits_label := Label.new()
-	credits_label.text = "\nFart Rocket\n\nEin Godot-4-Arcade-Spiel\nEntwickelt mit prozeduraler Grafik —\nkeine externen Assets.\n\nDanke fürs Spielen! 🚀"
-	credits_label.add_theme_font_size_override("font_size", 30)
+	var credits_label := UIHelpers.make_label(credits_scroll, "\nFart Rocket\n\nEin Godot-4-Arcade-Spiel\nEntwickelt mit prozeduraler Grafik —\nkeine externen Assets.\n\nDanke fürs Spielen! 🚀", 30)
 	credits_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	credits_scroll.add_child(credits_label)
 
 	_tab_container.tab_changed.connect(func(_i): GameManager.play_ui_click())
 
@@ -94,13 +88,9 @@ func _refresh_stickers() -> void:
 		var owned: bool = sticker_name in GameManager.collected_stickers
 		var card := PanelContainer.new()
 		card.custom_minimum_size = Vector2(180, 120)
-		var label := Label.new()
-		label.text = sticker_name if owned else "???"
-		label.add_theme_font_size_override("font_size", 26)
-		label.add_theme_color_override("font_color", Color.WHITE if owned else Color(0.4, 0.4, 0.4))
+		var label := UIHelpers.make_label(card, sticker_name if owned else "???", 26, Color.WHITE if owned else Color(0.4, 0.4, 0.4))
 		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		card.add_child(label)
 		_sticker_grid.add_child(card)
 
 
@@ -122,62 +112,31 @@ func _refresh_stats() -> void:
 	]
 	for entry in entries:
 		var row := HBoxContainer.new()
-		var key_label := Label.new()
-		key_label.text = entry[0]
+		var key_label := UIHelpers.make_label(row, entry[0], 28)
 		key_label.custom_minimum_size = Vector2(360, 0)
-		key_label.add_theme_font_size_override("font_size", 28)
-		row.add_child(key_label)
-		var value_label := Label.new()
-		value_label.text = entry[1]
-		value_label.add_theme_font_size_override("font_size", 28)
-		value_label.add_theme_color_override("font_color", Color(1.0, 0.85, 0.3))
-		row.add_child(value_label)
+		var value_label := UIHelpers.make_label(row, entry[1], 28, Color(1.0, 0.85, 0.3))
 		_stats_list.add_child(row)
 
 	# FR-315: Hinweis auf die 100%-Komplettierungs-Belohnung
 	if GameManager.get_overall_progress_percent() >= 100.0:
-		var complete_label := Label.new()
-		complete_label.text = "★ 100%% abgeschlossen — alle Level mit 3 Sternen gemeistert!"
-		complete_label.add_theme_font_size_override("font_size", 26)
-		complete_label.add_theme_color_override("font_color", Color(0.4, 1.0, 0.5))
-		_stats_list.add_child(complete_label)
+		var complete_label := UIHelpers.make_label(_stats_list, "★ 100% abgeschlossen — alle Level mit 3 Sternen gemeistert!", 26, Color(0.4, 1.0, 0.5))
 
 	# FR-317: Persönliche Bestzeiten je Level
-	var times_header := Label.new()
-	times_header.text = "\nBestzeiten"
-	times_header.add_theme_font_size_override("font_size", 28)
-	_stats_list.add_child(times_header)
+	var times_header := UIHelpers.make_label(_stats_list, "\nBestzeiten", 28)
 	for lvl in range(1, GameManager.TOTAL_LEVELS + 1):
 		var best := GameManager.get_best_attempt_time(lvl)
 		var row := HBoxContainer.new()
-		var key_label := Label.new()
-		key_label.text = "Level %d" % lvl
+		var key_label := UIHelpers.make_label(row, "Level %d" % lvl, 26)
 		key_label.custom_minimum_size = Vector2(360, 0)
-		key_label.add_theme_font_size_override("font_size", 26)
-		row.add_child(key_label)
-		var value_label := Label.new()
-		value_label.text = "%.2f s" % best if best >= 0.0 else "—"
-		value_label.add_theme_font_size_override("font_size", 26)
-		value_label.add_theme_color_override("font_color", Color(0.5, 0.85, 1.0))
-		row.add_child(value_label)
+		var value_label := UIHelpers.make_label(row, "%.2f s" % best if best >= 0.0 else "—", 26, Color(0.5, 0.85, 1.0))
 		_stats_list.add_child(row)
 
 	# FR-318: Statistik-getriebene Abzeichen
-	var badges_header := Label.new()
-	badges_header.text = "\nAbzeichen"
-	badges_header.add_theme_font_size_override("font_size", 28)
-	_stats_list.add_child(badges_header)
+	var badges_header := UIHelpers.make_label(_stats_list, "\nAbzeichen", 28)
 	for badge in GameManager.STAT_BADGES:
 		var owned: bool = badge["id"] in GameManager.earned_badges
 		var row := HBoxContainer.new()
-		var key_label := Label.new()
-		key_label.text = badge["name"] if owned else "???"
+		var key_label := UIHelpers.make_label(row, badge["name"] if owned else "???", 26, Color.WHITE if owned else Color(0.4, 0.4, 0.4))
 		key_label.custom_minimum_size = Vector2(360, 0)
-		key_label.add_theme_font_size_override("font_size", 26)
-		key_label.add_theme_color_override("font_color", Color.WHITE if owned else Color(0.4, 0.4, 0.4))
-		row.add_child(key_label)
-		var value_label := Label.new()
-		value_label.text = "freigeschaltet" if owned else "gesperrt"
-		value_label.add_theme_font_size_override("font_size", 26)
-		row.add_child(value_label)
+		var value_label := UIHelpers.make_label(row, "freigeschaltet" if owned else "gesperrt", 26)
 		_stats_list.add_child(row)
