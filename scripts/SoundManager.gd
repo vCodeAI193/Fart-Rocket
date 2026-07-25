@@ -35,14 +35,30 @@ var _duck_tween: Tween
 var _loop_cache: Dictionary = {}  # "<track_id>:<intense>" -> AudioStreamWAV
 var _tone_cache: Dictionary = {}  # Schlüssel -> AudioStreamWAV (Einzeltöne/Fanfare)
 
-# --- FR-165: Prozedurale Furz-Sound-Pakete -------------------------------
-var _fart_sound_cache: Dictionary = {}  # pack_id -> AudioStreamWAV
+# --- FR-165/244 (F20): Prozedurale Furz-Sound-Pakete ---------------------
+var _fart_sound_cache: Dictionary = {}  # "<pack>:<charge-stufe>" -> AudioStreamWAV
 var _fart_sound_players: Array[AudioStreamPlayer] = []
 const FART_SOUND_POOL_SIZE := 3
+
+# --- FR-243 (F19): Münz-Tonleiter ----------------------------------------
+# Jede Münze in einer Combo-Serie klingt eine Stufe höher (Dur-Pentatonik,
+# damit auch lange Serien harmonisch bleiben). Nach Ablauf der Serie
+# beginnt die Leiter wieder unten.
+const COIN_SCALE_SEMITONES := [0, 2, 4, 7, 9, 12, 14, 16, 19, 21]
+const COIN_BASE_FREQ := 660.0
+
+# --- FR-248 (F22): Ambient-Soundscape pro Level-Thema --------------------
+var _ambient_player: AudioStreamPlayer
+var _ambient_cache: Dictionary = {}  # theme_id -> AudioStreamWAV
+
+# --- FR-258 (F23): Reverb-Bus für Ambient/Stinger ------------------------
+const REVERB_BUS_NAME := "Reverb"
+var _reverb_bus_idx: int = -1
 
 
 func _ready() -> void:
 	_ensure_music_bus()
+	_ensure_reverb_bus()  # FR-258 (F23)
 
 	_music_player_calm = AudioStreamPlayer.new()
 	_music_player_calm.bus = MUSIC_BUS_NAME
@@ -53,10 +69,35 @@ func _ready() -> void:
 	_music_player_intense.volume_db = -80.0
 	add_child(_music_player_intense)
 
+	# FR-248 (F22): Dauerhaft laufender Ambient-Layer über den Reverb-Bus
+	_ambient_player = AudioStreamPlayer.new()
+	_ambient_player.bus = REVERB_BUS_NAME
+	_ambient_player.volume_db = -14.0
+	add_child(_ambient_player)
+
 	apply_music_volume()
 
 	GameManager.combo_changed.connect(_on_combo_changed)      # FR-254
 	GameManager.charges_changed.connect(_on_charges_changed)  # FR-242
+
+
+## FR-258 (F23): Legt einen Reverb-Bus an, der zum Music-Bus sendet.
+## Ambient-Klänge und Stinger laufen darüber und bekommen dadurch
+## räumliche Tiefe, ohne dass die SFX auf dem Master-Bus verhallen.
+func _ensure_reverb_bus() -> void:
+	_reverb_bus_idx = AudioServer.get_bus_index(REVERB_BUS_NAME)
+	if _reverb_bus_idx != -1:
+		return
+	AudioServer.add_bus()
+	_reverb_bus_idx = AudioServer.bus_count - 1
+	AudioServer.set_bus_name(_reverb_bus_idx, REVERB_BUS_NAME)
+	AudioServer.set_bus_send(_reverb_bus_idx, MUSIC_BUS_NAME)
+	var reverb := AudioEffectReverb.new()
+	reverb.room_size = 0.7
+	reverb.damping = 0.4
+	reverb.wet = 0.35
+	reverb.dry = 0.8
+	AudioServer.add_bus_effect(_reverb_bus_idx, reverb)
 
 
 ## Legt bei Bedarf einen eigenen "Music"-Bus an, der zum Master-Bus
@@ -383,15 +424,25 @@ func play_ui_click(pitch: float = 1.0) -> void:
 
 ## FR-165/257: Spielt einen prozedural erzeugten Furz-Sound passend zum
 ## ausgerüsteten Sound-Paket ab, moduliert durch die Stoßstärke.
+## FR-016/244 (F20/F24): `strength` (0..1) wählt jetzt zusätzlich eine von
+## drei klanglich unterschiedlichen Varianten je Sound-Paket aus, statt nur
+## die Tonhöhe zu verschieben — ein zaghafter Stups klingt dadurch hörbar
+## anders als ein voll aufgeladener Mega-Furz.
 func play_fart_sound(strength: float = 1.0) -> void:
 	if sound_muted:
 		return
 	duck_for_sfx()  # FR-251: Musik kurz leiser für den Stoß
 	var pack := CosmeticsManager.equipped_fart_sound
-	if not _fart_sound_cache.has(pack):
-		_fart_sound_cache[pack] = _generate_fart_tone(pack)
+	var stage := 0
+	if strength > 0.66:
+		stage = 2
+	elif strength > 0.33:
+		stage = 1
+	var key := "%s:%d" % [pack, stage]
+	if not _fart_sound_cache.has(key):
+		_fart_sound_cache[key] = _generate_fart_tone(pack, stage)
 	var player := _get_free_fart_player()
-	player.stream = _fart_sound_cache[pack]
+	player.stream = _fart_sound_cache[key]
 	player.pitch_scale = clampf(0.8 + strength * 0.4, 0.6, 1.8)
 	player.play()
 
@@ -410,7 +461,10 @@ func _get_free_fart_player() -> AudioStreamPlayer:
 
 ## FR-165: Erzeugt einen kurzen, "brummenden" Ton mit paket-abhängiger
 ## Grundfrequenz und Modulation — vollständig prozedural, kein Asset.
-func _generate_fart_tone(pack: String) -> AudioStreamWAV:
+## `stage` (0=zaghaft, 1=normal, 2=voll aufgeladen) variiert Dauer, Wobble
+## und Obertongehalt — daraus ergeben sich mit den 4 Paketen 12 hörbar
+## unterschiedliche Furz-Varianten (FR-244/F20) statt bisher 4.
+func _generate_fart_tone(pack: String, stage: int = 1) -> AudioStreamWAV:
 	var sample_rate := 22050
 	var duration := 0.35
 	var base_freq := 110.0
@@ -426,6 +480,17 @@ func _generate_fart_tone(pack: String) -> AudioStreamWAV:
 			base_freq = 150.0
 			wobble = 0.0  # wird durch Bitcrush-Stufen ersetzt
 
+	# FR-016 (F24): Aufladungsgrad prägt den Klangcharakter
+	match stage:
+		0:  # zaghafter Stups: kurz, höher, kaum Wobble
+			duration *= 0.55
+			base_freq *= 1.25
+			wobble *= 0.5
+		2:  # voll aufgeladen: länger, tiefer, kräftiges Flattern
+			duration *= 1.35
+			base_freq *= 0.85
+			wobble *= 1.8
+
 	var sample_count := int(sample_rate * duration)
 	var data := PackedByteArray()
 	data.resize(sample_count * 2)
@@ -436,6 +501,9 @@ func _generate_fart_tone(pack: String) -> AudioStreamWAV:
 		var raw := sin(TAU * freq * t)
 		if pack == "fartsound_robotic":
 			raw = sign(raw) * 0.6 + raw * 0.4  # grobe Rechteck-Beimischung
+		if stage == 2:
+			# Kräftigere Oberwelle für den "satten" Vollgas-Furz
+			raw = raw * 0.75 + sin(TAU * freq * 2.0 * t) * 0.25
 		var sample := raw * envelope * 0.6
 		var value := int(clampf(sample, -1.0, 1.0) * 32767.0)
 		data.encode_s16(i * 2, value)
@@ -446,6 +514,174 @@ func _generate_fart_tone(pack: String) -> AudioStreamWAV:
 	stream.mix_rate = sample_rate
 	stream.stereo = false
 	return stream
+
+
+# --- FR-243 (F19): Münz-Tonleiter ----------------------------------------
+
+## Spielt beim Münz-Einsammeln einen Ton, dessen Höhe mit der Combo-Stufe
+## eine Dur-Pentatonik hinaufwandert. `combo_step` ist 1-basiert.
+func play_coin_pickup(combo_step: int) -> void:
+	if sound_muted:
+		return
+	var idx := clampi(combo_step - 1, 0, COIN_SCALE_SEMITONES.size() - 1)
+	var semitones: int = COIN_SCALE_SEMITONES[idx]
+	var freq: float = COIN_BASE_FREQ * pow(2.0, float(semitones) / 12.0)
+	var tone := _get_or_generate_tone("coin_%d" % idx, freq, 0.11)
+	_play_stinger(tone)
+
+
+# --- FR-245 (F21): Treffer- und Tod-Sounds -------------------------------
+
+## Kurzer, harter Treffer-Sound (Schild absorbiert / Streifschuss).
+func play_hit_sound() -> void:
+	if sound_muted:
+		return
+	if not _tone_cache.has("hit"):
+		_tone_cache["hit"] = _generate_noise_burst(0.12, 900.0, 0.55)
+	_play_stinger(_tone_cache["hit"])
+
+
+## Absteigender "Aufgeben"-Ton beim Tod — komisch statt bedrohlich, passend
+## zum humorvollen Grundton des Spiels.
+func play_death_sound() -> void:
+	if sound_muted:
+		return
+	if not _tone_cache.has("death"):
+		_tone_cache["death"] = _generate_death_wail()
+	_play_stinger(_tone_cache["death"])
+
+
+## Rauschbasierter Knall-Sound (deterministisch, ohne RNG-Abhängigkeit).
+func _generate_noise_burst(duration: float, brightness: float,
+		volume: float, sample_rate: int = 22050) -> AudioStreamWAV:
+	var sample_count := int(sample_rate * duration)
+	var data := PackedByteArray()
+	data.resize(sample_count * 2)
+	var last := 0.0
+	for i in range(sample_count):
+		var t := float(i) / sample_rate
+		var envelope := pow(1.0 - (float(i) / sample_count), 2.0)
+		# Deterministisches Pseudo-Rauschen aus verschachtelten Sinus-Termen
+		var noise := sin(t * brightness * 7.3) * sin(t * brightness * 13.1) \
+			+ sin(t * brightness * 3.7) * 0.5
+		# Einfacher Tiefpass, damit es nicht schneidend klingt
+		last = lerpf(last, noise, 0.55)
+		var sample := last * envelope * volume
+		var value := int(clampf(sample, -1.0, 1.0) * 32767.0)
+		data.encode_s16(i * 2, value)
+	var stream := AudioStreamWAV.new()
+	stream.data = data
+	stream.format = AudioStreamWAV.FORMAT_16_BITS
+	stream.mix_rate = sample_rate
+	stream.stereo = false
+	return stream
+
+
+## Abfallender Gleitton ("wah-wah-wah") für den Tod.
+func _generate_death_wail(sample_rate: int = 22050) -> AudioStreamWAV:
+	var duration := 0.55
+	var sample_count := int(sample_rate * duration)
+	var data := PackedByteArray()
+	data.resize(sample_count * 2)
+	for i in range(sample_count):
+		var t := float(i) / sample_rate
+		var progress := float(i) / sample_count
+		var envelope := 1.0 - progress * 0.7
+		# Grundton rutscht eine Oktave nach unten, mit Vibrato
+		var freq := 420.0 * pow(2.0, -progress) + sin(t * 26.0) * 22.0
+		var raw := sin(TAU * freq * t)
+		var sample := raw * envelope * 0.5
+		var value := int(clampf(sample, -1.0, 1.0) * 32767.0)
+		data.encode_s16(i * 2, value)
+	var stream := AudioStreamWAV.new()
+	stream.data = data
+	stream.format = AudioStreamWAV.FORMAT_16_BITS
+	stream.mix_rate = sample_rate
+	stream.stereo = false
+	return stream
+
+
+# --- FR-248 (F22): Ambient-Soundscapes -----------------------------------
+
+## Startet den zum Level passenden Ambient-Layer (leiser Dauerklang über
+## dem Reverb-Bus). Themen entsprechen den Vordergrund-Themen aus F12.
+func play_ambient_for_level(level_index: int) -> void:
+	var theme := _ambient_theme_for_level(level_index)
+	if not _ambient_cache.has(theme):
+		_ambient_cache[theme] = _generate_ambient_loop(theme)
+	_ambient_player.stream = _ambient_cache[theme]
+	_ambient_player.play()
+
+
+func stop_ambient() -> void:
+	if _ambient_player != null:
+		_ambient_player.stop()
+
+
+func _ambient_theme_for_level(level_index: int) -> String:
+	match level_index:
+		4, 6:
+			return "cave"     # tiefes Höhlen-Dröhnen
+		5:
+			return "factory"  # rhythmisches Maschinen-Brummen
+		7:
+			return "cavern"   # heller, hallender Schatzkammer-Klang
+		_:
+			return "space"    # weites Weltraum-Rauschen
+
+
+## Sehr langsamer, leiser Schleifen-Klang je Thema — bewusst tonal
+## unauffällig, damit er die Musik nicht überlagert.
+func _generate_ambient_loop(theme: String, sample_rate: int = 22050) -> AudioStreamWAV:
+	var duration := 3.0
+	var base := 70.0
+	var beat := 0.0  # >0 = zusätzliche langsame Pulsation
+	match theme:
+		"cave":
+			base = 55.0
+		"factory":
+			base = 82.0
+			beat = 2.4
+		"cavern":
+			base = 130.0
+		_:
+			base = 66.0
+	var sample_count := int(sample_rate * duration)
+	var data := PackedByteArray()
+	data.resize(sample_count * 2)
+	for i in range(sample_count):
+		var t := float(i) / sample_rate
+		# Zwei leicht verstimmte Grundtöne erzeugen ein langsames Schweben
+		var raw := sin(TAU * base * t) * 0.6 + sin(TAU * (base * 1.006) * t) * 0.4
+		if beat > 0.0:
+			raw *= 0.7 + 0.3 * sin(TAU * beat * t)
+		# Weiche Ein-/Ausblendung an den Nahtstellen für einen sauberen Loop
+		var fade := minf(1.0, minf(t, duration - t) / 0.25)
+		var sample := raw * fade * 0.32
+		var value := int(clampf(sample, -1.0, 1.0) * 32767.0)
+		data.encode_s16(i * 2, value)
+	var stream := AudioStreamWAV.new()
+	stream.data = data
+	stream.format = AudioStreamWAV.FORMAT_16_BITS
+	stream.mix_rate = sample_rate
+	stream.stereo = false
+	stream.loop_mode = AudioStreamWAV.LOOP_FORWARD
+	stream.loop_begin = 0
+	stream.loop_end = sample_count
+	return stream
+
+
+## F25: Eigener, triumphaler Stinger für einen besiegten Boss — deutlicher
+## als die reguläre Level-Fanfare (FR-246), damit sich ein Bosssieg
+## besonders anfühlt.
+func play_boss_defeated_fanfare() -> void:
+	if sound_muted:
+		return
+	if not _tone_cache.has("boss_fanfare"):
+		_tone_cache["boss_fanfare"] = _generate_music_loop(
+			[392.0, 523.25, 659.25, 783.99, 1046.5], 0.16, "square", 0.4)
+		_tone_cache["boss_fanfare"].loop_mode = AudioStreamWAV.LOOP_DISABLED
+	_play_stinger(_tone_cache["boss_fanfare"])
 
 
 ## FR-251: Duckt die Musik kurz ab (z.B. wenn eine pointierte SFX wie ein

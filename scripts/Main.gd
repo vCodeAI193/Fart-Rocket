@@ -772,6 +772,8 @@ func _load_current_level() -> void:
 	else:
 		SoundManager.play_level_music(GameManager.current_level)
 	SoundManager.play_countdown()
+	# FR-248 (F22): Ambient-Soundscape passend zum Level-Thema
+	SoundManager.play_ambient_for_level(GameManager.current_level)
 
 	# FR-342-360: Spielmodus-spezifische Regeln anwenden
 	_apply_game_mode_setup(level)
@@ -968,6 +970,12 @@ func _on_player_aim_released() -> void:
 ## FR-194: Boss besiegt — Verfolgungs-Kamera wieder auf den Spieler zentrieren.
 func _on_active_boss_defeated() -> void:
 	_active_boss = null
+	# F25: Eigener Triumph-Stinger + Farb-Puls für den Bosssieg
+	SoundManager.play_boss_defeated_fanfare()
+	_flash_screen(Color(1.0, 0.9, 0.4, 0.3), 0.5)
+	_camera_shake(0.2, 0.4)
+	# Nach dem Bosskampf zurück auf die reguläre Level-Musik wechseln
+	SoundManager.play_level_music(GameManager.current_level)
 
 
 ## FR-199: Fokus-Highlight — pulsierender Umriss um ein wichtiges Objekt.

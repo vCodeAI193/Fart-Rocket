@@ -40,13 +40,13 @@ Tod und Ragdoll. Was fehlt, ist Lebendigkeit am Männchen selbst.
 
 ## C. Audio (offene BACKLOG-Punkte)
 
-- [ ] **F19** FR-243 Münz-Sammel-Sounds mit steigender Tonleiter
-- [ ] **F20** FR-244 Erweiterte Furz-Sound-Bibliothek (mehr Varianten)
-- [ ] **F21** FR-245 Treffer- und Tod-Sounds
-- [ ] **F22** FR-248 Ambient-Soundscapes pro Level-Thema
-- [ ] **F23** FR-258 Audio-Bus-Setup mit Reverb-Effekt
-- [ ] **F24** FR-016 Furz-Sound an Aufladungsgrad koppeln
-- [ ] **F25** Boss-Besiegt-Fanfare (eigener Stinger)
+- [x] **F19** FR-243 Münz-Sammel-Sounds mit steigender Tonleiter
+- [x] **F20** FR-244 Erweiterte Furz-Sound-Bibliothek (mehr Varianten)
+- [x] **F21** FR-245 Treffer- und Tod-Sounds
+- [x] **F22** FR-248 Ambient-Soundscapes pro Level-Thema
+- [x] **F23** FR-258 Audio-Bus-Setup mit Reverb-Effekt
+- [x] **F24** FR-016 Furz-Sound an Aufladungsgrad koppeln
+- [x] **F25** Boss-Besiegt-Fanfare (eigener Stinger)
 
 ## D. Gameplay & Mechanik
 

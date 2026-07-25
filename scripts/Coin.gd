@@ -46,6 +46,8 @@ func _collect() -> void:
 	GameManager.record_coin_pickup()  # FR-099: Sammel-Fortschritt
 	collected.emit(coin_value)
 	GameManager.vibrate(20)
+	# FR-243 (F19): Tonhöhe steigt mit der Combo-Serie
+	SoundManager.play_coin_pickup(GameManager.combo_count)
 	if _audio.stream != null:
 		_audio.play()
 

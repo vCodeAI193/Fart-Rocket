@@ -749,6 +749,7 @@ func _on_body_entered(body: Node) -> void:
 			shield_changed.emit(false)
 			_update_shield_aura(false)  # FR-297
 			GameManager.vibrate(60)
+			SoundManager.play_hit_sound()  # FR-245 (F21)
 			took_hit_this_run = true  # FR-325: kein "Perfekt-Lauf" mehr möglich
 			return
 		_die()
@@ -851,6 +852,7 @@ func _die() -> void:
 	_is_dead = true
 	_aim_arrow.visible = false
 	GameManager.vibrate(120)  # FR-045: kräftige Vibration beim Tod
+	SoundManager.play_death_sound()  # FR-245 (F21)
 	# FR-266: Hit-Stop – kurzes Einfrieren beim Aufprall
 	Engine.time_scale = 0.0
 	await get_tree().create_timer(0.08, false, false, true).timeout
